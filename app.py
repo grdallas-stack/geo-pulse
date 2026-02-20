@@ -67,23 +67,15 @@ def load_run_log():
 # Helpers
 # ---------------------------------------------------------------------------
 
-SOURCE_ICONS = {
-    "Reddit": "💬", "Hacker News": "🟠", "Slack": "💼",
-    "Product Hunt": "🚀", "G2": "⭐", "News": "📰", "RSS": "📰",
-}
-
 SOURCE_LIST = "Reddit, Hacker News, G2, Product Hunt, Google News, Search Engine Journal, Search Engine Land, Digiday, AdExchanger"
 
 
-def _source_icon(source):
-    for key, icon in SOURCE_ICONS.items():
+def _source_badge(source):
+    """Plain text source label for pill display."""
+    for key in ("Reddit", "Hacker News", "Slack", "Product Hunt", "G2", "News", "RSS"):
         if key.lower() in source.lower():
-            return icon
-    return "📄"
-
-
-def _sentiment_badge(sentiment):
-    return {"positive": "🟢", "negative": "🔴", "neutral": "⚪"}.get(sentiment, "⚪")
+            return key
+    return source.strip() or "Source"
 
 
 def _time_ago(date_str):
@@ -229,10 +221,51 @@ def _company_positioning(comp_data):
 
 
 # ---------------------------------------------------------------------------
+# Display-level relevance and age filters
+# ---------------------------------------------------------------------------
+
+_GEO_DISPLAY_TERMS = [
+    "geo", "aeo", "generative engine", "answer engine",
+    "ai search", "ai visibility", "ai answer", "ai citation", "ai overview",
+    "brand visibility", "share of voice", "share of answer",
+    "llm optimization", "llm brand", "llm monitoring",
+    "perplexity", "chatgpt", "searchgpt", "gemini",
+    "seo", "content optimization", "structured data", "schema markup",
+    "zero click", "ai overviews",
+]
+
+_MAX_AGE_DAYS = 730  # 24 months
+
+
+def _is_display_relevant(insight):
+    """Require GEO context for display. Company mention alone is insufficient."""
+    text = (insight.get("text", "") + " " + insight.get("title", "")).lower()
+    has_context = any(term in text for term in _GEO_DISPLAY_TERMS)
+    if has_context:
+        return True
+    has_companies = bool(insight.get("companies_mentioned"))
+    source = insight.get("source", "")
+    if has_companies and source in ("G2", "Product Hunt"):
+        return True
+    return False
+
+
+def _within_age_limit(insight):
+    """Exclude articles older than 24 months."""
+    try:
+        dt = datetime.strptime(insight.get("post_date", ""), "%Y-%m-%d")
+        cutoff = datetime.now() - timedelta(days=_MAX_AGE_DAYS)
+        return dt >= cutoff
+    except (ValueError, TypeError):
+        return False
+
+
+# ---------------------------------------------------------------------------
 # Load data
 # ---------------------------------------------------------------------------
 
-insights = load_insights()
+insights = [i for i in load_insights()
+            if _is_display_relevant(i) and _within_age_limit(i)]
 trends = load_trends()
 companies_data = load_companies()
 discovered = load_discovered_sources()
@@ -744,6 +777,7 @@ with tabs[0]:
         else:
             filtered = [i for i in filtered if i.get(f"is_{filter_signal}")]
 
+    filtered = [i for i in filtered if _relevance_sentence(i)]
     filtered.sort(key=lambda x: _relevance_score(x), reverse=True)
     st.caption(f"Showing {min(25, len(filtered))} of {len(filtered)} signals (sorted by relevance)")
 
@@ -751,9 +785,7 @@ with tabs[0]:
     page_size = 25
     for idx, insight in enumerate(filtered[:page_size]):
         source = insight.get("source", "")
-        icon = _source_icon(source)
-        sentiment = insight.get("sentiment", "neutral")
-        badge = _sentiment_badge(sentiment)
+        source_label = _source_badge(source)
         title = insight.get("title", "")[:120] or insight.get("text", "")[:120]
         companies = insight.get("companies_mentioned", [])
         url = insight.get("url", "")
@@ -772,10 +804,9 @@ with tabs[0]:
         kw_str = " ".join(f"`{k}`" for k in kws)
 
         with st.container(border=True):
-            st.markdown(f"{icon} {badge} **{title}**")
-            if rel_sentence:
-                st.caption(f"_{rel_sentence}_")
-            meta_parts = [time_label, source]
+            st.markdown(f"`{source_label}` **{title}**")
+            st.caption(f"_{rel_sentence}_")
+            meta_parts = [time_label]
             if url:
                 meta_parts.append(f"[Source]({url})")
             meta = " · ".join(p for p in meta_parts if p)
@@ -864,7 +895,8 @@ with tabs[1]:
             with hc2:
                 st.markdown(f"{momentum}")
             with hc3:
-                st.markdown(f"🟢{pos_pct}% 🔴{neg_pct}% · {total} mentions")
+                neu_pct = 100 - pos_pct - neg_pct
+                st.markdown(f"{pos_pct}% positive · {neg_pct}% negative · {neu_pct}% neutral · {total} mentions")
 
             # Top 3 most relevant signals this week
             week_signals = [s for s in cd["signals"] if s.get("post_date", "") >= week_ago_str]
@@ -872,41 +904,32 @@ with tabs[1]:
                 week_signals = cd["signals"]
             week_signals.sort(key=lambda x: _relevance_score(x), reverse=True)
 
-            top_signals = week_signals[:3]
+            top_signals = [s for s in week_signals if _relevance_sentence(s)][:3]
             for sig in top_signals:
                 sig_title = sig.get("title", "")[:100] or sig.get("text", "")[:100]
                 sig_url = sig.get("url", "")
                 sig_source = sig.get("source", "")
-                sig_sentiment = sig.get("sentiment", "neutral")
-                sig_badge = _sentiment_badge(sig_sentiment)
-                sig_icon = _source_icon(sig_source)
+                sig_source_label = _source_badge(sig_source)
                 sig_reason = _relevance_sentence(sig)
 
                 headline = f"[{sig_title}]({sig_url})" if sig_url else sig_title
-                st.markdown(f"  {sig_icon} {sig_badge} {headline}")
-                if sig_reason:
-                    st.caption(f"  {sig_reason} · {sig_source} · {_time_ago(sig.get('post_date', ''))}")
-                else:
-                    st.caption(f"  {sig_source} · {_time_ago(sig.get('post_date', ''))}")
+                st.markdown(f"  `{sig_source_label}` {headline}")
+                st.caption(f"  _{sig_reason}_ · {_time_ago(sig.get('post_date', ''))}")
 
             # Show more expander
-            remaining = week_signals[3:15]
+            remaining = [s for s in week_signals[3:] if _relevance_sentence(s)][:12]
             if remaining:
                 with st.expander(f"Show {len(remaining)} more signals"):
                     for sig in remaining:
                         sig_title = sig.get("title", "")[:100] or sig.get("text", "")[:100]
                         sig_url = sig.get("url", "")
                         sig_source = sig.get("source", "")
-                        sig_badge = _sentiment_badge(sig.get("sentiment", "neutral"))
-                        sig_icon = _source_icon(sig_source)
+                        sig_source_label = _source_badge(sig_source)
                         sig_reason = _relevance_sentence(sig)
 
                         headline = f"[{sig_title}]({sig_url})" if sig_url else sig_title
-                        st.markdown(f"{sig_icon} {sig_badge} {headline}")
-                        reason_parts = [sig_reason] if sig_reason else []
-                        reason_parts.append(sig_source)
-                        reason_parts.append(_time_ago(sig.get("post_date", "")))
-                        st.caption(" · ".join(p for p in reason_parts if p))
+                        st.markdown(f"`{sig_source_label}` {headline}")
+                        st.caption(f"_{sig_reason}_ · {_time_ago(sig.get('post_date', ''))}")
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1055,7 +1078,7 @@ with tabs[2]:
             rationale_parts.append(f"no coverage from {', '.join(no_coverage[:3])}")
         elif od["praise"] == 0:
             rationale_parts.append("no tool praised for this yet")
-        rationale = ". ".join(rationale_parts) + "." if rationale_parts else ""
+        rationale = ". ".join(p[0].upper() + p[1:] for p in rationale_parts) + "." if rationale_parts else ""
 
         with st.container(border=True):
             tooltip = FEATURE_TOOLTIPS.get(opp, "")
@@ -1073,39 +1096,32 @@ with tabs[2]:
 
             # Top 3 supporting signals
             scored_signals = sorted(od["signals"], key=lambda x: _relevance_score(x), reverse=True)
-            top3 = scored_signals[:3]
+            top3 = [s for s in scored_signals if _relevance_sentence(s)][:3]
             for sig in top3:
                 sig_title = sig.get("title", "")[:100] or sig.get("text", "")[:100]
                 sig_url = sig.get("url", "")
                 sig_source = sig.get("source", "")
-                sig_badge = _sentiment_badge(sig.get("sentiment", "neutral"))
-                sig_icon = _source_icon(sig_source)
+                sig_source_label = _source_badge(sig_source)
                 sig_reason = _relevance_sentence(sig)
 
                 headline = f"[{sig_title}]({sig_url})" if sig_url else sig_title
-                st.markdown(f"  {sig_icon} {sig_badge} {headline}")
-                if sig_reason:
-                    st.caption(f"  {sig_reason} · {sig_source}")
-                else:
-                    st.caption(f"  {sig_source}")
+                st.markdown(f"  `{sig_source_label}` {headline}")
+                st.caption(f"  _{sig_reason}_")
 
             # Show more evidence
-            remaining = scored_signals[3:15]
+            remaining = [s for s in scored_signals[3:] if _relevance_sentence(s)][:12]
             if remaining:
                 with st.expander(f"Show {len(remaining)} more evidence"):
                     for sig in remaining:
                         sig_title = sig.get("title", "")[:100] or sig.get("text", "")[:100]
                         sig_url = sig.get("url", "")
                         sig_source = sig.get("source", "")
-                        sig_badge = _sentiment_badge(sig.get("sentiment", "neutral"))
-                        sig_icon = _source_icon(sig_source)
+                        sig_source_label = _source_badge(sig_source)
                         sig_reason = _relevance_sentence(sig)
 
                         headline = f"[{sig_title}]({sig_url})" if sig_url else sig_title
-                        st.markdown(f"{sig_icon} {sig_badge} {headline}")
-                        reason_parts = [sig_reason] if sig_reason else []
-                        reason_parts.append(sig_source)
-                        st.caption(" · ".join(p for p in reason_parts if p))
+                        st.markdown(f"`{sig_source_label}` {headline}")
+                        st.caption(f"_{sig_reason}_")
 
 
 # ---------------------------------------------------------------------------

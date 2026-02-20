@@ -68,6 +68,9 @@ GEO_CONTEXT = [
     "zero click", "zero-click", "ai overviews",
 ]
 
+# Sources inherently about GEO/AEO tools (company mention alone is valid)
+GEO_SOURCES = {"G2", "Product Hunt"}
+
 NOISE_PHRASES = [
     "i am a bot", "this action was performed automatically",
     "automoderator", "this post has been removed",
@@ -321,11 +324,14 @@ def run_enrichment(since_date=None):
         if any(n in text for n in NOISE_PHRASES):
             continue
 
-        # Must mention a company OR contain GEO/AEO context
+        # Company mention requires GEO context or a known GEO source
         mentions_company = any(alias in text for alias in company_terms if len(alias) >= 3)
         has_context = any(term in text for term in GEO_CONTEXT)
+        is_geo_source = post.get("source", "") in GEO_SOURCES
 
-        if mentions_company or has_context:
+        if has_context:
+            relevant.append(post)
+        elif mentions_company and is_geo_source:
             relevant.append(post)
 
     print(f"  Relevant: {len(relevant)} ({len(relevant)*100//max(len(unique),1)}%)")
