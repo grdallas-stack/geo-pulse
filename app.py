@@ -9,8 +9,22 @@ from collections import defaultdict, Counter
 import streamlit as st
 import pandas as pd
 import altair as alt
+from apscheduler.schedulers.background import BackgroundScheduler
+from pipeline.enrich import run_enrichment
 
 st.set_page_config(page_title="GEO Pulse", page_icon="📡", layout="wide")
+
+# ---------------------------------------------------------------------------
+# Background scheduler — re-runs pipeline every 6 hours
+# ---------------------------------------------------------------------------
+
+def scheduled_refresh():
+    run_enrichment()
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(scheduled_refresh, 'interval', hours=6)
+if not scheduler.running:
+    scheduler.start()
 
 # ---------------------------------------------------------------------------
 # Data loading
