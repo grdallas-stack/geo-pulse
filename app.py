@@ -9,6 +9,7 @@ from collections import defaultdict, Counter
 import streamlit as st
 import pandas as pd
 import altair as alt
+import plotly.graph_objects as go
 from apscheduler.schedulers.background import BackgroundScheduler
 from pipeline.enrich import run_enrichment
 
@@ -514,7 +515,7 @@ with st.expander("How to use this dashboard"):
 
 **Competitors** — One card per competitor with momentum, sentiment, and top signals this week. Expand for more.
 
-**Roadmap** — Build Now priorities, trending features, and competitive coverage matrix with supporting evidence.
+**Roadmap** — Plotly charts showing competitor momentum and feature heat, plus Build Now product opportunities.
 
 Data refreshes every 6 hours from Reddit, Hacker News, G2 reviews, Product Hunt, Google News, and trade press.
 """)
@@ -1161,19 +1162,276 @@ with tabs[2]:
     for i in insights:
         for c in i.get("companies_mentioned", []):
             comp_mention_counts[c] += 1
-    top_companies = [c for c, _ in comp_mention_counts.most_common(10)]
+    all_companies_ranked = [c for c, _ in comp_mention_counts.most_common()]
+    top8_default = [c for c, _ in comp_mention_counts.most_common(8)]
 
     active_opps = {opp: od for opp, od in opportunity_data.items() if od["evidence"] >= 2}
     sorted_opp_names = sorted(active_opps.keys(),
                                key=lambda x: active_opps[x]["evidence"], reverse=True)
 
-    # Date boundaries for recency logic
-    _30d_ago = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
-    _60d_ago = (datetime.now() - timedelta(days=60)).strftime("%Y-%m-%d")
-    _90d_ago = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
-    _180d_ago = (datetime.now() - timedelta(days=180)).strftime("%Y-%m-%d")
+    # Date boundaries
+    _now_rm = datetime.now()
+    _30d_ago = (_now_rm - timedelta(days=30)).strftime("%Y-%m-%d")
+    _60d_ago = (_now_rm - timedelta(days=60)).strftime("%Y-%m-%d")
+    _90d_ago = (_now_rm - timedelta(days=90)).strftime("%Y-%m-%d")
+    _180d_ago = (_now_rm - timedelta(days=180)).strftime("%Y-%m-%d")
+    _week_ago_rm = (_now_rm - timedelta(days=7)).strftime("%Y-%m-%d")
+    _2week_ago_rm = (_now_rm - timedelta(days=14)).strftime("%Y-%m-%d")
 
-    # ── SECTION 1: BUILD NOW ──────────────────────────────────────────────────
+    # ── COMPETITOR SELECTOR ───────────────────────────────────────────────────
+    if "rm_quick" not in st.session_state:
+        st.session_state["rm_quick"] = None
+
+    def _set_quick(mode):
+        st.session_state["rm_quick"] = mode
+        # Force multiselect to re-render with new default
+        st.session_state.pop("rm_comp_sel", None)
+
+    qc1, qc2, qc3 = st.columns(3)
+    with qc1:
+        st.button("Top 8 by volume", key="qf_top8", on_click=_set_quick, args=("top8",))
+    with qc2:
+        st.button("Rising only", key="qf_rising", on_click=_set_quick, args=("rising",))
+    with qc3:
+        st.button("All", key="qf_all", on_click=_set_quick, args=("all",))
+
+    # Compute rising companies for the quick filter
+    _rising_comps = []
+    for c in all_companies_ranked:
+        tw = sum(1 for s in insights
+                 if c in s.get("companies_mentioned", [])
+                 and s.get("post_date", "") >= _week_ago_rm)
+        pw = sum(1 for s in insights
+                 if c in s.get("companies_mentioned", [])
+                 and _2week_ago_rm <= s.get("post_date", "") < _week_ago_rm)
+        if pw > 0 and tw > pw:
+            _rising_comps.append(c)
+        elif pw == 0 and tw > 0:
+            _rising_comps.append(c)
+
+    qmode = st.session_state.get("rm_quick")
+    if qmode == "top8":
+        _sel_default = top8_default
+    elif qmode == "rising":
+        _sel_default = _rising_comps if _rising_comps else top8_default
+    elif qmode == "all":
+        _sel_default = all_companies_ranked
+    else:
+        _sel_default = top8_default
+
+    # Reset quick filter after applying so widget stays in sync
+    if qmode:
+        st.session_state["rm_quick"] = None
+
+    selected_comps = st.multiselect(
+        "Select competitors to display",
+        options=all_companies_ranked,
+        default=_sel_default,
+        help="Choose which competitors appear in the charts below",
+        key="rm_comp_sel",
+    )
+
+    if len(selected_comps) < 2:
+        st.warning("Select at least 2 competitors to compare.")
+        st.stop()
+
+    # ── Pre-compute per-company stats for charts ──────────────────────────────
+    _comp_stats = {}
+    for comp in selected_comps:
+        sigs = [s for s in insights if comp in s.get("companies_mentioned", [])]
+        total = len(sigs)
+        pos = sum(1 for s in sigs if s.get("sentiment") == "positive")
+        neg = sum(1 for s in sigs if s.get("sentiment") == "negative")
+        tw = sum(1 for s in sigs if s.get("post_date", "") >= _week_ago_rm)
+        pw = sum(1 for s in sigs
+                 if _2week_ago_rm <= s.get("post_date", "") < _week_ago_rm)
+        latest = max((s.get("post_date", "") for s in sigs), default="")
+
+        if total < 3:
+            momentum = "Insufficient data"
+        elif pw == 0 and tw == 0:
+            momentum = "No recent activity"
+        elif pw == 0:
+            momentum = "Rising"
+        else:
+            wow = round((tw - pw) / pw * 100)
+            if wow >= 20:
+                momentum = "Rising"
+            elif wow <= -20:
+                momentum = "Falling"
+            else:
+                momentum = "Stable"
+
+        _comp_stats[comp] = {
+            "total": total, "pos": pos, "neg": neg,
+            "pos_pct": round(pos * 100 / max(total, 1)),
+            "momentum": momentum, "latest": latest,
+        }
+
+    # ── CHART 1: COMPETITOR MOMENTUM MAP ──────────────────────────────────────
+    st.markdown("#### Competitor Presence & Momentum")
+    st.caption(
+        "Position = total signal volume. "
+        "Color = momentum vs. prior 30 days."
+    )
+
+    MOMENTUM_COLORS = {
+        "Rising": "#22c55e",
+        "Falling": "#ef4444",
+        "Stable": "#94a3b8",
+        "No recent activity": "#cbd5e1",
+        "Insufficient data": "#e2e8f0",
+    }
+
+    # Sort by total signal count descending (top = highest)
+    sorted_for_chart = sorted(selected_comps,
+                               key=lambda c: _comp_stats[c]["total"])
+
+    fig1 = go.Figure()
+
+    for m_label, m_color in MOMENTUM_COLORS.items():
+        comps_in_group = [c for c in sorted_for_chart
+                          if _comp_stats[c]["momentum"] == m_label]
+        if not comps_in_group:
+            continue
+        fig1.add_trace(go.Scatter(
+            x=[_comp_stats[c]["total"] for c in comps_in_group],
+            y=comps_in_group,
+            mode="markers",
+            marker=dict(size=14, color=m_color),
+            name=m_label,
+            hovertemplate=(
+                "<b>%{y}</b><br>"
+                "Signals: %{x}<br>"
+                "Momentum: " + m_label + "<br>"
+                "Sentiment: %{customdata[0]}% positive<br>"
+                "Last signal: %{customdata[1]}"
+                "<extra></extra>"
+            ),
+            customdata=[
+                [_comp_stats[c]["pos_pct"], _comp_stats[c]["latest"]]
+                for c in comps_in_group
+            ],
+        ))
+
+    # Category average vertical line
+    mean_signals = sum(_comp_stats[c]["total"] for c in selected_comps) / max(len(selected_comps), 1)
+    fig1.add_vline(
+        x=mean_signals, line_dash="dash", line_color="#94a3b8", line_width=1,
+        annotation_text="Category average",
+        annotation_position="top",
+        annotation_font_size=11,
+        annotation_font_color="#94a3b8",
+    )
+
+    fig1.update_layout(
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        xaxis=dict(title="Total signals", gridcolor="#f0f0f0", zeroline=False),
+        yaxis=dict(title="", gridcolor="#f0f0f0"),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0),
+        margin=dict(l=10, r=20, t=40, b=20),
+        height=max(300, len(selected_comps) * 32 + 80),
+    )
+
+    st.plotly_chart(fig1, use_container_width=True)
+
+    # ── CHART 2: FEATURE HEAT MAP ────────────────────────────────────────────
+    # Feature definitions expander above Chart 2
+    with st.expander("Feature definitions"):
+        for feat, defn in FEATURE_TOOLTIPS.items():
+            st.markdown(f"**{feat}**: {defn}")
+
+    st.markdown("#### Feature Heat Map")
+    st.caption("Darker = more recent market attention.")
+
+    # Build the heat matrix: rows = features, columns = selected_comps
+    feature_names = list(OPPORTUNITY_THEMES.keys())
+    heat_z = []
+    hover_text = []
+
+    for feat in feature_names:
+        row_z = []
+        row_hover = []
+        od = opportunity_data.get(feat)
+        for comp in selected_comps:
+            if od is None:
+                row_z.append(0)
+                row_hover.append(f"{feat} x {comp}<br>Score: 0/10<br>No signals")
+                continue
+            detail = od["company_detail"].get(comp, {"count": 0, "latest": ""})
+            count = detail["count"]
+            latest = detail["latest"]
+
+            if count == 0:
+                score = 0
+            elif latest and latest >= _30d_ago:
+                score = 7 + min(count - 1, 2)  # 7-9
+            elif latest and latest >= _180d_ago:
+                score = 4 + min(count - 1, 2)  # 4-6
+            else:
+                score = 1 + min(count - 1, 2)  # 1-3
+
+            # Positive sentiment bonus
+            comp_sigs = [s for s in od["signals"]
+                         if comp in s.get("companies_mentioned", [])]
+            has_positive = any(s.get("sentiment") == "positive" for s in comp_sigs)
+            if has_positive and score > 0:
+                score = min(score + 1, 10)
+
+            # Top signal title for hover
+            top_sig_title = ""
+            if comp_sigs:
+                best = sorted(comp_sigs, key=lambda s: s.get("post_date", ""), reverse=True)[0]
+                top_sig_title = (best.get("title", "") or best.get("text", ""))[:60]
+
+            row_z.append(score)
+            hover_line = (
+                f"<b>{feat}</b> x <b>{comp}</b><br>"
+                f"Score: {score}/10<br>"
+                f"Signals: {count}<br>"
+                f"Most recent: {latest or 'n/a'}<br>"
+                f"Top signal: {top_sig_title}"
+            )
+            row_hover.append(hover_line)
+
+        heat_z.append(row_z)
+        hover_text.append(row_hover)
+
+    fig2 = go.Figure(data=go.Heatmap(
+        z=heat_z,
+        x=selected_comps,
+        y=feature_names,
+        hovertext=hover_text,
+        hovertemplate="%{hovertext}<extra></extra>",
+        colorscale=[[0, "#ffffff"], [1, "#00695c"]],
+        colorbar=dict(
+            title=dict(text="Cold \u2192 Hot (recent activity)", side="right"),
+            thickness=14,
+        ),
+        xgap=2, ygap=2,
+        zmin=0, zmax=10,
+    ))
+
+    fig2.update_layout(
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        xaxis=dict(
+            tickangle=-35,
+            tickfont=dict(size=11),
+            side="bottom",
+        ),
+        yaxis=dict(
+            autorange="reversed",
+            tickfont=dict(size=11),
+        ),
+        margin=dict(l=10, r=20, t=30, b=max(100, max((len(c) for c in selected_comps), default=8) * 6)),
+        height=max(350, len(feature_names) * 38 + 140),
+    )
+
+    st.plotly_chart(fig2, use_container_width=True)
+
+    # ── BUILD NOW ─────────────────────────────────────────────────────────────
     st.markdown("#### Build Now")
     st.caption("High buyer demand. No competitor has solved it.")
 
@@ -1181,15 +1439,15 @@ with tabs[2]:
     for opp, od in opportunity_data.items():
         if od["evidence"] < 3:
             continue
-        if not top_companies:
+        if not selected_comps:
             continue
         red_count = sum(
-            1 for c in top_companies
+            1 for c in selected_comps
             if c not in od["companies_praised"]
             and c not in od["companies_complained"]
             and c not in od["companies_tried"]
         )
-        if red_count > len(top_companies) / 2:
+        if red_count > len(selected_comps) / 2:
             build_now_items.append((opp, od))
 
     build_now_items.sort(key=lambda x: x[1]["evidence"], reverse=True)
@@ -1200,14 +1458,19 @@ with tabs[2]:
             recent_count = sum(
                 1 for s in od["signals"] if s.get("post_date", "") >= _90d_ago
             )
+            # Filter evidence to selected competitors only
+            comp_signals = [
+                s for s in od["signals"]
+                if any(c in s.get("companies_mentioned", []) for c in selected_comps)
+            ]
             with st.container(border=True):
-                st.markdown(f"**{opp}** — {conf}% confidence")
+                st.markdown(f"**{opp}** \u2014 {conf}% confidence")
                 st.markdown(
                     f"{recent_count} signals mention this gap in the last 90 days. "
                     "No competitor has a clear solution."
                 )
                 scored_sigs = sorted(
-                    od["signals"], key=lambda x: _relevance_score(x), reverse=True
+                    comp_signals, key=lambda x: _relevance_score(x), reverse=True
                 )
                 displayable = [
                     s for s in scored_sigs
@@ -1238,143 +1501,7 @@ with tabs[2]:
             "(3+ signals, majority competitor gap)."
         )
 
-    # ── SECTION 2: TRENDING NOW ───────────────────────────────────────────────
-    st.markdown("#### Trending Now")
-    st.caption("Features gaining market attention in the last 30 days.")
 
-    trending_feats = []
-    for opp, od in opportunity_data.items():
-        recent_ct = sum(
-            1 for s in od["signals"] if s.get("post_date", "") >= _30d_ago
-        )
-        prior_ct = sum(
-            1 for s in od["signals"]
-            if _60d_ago <= s.get("post_date", "") < _30d_ago
-        )
-        if recent_ct > prior_ct and recent_ct >= 1:
-            recent_sigs = sorted(
-                [s for s in od["signals"] if s.get("post_date", "") >= _30d_ago],
-                key=lambda x: _relevance_score(x),
-                reverse=True,
-            )
-            top_hl = recent_sigs[0].get("title", "")[:100] if recent_sigs else ""
-            trending_feats.append({
-                "feature": opp, "recent": recent_ct, "prior": prior_ct,
-                "headline": top_hl,
-            })
-
-    trending_feats.sort(key=lambda x: x["recent"], reverse=True)
-
-    if trending_feats:
-        for t in trending_feats:
-            st.markdown(
-                f"**{t['feature']}** — \u2191 {t['recent']} new signals this month"
-            )
-            st.caption(
-                f"{t['prior']} signals last month \u2192 {t['recent']} this month"
-            )
-            if t["headline"]:
-                st.caption(f"Top signal: _{t['headline']}_")
-    else:
-        st.info(
-            "Not enough recent data to identify trends. "
-            "Check back after next pipeline refresh."
-        )
-
-    # ── SECTION 3: COVERAGE MATRIX ────────────────────────────────────────────
-    st.markdown("#### Feature Coverage Matrix")
-    st.caption(
-        "Coverage based on public signals only. "
-        "Absence of data does not mean absence of a feature."
-    )
-
-    defs_in_matrix = {f: d for f, d in FEATURE_TOOLTIPS.items() if f in active_opps}
-    if defs_in_matrix:
-        with st.expander("Feature definitions"):
-            for feat, defn in defs_in_matrix.items():
-                st.markdown(f"**{feat}**: {defn}")
-
-    st.caption(
-        "\U0001f7e2 Praised \u00b7 \U0001f7e1 Mentioned \u00b7 \U0001f534 No data \u00b7 "
-        "\U0001f525 NEW = within 30 days \u00b7 \U0001f7e4 Stale = older than 6 months"
-    )
-
-    if "matrix_sel" not in st.session_state:
-        st.session_state["matrix_sel"] = None
-
-    def _mx_click(key):
-        if st.session_state.get("matrix_sel") == key:
-            st.session_state["matrix_sel"] = None
-        else:
-            st.session_state["matrix_sel"] = key
-
-    if sorted_opp_names and top_companies:
-        header_cols = st.columns([2] + [1] * len(top_companies))
-        with header_cols[0]:
-            st.markdown("**Feature**")
-        for ci, comp in enumerate(top_companies):
-            with header_cols[ci + 1]:
-                st.markdown(f"**{comp[:10]}**")
-
-        for opp in sorted_opp_names:
-            od = active_opps[opp]
-            row_cols = st.columns([2] + [1] * len(top_companies))
-            with row_cols[0]:
-                st.markdown(f"**{opp}**")
-            for ci, comp in enumerate(top_companies):
-                detail = od["company_detail"].get(comp, {"count": 0, "latest": ""})
-                count = detail["count"]
-                latest = detail["latest"]
-                with row_cols[ci + 1]:
-                    is_present = (
-                        comp in od["companies_praised"]
-                        or comp in od["companies_complained"]
-                        or comp in od["companies_tried"]
-                    )
-                    if is_present:
-                        dot = "\U0001f7e2" if comp in od["companies_praised"] else "\U0001f7e1"
-                        if latest and latest >= _30d_ago:
-                            label = f"{dot} {count} \U0001f525"
-                        elif latest and latest < _180d_ago:
-                            label = f"\U0001f7e4 {count}"
-                        else:
-                            label = f"{dot} {count}"
-                        cell_key = f"{opp}|{comp}"
-                        st.button(
-                            label, key=f"mx_{opp}_{comp}",
-                            on_click=_mx_click, args=(cell_key,),
-                            use_container_width=True,
-                        )
-                    else:
-                        st.markdown("\U0001f534")
-
-        sel = st.session_state.get("matrix_sel")
-        if sel and "|" in sel:
-            sel_opp, sel_comp = sel.split("|", 1)
-            if sel_opp in active_opps:
-                cell_sigs = sorted(
-                    [
-                        s for s in active_opps[sel_opp]["signals"]
-                        if sel_comp in s.get("companies_mentioned", [])
-                    ],
-                    key=lambda x: x.get("post_date", ""),
-                    reverse=True,
-                )
-                if cell_sigs:
-                    with st.expander(
-                        f"Signals: {sel_opp} \u00d7 {sel_comp}", expanded=True
-                    ):
-                        for sig in cell_sigs[:10]:
-                            sig_title = sig.get("title", "")[:100] or sig.get("text", "")[:100]
-                            sig_url = sig.get("url", "")
-                            sig_src = _source_badge(sig.get("source", ""))
-                            sig_date = sig.get("post_date", "")
-                            sig_why = _relevance_sentence(sig)
-                            hl = f"[{sig_title}]({sig_url})" if sig_url else sig_title
-                            st.markdown(f"`{sig_src}` {hl}")
-                            st.caption(f"{sig_date} \u00b7 _{sig_why}_")
-    else:
-        st.caption("Not enough data to build the matrix yet.")
 
 
 
