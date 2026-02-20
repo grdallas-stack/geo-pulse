@@ -514,7 +514,7 @@ with st.expander("How to use this dashboard"):
 
 **Competitors** — One card per competitor with momentum, sentiment, and top signals this week. Expand for more.
 
-**Roadmap** — Competitive gap matrix and ranked product opportunities with supporting evidence.
+**Roadmap** — Build Now priorities, trending features, and competitive coverage matrix with supporting evidence.
 
 Data refreshes every 6 hours from Reddit, Hacker News, G2 reviews, Product Hunt, Google News, and trade press.
 """)
@@ -1058,8 +1058,8 @@ with tabs[1]:
 with tabs[2]:
     st.markdown("### Roadmap")
     st.markdown(
-        "Product opportunities ranked by market evidence. The gap matrix shows who has what. "
-        "Below it: what to build, why, and the signals backing each recommendation."
+        "Product opportunities ranked by market evidence, trending features, "
+        "and competitive coverage."
     )
 
     FEATURE_TOOLTIPS = {
@@ -1156,10 +1156,7 @@ with tabs[2]:
             conf += 10  # G2 is highest trust source
         od["confidence"] = min(conf, 95)
 
-    # --- COMPETITIVE GAP MATRIX ---
-    st.markdown("#### Competitive Gap Matrix")
-    st.caption("🟢 Praised (signal count) · 🟡 Mentioned (signal count) · 🔴 No data")
-
+    # --- Shared computation for roadmap sections ---
     comp_mention_counts = Counter()
     for i in insights:
         for c in i.get("companies_mentioned", []):
@@ -1170,8 +1167,148 @@ with tabs[2]:
     sorted_opp_names = sorted(active_opps.keys(),
                                key=lambda x: active_opps[x]["evidence"], reverse=True)
 
+    # Date boundaries for recency logic
+    _30d_ago = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+    _60d_ago = (datetime.now() - timedelta(days=60)).strftime("%Y-%m-%d")
+    _90d_ago = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
+    _180d_ago = (datetime.now() - timedelta(days=180)).strftime("%Y-%m-%d")
+
+    # ── SECTION 1: BUILD NOW ──────────────────────────────────────────────────
+    st.markdown("#### Build Now")
+    st.caption("High buyer demand. No competitor has solved it.")
+
+    build_now_items = []
+    for opp, od in opportunity_data.items():
+        if od["evidence"] < 3:
+            continue
+        if not top_companies:
+            continue
+        red_count = sum(
+            1 for c in top_companies
+            if c not in od["companies_praised"]
+            and c not in od["companies_complained"]
+            and c not in od["companies_tried"]
+        )
+        if red_count > len(top_companies) / 2:
+            build_now_items.append((opp, od))
+
+    build_now_items.sort(key=lambda x: x[1]["evidence"], reverse=True)
+
+    if build_now_items:
+        for opp, od in build_now_items:
+            conf = od["confidence"]
+            recent_count = sum(
+                1 for s in od["signals"] if s.get("post_date", "") >= _90d_ago
+            )
+            with st.container(border=True):
+                st.markdown(f"**{opp}** — {conf}% confidence")
+                st.markdown(
+                    f"{recent_count} signals mention this gap in the last 90 days. "
+                    "No competitor has a clear solution."
+                )
+                scored_sigs = sorted(
+                    od["signals"], key=lambda x: _relevance_score(x), reverse=True
+                )
+                displayable = [
+                    s for s in scored_sigs
+                    if _is_display_relevant(s) and _relevance_sentence(s)
+                ]
+                for sig in displayable[:3]:
+                    sig_title = sig.get("title", "")[:100] or sig.get("text", "")[:100]
+                    sig_url = sig.get("url", "")
+                    sig_src = _source_badge(sig.get("source", ""))
+                    sig_why = _relevance_sentence(sig)
+                    hl = f"[{sig_title}]({sig_url})" if sig_url else sig_title
+                    st.markdown(f"  `{sig_src}` {hl}")
+                    st.caption(f"  _{sig_why}_")
+                rest = displayable[3:15]
+                if rest:
+                    with st.expander(f"Show {len(rest)} more evidence"):
+                        for sig in rest:
+                            sig_title = sig.get("title", "")[:100] or sig.get("text", "")[:100]
+                            sig_url = sig.get("url", "")
+                            sig_src = _source_badge(sig.get("source", ""))
+                            sig_why = _relevance_sentence(sig)
+                            hl = f"[{sig_title}]({sig_url})" if sig_url else sig_title
+                            st.markdown(f"`{sig_src}` {hl}")
+                            st.caption(f"_{sig_why}_")
+    else:
+        st.caption(
+            "No features currently meet the Build Now criteria "
+            "(3+ signals, majority competitor gap)."
+        )
+
+    # ── SECTION 2: TRENDING NOW ───────────────────────────────────────────────
+    st.markdown("#### Trending Now")
+    st.caption("Features gaining market attention in the last 30 days.")
+
+    trending_feats = []
+    for opp, od in opportunity_data.items():
+        recent_ct = sum(
+            1 for s in od["signals"] if s.get("post_date", "") >= _30d_ago
+        )
+        prior_ct = sum(
+            1 for s in od["signals"]
+            if _60d_ago <= s.get("post_date", "") < _30d_ago
+        )
+        if recent_ct > prior_ct and recent_ct >= 1:
+            recent_sigs = sorted(
+                [s for s in od["signals"] if s.get("post_date", "") >= _30d_ago],
+                key=lambda x: _relevance_score(x),
+                reverse=True,
+            )
+            top_hl = recent_sigs[0].get("title", "")[:100] if recent_sigs else ""
+            trending_feats.append({
+                "feature": opp, "recent": recent_ct, "prior": prior_ct,
+                "headline": top_hl,
+            })
+
+    trending_feats.sort(key=lambda x: x["recent"], reverse=True)
+
+    if trending_feats:
+        for t in trending_feats:
+            st.markdown(
+                f"**{t['feature']}** — \u2191 {t['recent']} new signals this month"
+            )
+            st.caption(
+                f"{t['prior']} signals last month \u2192 {t['recent']} this month"
+            )
+            if t["headline"]:
+                st.caption(f"Top signal: _{t['headline']}_")
+    else:
+        st.info(
+            "Not enough recent data to identify trends. "
+            "Check back after next pipeline refresh."
+        )
+
+    # ── SECTION 3: COVERAGE MATRIX ────────────────────────────────────────────
+    st.markdown("#### Feature Coverage Matrix")
+    st.caption(
+        "Coverage based on public signals only. "
+        "Absence of data does not mean absence of a feature."
+    )
+
+    defs_in_matrix = {f: d for f, d in FEATURE_TOOLTIPS.items() if f in active_opps}
+    if defs_in_matrix:
+        with st.expander("Feature definitions"):
+            for feat, defn in defs_in_matrix.items():
+                st.markdown(f"**{feat}**: {defn}")
+
+    st.caption(
+        "\U0001f7e2 Praised \u00b7 \U0001f7e1 Mentioned \u00b7 \U0001f534 No data \u00b7 "
+        "\U0001f525 NEW = within 30 days \u00b7 \U0001f7e4 Stale = older than 6 months"
+    )
+
+    if "matrix_sel" not in st.session_state:
+        st.session_state["matrix_sel"] = None
+
+    def _mx_click(key):
+        if st.session_state.get("matrix_sel") == key:
+            st.session_state["matrix_sel"] = None
+        else:
+            st.session_state["matrix_sel"] = key
+
     if sorted_opp_names and top_companies:
-        # Header row
         header_cols = st.columns([2] + [1] * len(top_companies))
         with header_cols[0]:
             st.markdown("**Feature**")
@@ -1182,91 +1319,63 @@ with tabs[2]:
         for opp in sorted_opp_names:
             od = active_opps[opp]
             row_cols = st.columns([2] + [1] * len(top_companies))
-            feat_def = FEATURE_TOOLTIPS.get(opp, "")
             with row_cols[0]:
                 st.markdown(f"**{opp}**")
-                if feat_def:
-                    st.caption(feat_def)
             for ci, comp in enumerate(top_companies):
                 detail = od["company_detail"].get(comp, {"count": 0, "latest": ""})
                 count = detail["count"]
                 latest = detail["latest"]
-                recency = _time_ago(latest) if latest else ""
                 with row_cols[ci + 1]:
-                    if comp in od["companies_praised"]:
-                        st.markdown(f"🟢 {count}")
-                        if recency:
-                            st.caption(recency)
-                    elif comp in od["companies_complained"] or comp in od["companies_tried"]:
-                        st.markdown(f"🟡 {count}")
-                        if recency:
-                            st.caption(recency)
+                    is_present = (
+                        comp in od["companies_praised"]
+                        or comp in od["companies_complained"]
+                        or comp in od["companies_tried"]
+                    )
+                    if is_present:
+                        dot = "\U0001f7e2" if comp in od["companies_praised"] else "\U0001f7e1"
+                        if latest and latest >= _30d_ago:
+                            label = f"{dot} {count} \U0001f525"
+                        elif latest and latest < _180d_ago:
+                            label = f"\U0001f7e4 {count}"
+                        else:
+                            label = f"{dot} {count}"
+                        cell_key = f"{opp}|{comp}"
+                        st.button(
+                            label, key=f"mx_{opp}_{comp}",
+                            on_click=_mx_click, args=(cell_key,),
+                            use_container_width=True,
+                        )
                     else:
-                        st.markdown("🔴")
+                        st.markdown("\U0001f534")
+
+        sel = st.session_state.get("matrix_sel")
+        if sel and "|" in sel:
+            sel_opp, sel_comp = sel.split("|", 1)
+            if sel_opp in active_opps:
+                cell_sigs = sorted(
+                    [
+                        s for s in active_opps[sel_opp]["signals"]
+                        if sel_comp in s.get("companies_mentioned", [])
+                    ],
+                    key=lambda x: x.get("post_date", ""),
+                    reverse=True,
+                )
+                if cell_sigs:
+                    with st.expander(
+                        f"Signals: {sel_opp} \u00d7 {sel_comp}", expanded=True
+                    ):
+                        for sig in cell_sigs[:10]:
+                            sig_title = sig.get("title", "")[:100] or sig.get("text", "")[:100]
+                            sig_url = sig.get("url", "")
+                            sig_src = _source_badge(sig.get("source", ""))
+                            sig_date = sig.get("post_date", "")
+                            sig_why = _relevance_sentence(sig)
+                            hl = f"[{sig_title}]({sig_url})" if sig_url else sig_title
+                            st.markdown(f"`{sig_src}` {hl}")
+                            st.caption(f"{sig_date} \u00b7 _{sig_why}_")
     else:
         st.caption("Not enough data to build the matrix yet.")
 
-    # --- RANKED: WHAT TO BUILD ---
-    st.markdown("#### What to Build")
-    sorted_opps = sorted(opportunity_data.items(),
-                         key=lambda x: (x[1]["confidence"], x[1]["evidence"]), reverse=True)
-
-    conf_help = ("Confidence starts at 30%. +6% per unique source type. "
-                 "+5% per signal beyond the first (up to +15%). +10% bonus if G2 data exists. Capped at 95%.")
-
-    for opp, od in sorted_opps:
-        if od["evidence"] < 2:
-            continue
-
-        conf = od["confidence"]
-        conf_color = "🔴" if conf >= 70 else ("🟡" if conf >= 40 else "🟢")
-        praised_comps = sorted(od["companies_praised"])
-        no_coverage = [c for c in top_companies
-                       if c not in od["companies_praised"]
-                       and c not in od["companies_complained"]
-                       and c not in od["companies_tried"]]
-
-        with_it = ", ".join(praised_comps[:5]) if praised_comps else "None yet"
-        without_it = ", ".join(no_coverage[:5]) if no_coverage else "All have attempted"
-
-        with st.container(border=True):
-            tooltip = FEATURE_TOOLTIPS.get(opp, "")
-            st.markdown(f"{conf_color} **{opp}** — Confidence: {conf}%",
-                        help=f"{tooltip}\n\n{conf_help}" if tooltip else conf_help)
-            st.markdown(
-                f"**Market evidence:** {od['evidence']} signals mention this gap. "
-                f"Competitors with this: {with_it}. "
-                f"Competitors without: {without_it}."
-            )
-
-            # Top 3 supporting signals
-            scored_signals = sorted(od["signals"], key=lambda x: _relevance_score(x), reverse=True)
-            top3 = [s for s in scored_signals if _is_display_relevant(s) and _relevance_sentence(s)][:3]
-            for sig in top3:
-                sig_title = sig.get("title", "")[:100] or sig.get("text", "")[:100]
-                sig_url = sig.get("url", "")
-                sig_source = sig.get("source", "")
-                sig_source_label = _source_badge(sig_source)
-                sig_reason = _relevance_sentence(sig)
-
-                headline = f"[{sig_title}]({sig_url})" if sig_url else sig_title
-                st.markdown(f"  `{sig_source_label}` {headline}")
-                st.caption(f"  _{sig_reason}_")
-
-            # Show more evidence
-            remaining = [s for s in scored_signals[3:] if _is_display_relevant(s) and _relevance_sentence(s)][:12]
-            if remaining:
-                with st.expander(f"Show {len(remaining)} more evidence"):
-                    for sig in remaining:
-                        sig_title = sig.get("title", "")[:100] or sig.get("text", "")[:100]
-                        sig_url = sig.get("url", "")
-                        sig_source = sig.get("source", "")
-                        sig_source_label = _source_badge(sig_source)
-                        sig_reason = _relevance_sentence(sig)
-
-                        headline = f"[{sig_title}]({sig_url})" if sig_url else sig_title
-                        st.markdown(f"`{sig_source_label}` {headline}")
-                        st.caption(f"_{sig_reason}_")
 
 
 # ---------------------------------------------------------------------------
