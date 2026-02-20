@@ -408,13 +408,9 @@ with st.expander("How to use this dashboard"):
     st.markdown("""
 **Live Feed** — Real-time stream of every signal from the GEO/AEO market. Filter by company, source, sentiment, or signal type.
 
-**Sentiment Map** — How the market talks about each tool. Sentiment shifts before market share shifts.
+**Competitors** — One card per competitor with momentum, sentiment, and top signals this week. Expand for more.
 
-**Feature Gap Analysis** — Features the market wants that are missing or poorly executed. Your product research input.
-
-**Company Tracker** — Every player ranked by conversation volume with week-over-week momentum.
-
-**Roadmap Signals** — Strategic product opportunities ranked by market evidence. The competitive gap matrix shows exactly where to build.
+**Roadmap** — Competitive gap matrix and ranked product opportunities with supporting evidence.
 
 Data refreshes every 6 hours from Reddit, Hacker News, G2 reviews, Product Hunt, Google News, and trade press.
 """)
@@ -678,15 +674,13 @@ SOURCE REFERENCE (for [S1] etc. citations):
 
 
 # ---------------------------------------------------------------------------
-# Tabs (5 tabs — Source Radar removed, merged into header)
+# Tabs (3 tabs)
 # ---------------------------------------------------------------------------
 
 tabs = st.tabs([
     "🔴 Live Feed",
-    "😀 Sentiment Map",
-    "🔧 Feature Gap Analysis",
-    "🏢 Company Tracker",
-    "🎯 Roadmap Signals",
+    "🏢 Competitors",
+    "🎯 Roadmap",
 ])
 
 
@@ -696,14 +690,11 @@ tabs = st.tabs([
 with tabs[0]:
     st.markdown("### Live Feed")
     st.markdown(
-        "This feed pulls from Reddit, Hacker News, G2 reviews, Product Hunt, and trade press. "
-        "Ranked by relevance, recency, and social signal strength. Use it to stay current on what "
-        "practitioners, buyers, and analysts are saying about every tool in the space."
+        "Real-time stream from Reddit, Hacker News, G2, Product Hunt, and trade press. "
+        "Ranked by relevance, recency, and social signal strength."
     )
 
-    # Filters
     fc1, fc2, fc3, fc4 = st.columns(4)
-
     all_companies_in_data = sorted(set(
         c for i in insights for c in i.get("companies_mentioned", [])
     ))
@@ -720,7 +711,6 @@ with tabs[0]:
                           "funding_news", "product_launch"]
         filter_signal = st.selectbox("Signal", signal_options, key="feed_signal")
 
-    # Add Competitor
     with st.expander("Add a new competitor to monitor"):
         new_comp_name = st.text_input("Company name", key="new_comp_name")
         new_comp_aliases = st.text_input("Aliases (comma-separated)", key="new_comp_aliases",
@@ -739,7 +729,6 @@ with tabs[0]:
                 st.cache_data.clear()
                 st.success(f"Now monitoring **{name}**. Will appear in next pipeline run.")
 
-    # Apply filters
     filtered = insights
     if filter_company != "All":
         filtered = [i for i in filtered if filter_company in i.get("companies_mentioned", [])]
@@ -753,12 +742,9 @@ with tabs[0]:
         else:
             filtered = [i for i in filtered if i.get(f"is_{filter_signal}")]
 
-    # Sort by relevance score
     filtered.sort(key=lambda x: _relevance_score(x), reverse=True)
-
     st.caption(f"Showing {min(25, len(filtered))} of {len(filtered)} signals (sorted by relevance)")
 
-    # Render cards
     new_companies = _get_new_companies(json.dumps(insights))
     page_size = 25
     for idx, insight in enumerate(filtered[:page_size]):
@@ -771,13 +757,9 @@ with tabs[0]:
         url = insight.get("url", "")
         date = insight.get("post_date", "")
         time_label = _time_ago(date)
-
-        # Relevance sentence
         rel_sentence = _relevance_sentence(insight)
-        # Keywords
         kws = _keywords_for_card(insight)
 
-        # Company badges
         company_badges = ""
         for comp in companies[:4]:
             is_own = comp in own_brands
@@ -785,11 +767,8 @@ with tabs[0]:
             label = f"**{comp}**" if is_own else comp
             new_badge = " 🆕" if new else ""
             company_badges += f" `{label}{new_badge}`"
-
-        # Keyword tags
         kw_str = " ".join(f"`{k}`" for k in kws)
 
-        # Card
         with st.container(border=True):
             st.markdown(f"{icon} {badge} **{title}**")
             if rel_sentence:
@@ -809,341 +788,162 @@ with tabs[0]:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 2: SENTIMENT MAP
+# TAB 2: COMPETITORS
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tabs[1]:
-    st.markdown("### Sentiment Map")
+    st.markdown("### Competitors")
     st.markdown(
-        "How the market talks about each tool, based on what real users, buyers, and analysts are actually saying. "
-        "Positive means people recommend it or praise specific features. Negative means complaints, switching signals, "
-        "or warnings to others."
-    )
-    st.info("Sentiment shifts before market share shifts. A tool going negative is an opportunity.")
-
-    # Build company sentiment data
-    company_sentiment = defaultdict(lambda: {"positive": 0, "negative": 0, "neutral": 0,
-                                              "total": 0, "quotes": []})
-    for i in insights:
-        for comp in i.get("companies_mentioned", []):
-            s = i.get("sentiment", "neutral")
-            company_sentiment[comp][s] += 1
-            company_sentiment[comp]["total"] += 1
-            if len(company_sentiment[comp]["quotes"]) < 6:
-                company_sentiment[comp]["quotes"].append({
-                    "text": i.get("text", "")[:250],
-                    "sentiment": s,
-                    "sentiment_reason": i.get("sentiment_reason", ""),
-                    "source": i.get("source", ""),
-                    "date": i.get("post_date", ""),
-                    "url": i.get("url", ""),
-                })
-
-    if not company_sentiment:
-        st.info("No company mentions found in data.")
-    else:
-        sort_by = st.radio("Sort by", ["Most mentioned", "Most negative", "Most positive"],
-                           horizontal=True, key="sentiment_sort")
-
-        sorted_companies = sorted(company_sentiment.items(), key=lambda x: x[1]["total"], reverse=True)
-        if sort_by == "Most negative":
-            # Sort by negative PERCENTAGE, not count
-            sorted_companies.sort(
-                key=lambda x: x[1]["negative"] / max(x[1]["total"], 1),
-                reverse=True
-            )
-        elif sort_by == "Most positive":
-            sorted_companies.sort(
-                key=lambda x: x[1]["positive"] / max(x[1]["total"], 1),
-                reverse=True
-            )
-
-        for comp, data in sorted_companies[:20]:
-            total = data["total"]
-            pos_pct = round(data["positive"] * 100 / max(total, 1))
-            neg_pct = round(data["negative"] * 100 / max(total, 1))
-            neu_pct = 100 - pos_pct - neg_pct
-
-            is_own = comp in own_brands
-            name_display = f"**{comp}** (own brand)" if is_own else f"**{comp}**"
-
-            with st.expander(f"{name_display} — {total} mentions · 🟢{pos_pct}% 🔴{neg_pct}% ⚪{neu_pct}%"):
-                # Sentiment bar
-                bar_data = pd.DataFrame([
-                    {"Sentiment": "Positive", "Count": data["positive"]},
-                    {"Sentiment": "Negative", "Count": data["negative"]},
-                    {"Sentiment": "Neutral", "Count": data["neutral"]},
-                ])
-                chart = alt.Chart(bar_data).mark_bar().encode(
-                    x=alt.X("Count:Q"),
-                    y=alt.Y("Sentiment:N", sort=["Positive", "Neutral", "Negative"]),
-                    color=alt.Color("Sentiment:N", scale=alt.Scale(
-                        domain=["Positive", "Negative", "Neutral"],
-                        range=["#4CAF50", "#F44336", "#9E9E9E"]
-                    )),
-                ).properties(height=100)
-                st.altair_chart(chart, use_container_width=True)
-
-                # Quotes in card format
-                for q in data["quotes"]:
-                    badge = _sentiment_badge(q["sentiment"])
-                    link = f" · [Source]({q['url']})" if q.get("url") else ""
-                    reason = f" · _{q['sentiment_reason']}_" if q.get("sentiment_reason") and "No strong" not in q.get("sentiment_reason", "") else ""
-                    st.markdown(f"> {badge} {q['text']}")
-                    st.caption(f"{q['source']} · {q['date']}{reason}{link}")
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 3: FEATURE GAP ANALYSIS
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-with tabs[2]:
-    st.markdown("### Feature Gap Analysis")
-    st.markdown(
-        "Features the market is actively requesting or complaining about across all GEO/AEO tools. "
-        "This is your product research, ranked by how often a gap is mentioned and how frustrated "
-        "people are about it."
+        "One card per competitor. Momentum, sentiment, and the most relevant signals this week."
     )
 
-    feature_requests = [i for i in insights if i.get("is_feature_request") or "complaint" in i.get("entity_tags", [])]
-
-    GAP_THEMES = {
-        "Measurement & Analytics": ["dashboard", "reporting", "analytics", "metrics", "kpi", "roi",
-                                    "tracking", "measurement", "benchmark", "share of voice"],
-        "Reporting & Export": ["report", "export", "csv", "pdf", "presentation", "visualization"],
-        "Integrations & API": ["api", "integration", "plugin", "connect", "sync", "webhook",
-                               "zapier", "slack", "google analytics", "hubspot"],
-        "Pricing & Value": ["pricing", "price", "cost", "expensive", "affordable", "free tier",
-                            "free plan", "trial", "subscription", "enterprise"],
-        "Accuracy & Reliability": ["accuracy", "accurate", "inaccurate", "wrong", "hallucinate",
-                                   "false", "misleading", "reliable", "unreliable"],
-        "Actionable Guidance": ["recommendation", "suggest", "actionable", "insights",
-                                "next steps", "what to do", "optimize", "improve", "specific advice"],
-        "Workflow & Automation": ["workflow", "automation", "alert", "notification", "schedule",
-                                 "bulk", "team", "collaboration", "permission"],
-    }
-
-    # Build gap data with company-level detail
-    gap_data = defaultdict(lambda: {
-        "mentions": 0, "sentiment": defaultdict(int),
-        "companies_with_gap": set(),  # complained about having this feature poorly
-        "companies_requested": set(),  # requested for this company
-        "quotes": [],
-    })
-
-    for i in feature_requests:
-        text_lower = (i.get("text", "") + " " + i.get("title", "")).lower()
-        companies = i.get("companies_mentioned", [])
-        is_complaint = "complaint" in i.get("entity_tags", [])
-        sent = i.get("sentiment", "neutral")
-
-        for theme, keywords in GAP_THEMES.items():
-            if any(kw in text_lower for kw in keywords):
-                gd = gap_data[theme]
-                gd["mentions"] += 1
-                gd["sentiment"][sent] += 1
-
-                for comp in companies:
-                    if is_complaint:
-                        gd["companies_with_gap"].add(comp)
-                    else:
-                        gd["companies_requested"].add(comp)
-
-                if len(gd["quotes"]) < 4:
-                    gd["quotes"].append({
-                        "text": i.get("text", "")[:250],
-                        "sentiment": sent,
-                        "companies": companies,
-                        "source": i.get("source", ""),
-                    })
-
-    if not gap_data:
-        st.info("No feature gaps found yet.")
-    else:
-        # Summary table
-        table_rows = []
-        sorted_gaps = sorted(gap_data.items(), key=lambda x: x[1]["mentions"], reverse=True)
-
-        for theme, gd in sorted_gaps:
-            neg = gd["sentiment"].get("negative", 0)
-            pos = gd["sentiment"].get("positive", 0)
-            neu = gd["sentiment"].get("neutral", 0)
-            total = gd["mentions"]
-            neg_pct = round(neg * 100 / max(total, 1))
-            gap_companies = sorted(gd["companies_with_gap"])
-            requested_by = sorted(gd["companies_requested"])
-
-            table_rows.append({
-                "Feature Gap": theme,
-                "Mentions": total,
-                "Negative %": f"{neg_pct}%",
-                "Requested By": ", ".join(requested_by[:5]) or "General",
-                "Poorly Executed At": ", ".join(gap_companies[:5]) or "None cited",
-            })
-
-        st.dataframe(pd.DataFrame(table_rows), use_container_width=True, hide_index=True)
-
-        # Detail expanders
-        st.markdown("#### Detail")
-        for theme, gd in sorted_gaps:
-            if gd["mentions"] < 2:
-                continue
-            neg = gd["sentiment"].get("negative", 0)
-            pos = gd["sentiment"].get("positive", 0)
-
-            with st.expander(f"**{theme}** — {gd['mentions']} mentions · 🔴{neg} negative · 🟢{pos} positive"):
-                gap_comps = sorted(gd["companies_with_gap"])
-                req_comps = sorted(gd["companies_requested"])
-                if gap_comps:
-                    st.markdown(f"**Poorly executed at:** {', '.join(gap_comps)}")
-                if req_comps:
-                    st.markdown(f"**Requested by users of:** {', '.join(req_comps)}")
-
-                for q in gd["quotes"]:
-                    badge = _sentiment_badge(q["sentiment"])
-                    comp_str = ", ".join(q["companies"]) if q["companies"] else ""
-                    st.markdown(f"> {badge} {q['text']}")
-                    meta = q["source"]
-                    if comp_str:
-                        meta += f" · {comp_str}"
-                    st.caption(meta)
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 4: COMPANY TRACKER
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-with tabs[3]:
-    st.markdown("### Company Tracker")
-    st.markdown(
-        "Every company in the GEO/AEO space ranked by how much the market is talking about them. "
-        "Velocity shows momentum. Rising means gaining attention, falling means losing it."
-    )
-
-    # Build company stats
-    company_stats = defaultdict(lambda: {
-        "mentions_total": 0, "mentions_this_week": 0,
-        "pos": 0, "neg": 0, "neu": 0,
-        "latest_date": "", "latest_title": "", "latest_url": "",
-        "is_own_brand": False,
-    })
-
+    # Build per-company data
     now = datetime.now()
-    week_ago = (now - timedelta(days=7)).strftime("%Y-%m-%d")
+    week_ago_str = (now - timedelta(days=7)).strftime("%Y-%m-%d")
+
+    comp_data_map = defaultdict(lambda: {
+        "total": 0, "this_week": 0,
+        "pos": 0, "neg": 0, "neu": 0,
+        "signals": [],  # all signals for this company, scored
+    })
 
     for i in insights:
         for comp in i.get("companies_mentioned", []):
-            cs = company_stats[comp]
-            cs["mentions_total"] += 1
-            date = i.get("post_date", "")
-            if date >= week_ago:
-                cs["mentions_this_week"] += 1
-            if date > cs["latest_date"]:
-                cs["latest_date"] = date
-                cs["latest_title"] = i.get("title", "")[:70] or i.get("text", "")[:70]
-                cs["latest_url"] = i.get("url", "")
-
+            cd = comp_data_map[comp]
+            cd["total"] += 1
             s = i.get("sentiment", "neutral")
-            cs[{"positive": "pos", "negative": "neg"}.get(s, "neu")] += 1
-            cs["is_own_brand"] = comp in own_brands
+            cd[{"positive": "pos", "negative": "neg"}.get(s, "neu")] += 1
+            date = i.get("post_date", "")
+            if date >= week_ago_str:
+                cd["this_week"] += 1
+            cd["signals"].append(i)
 
-    # WoW delta from trends
+    # WoW deltas
     wow_deltas = {}
     if trends:
         for name, d in trends.get("company_trends", {}).items():
             wow_deltas[name] = d.get("delta_pct", 0)
 
-    if not company_stats:
-        st.info("No company mentions found.")
-    else:
-        rows = []
-        for comp, cs in sorted(company_stats.items(), key=lambda x: x[1]["mentions_total"], reverse=True):
-            total = cs["mentions_total"]
-            pos_pct = round(cs["pos"] * 100 / max(total, 1))
-            neg_pct = round(cs["neg"] * 100 / max(total, 1))
-            delta = wow_deltas.get(comp, 0)
+    # Sort by total mentions
+    sorted_comps = sorted(comp_data_map.items(), key=lambda x: x[1]["total"], reverse=True)
 
-            # Color indicator for delta
-            if delta > 20:
-                delta_display = f"🟢 +{delta:.0f}%"
-            elif delta < -20:
-                delta_display = f"🔴 {delta:.0f}%"
-            elif delta != 0:
-                delta_display = f"⚪ {delta:+.0f}%"
-            else:
-                delta_display = "⚪ —"
+    for comp, cd in sorted_comps:
+        total = cd["total"]
+        if total < 2:
+            continue
 
-            is_new = cs["mentions_this_week"] == cs["mentions_total"] and cs["mentions_total"] <= 3
-            new_badge = " 🆕" if is_new else ""
-            own_badge = " ⭐" if cs["is_own_brand"] else ""
+        pos_pct = round(cd["pos"] * 100 / max(total, 1))
+        neg_pct = round(cd["neg"] * 100 / max(total, 1))
+        delta = wow_deltas.get(comp, 0)
 
-            # Positioning from company metadata
-            meta = company_meta.get(comp, {})
-            positioning = _company_positioning(meta) if meta else ""
+        # Momentum indicator
+        if delta > 20:
+            momentum = f"🟢 +{delta:.0f}% WoW"
+        elif delta < -20:
+            momentum = f"🔴 {delta:.0f}% WoW"
+        elif delta != 0:
+            momentum = f"⚪ {delta:+.0f}% WoW"
+        else:
+            momentum = "⚪ Stable"
 
-            rows.append({
-                "Company": f"{comp}{own_badge}{new_badge}",
-                "Category": positioning,
-                "This Week": cs["mentions_this_week"],
-                "Total": total,
-                "Velocity": delta_display,
-                "Sentiment": f"🟢{pos_pct}% 🔴{neg_pct}%",
-                "Latest": cs["latest_title"],
-                "Link": cs["latest_url"],
-            })
+        is_own = comp in own_brands
+        meta = company_meta.get(comp, {})
+        positioning = _company_positioning(meta) if meta else ""
+        own_tag = " ⭐ own brand" if is_own else ""
 
-        df = pd.DataFrame(rows)
-        st.dataframe(
-            df,
-            use_container_width=True,
-            hide_index=True,
-            height=600,
-            column_config={
-                "Link": st.column_config.LinkColumn("Latest Source", display_text="Open"),
-            },
-        )
+        with st.container(border=True):
+            # Header row
+            hc1, hc2, hc3 = st.columns([3, 2, 2])
+            with hc1:
+                st.markdown(f"**{comp}**{own_tag}")
+                if positioning:
+                    st.caption(positioning)
+            with hc2:
+                st.markdown(f"{momentum}")
+            with hc3:
+                st.markdown(f"🟢{pos_pct}% 🔴{neg_pct}% · {total} mentions")
+
+            # Top 3 most relevant signals this week
+            week_signals = [s for s in cd["signals"] if s.get("post_date", "") >= week_ago_str]
+            if not week_signals:
+                week_signals = cd["signals"]
+            week_signals.sort(key=lambda x: _relevance_score(x), reverse=True)
+
+            top_signals = week_signals[:3]
+            for sig in top_signals:
+                sig_title = sig.get("title", "")[:100] or sig.get("text", "")[:100]
+                sig_url = sig.get("url", "")
+                sig_source = sig.get("source", "")
+                sig_sentiment = sig.get("sentiment", "neutral")
+                sig_badge = _sentiment_badge(sig_sentiment)
+                sig_icon = _source_icon(sig_source)
+                sig_reason = _relevance_sentence(sig)
+
+                headline = f"[{sig_title}]({sig_url})" if sig_url else sig_title
+                st.markdown(f"  {sig_icon} {sig_badge} {headline}")
+                if sig_reason:
+                    st.caption(f"  {sig_reason} · {sig_source} · {_time_ago(sig.get('post_date', ''))}")
+                else:
+                    st.caption(f"  {sig_source} · {_time_ago(sig.get('post_date', ''))}")
+
+            # Show more expander
+            remaining = week_signals[3:15]
+            if remaining:
+                with st.expander(f"Show {len(remaining)} more signals"):
+                    for sig in remaining:
+                        sig_title = sig.get("title", "")[:100] or sig.get("text", "")[:100]
+                        sig_url = sig.get("url", "")
+                        sig_source = sig.get("source", "")
+                        sig_badge = _sentiment_badge(sig.get("sentiment", "neutral"))
+                        sig_icon = _source_icon(sig_source)
+                        sig_reason = _relevance_sentence(sig)
+
+                        headline = f"[{sig_title}]({sig_url})" if sig_url else sig_title
+                        st.markdown(f"{sig_icon} {sig_badge} {headline}")
+                        reason_parts = [sig_reason] if sig_reason else []
+                        reason_parts.append(sig_source)
+                        reason_parts.append(_time_ago(sig.get("post_date", "")))
+                        st.caption(" · ".join(p for p in reason_parts if p))
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 5: ROADMAP SIGNALS
+# TAB 3: ROADMAP
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-with tabs[4]:
-    st.markdown("### Roadmap Signals")
+with tabs[2]:
+    st.markdown("### Roadmap")
     st.markdown(
-        "Strategic product opportunities ranked by market evidence. Each signal represents a gap, "
-        "something buyers are asking for that no current tool does well. The higher the confidence "
-        "score, the more evidence exists across multiple independent sources."
+        "Product opportunities ranked by market evidence. The gap matrix shows who has what. "
+        "Below it: what to build, why, and the signals backing each recommendation."
     )
 
-    st.info("These are the features ProRata should evaluate for Gist, ranked by market demand and competitive gap.")
-
-    # Opportunity themes
     OPPORTUNITY_THEMES = {
         "Real-time Tracking": ["real-time", "real time", "live tracking", "live monitoring",
-                                        "instant", "continuous"],
+                               "instant", "continuous"],
         "Multi-LLM Coverage": ["multiple llm", "all llm", "perplexity and chatgpt", "cross-platform",
                                "every ai", "all ai", "multi-model"],
         "Actionable Recs": ["actionable", "what to do", "next steps", "recommendations",
-                                       "how to improve", "specific advice"],
+                            "how to improve", "specific advice"],
         "ROI Measurement": ["roi", "return on investment", "revenue impact", "attribution",
-                           "prove value", "business impact", "conversion"],
+                            "prove value", "business impact", "conversion"],
         "Historical Trends": ["historical", "trend", "over time", "change over", "compare week",
-                             "month over month", "trajectory"],
+                              "month over month", "trajectory"],
         "Comp. Benchmarking": ["benchmark", "compare to competitor", "competitive",
-                                    "industry average", "how do we compare", "vs competitor"],
+                               "industry average", "how do we compare", "vs competitor"],
         "Content Guidance": ["what to write", "content recommendations", "topic suggestion",
-                                         "content gap", "optimization guide"],
+                             "content gap", "optimization guide"],
         "Brand Safety": ["brand safety", "misinformation", "hallucination about",
-                              "wrong information", "incorrect", "ai says wrong"],
+                         "wrong information", "incorrect", "ai says wrong"],
         "Integrations": ["integrate", "integration", "connect to", "plugin",
-                                           "works with", "api", "google analytics", "hubspot"],
+                         "works with", "api", "google analytics", "hubspot"],
         "Prompt Influence": ["influence prompt", "shape answer", "control what ai says",
-                           "optimize prompt", "prompt engineering", "answer shaping"],
+                             "optimize prompt", "prompt engineering", "answer shaping"],
     }
 
-    # Build opportunity data with per-company tracking
+    # Build opportunity data with per-company tracking and full signal refs
     opportunity_data = defaultdict(lambda: {
         "complaints": 0, "requests": 0, "praise": 0,
         "evidence": 0, "companies_tried": set(),
         "companies_praised": set(), "companies_complained": set(),
-        "quotes": [], "confidence": 0,
+        "signals": [], "confidence": 0,
     })
 
     for i in insights:
@@ -1168,15 +968,8 @@ with tabs[4]:
                         od["companies_praised"].add(c)
                 for c in companies:
                     od["companies_tried"].add(c)
-                if len(od["quotes"]) < 4:
-                    od["quotes"].append({
-                        "text": i.get("text", "")[:250],
-                        "sentiment": sentiment,
-                        "source": i.get("source", ""),
-                        "companies": companies,
-                    })
+                od["signals"].append(i)
 
-    # Score
     for opp, od in opportunity_data.items():
         pain = od["complaints"] + od["requests"]
         satisfaction = od["praise"]
@@ -1184,16 +977,14 @@ with tabs[4]:
 
     # --- COMPETITIVE GAP MATRIX ---
     st.markdown("#### Competitive Gap Matrix")
-    st.caption("Which tools address which market needs. Green = has it (praised). Yellow = attempted (complaints exist). Red = not addressed.")
+    st.caption("🟢 Has it (praised) · 🟡 Attempted (complaints exist) · 🔴 Not addressed")
 
-    # Top companies by mentions for matrix columns
     comp_mention_counts = Counter()
     for i in insights:
         for c in i.get("companies_mentioned", []):
             comp_mention_counts[c] += 1
     top_companies = [c for c, _ in comp_mention_counts.most_common(10)]
 
-    # Features with enough evidence
     active_opps = {opp: od for opp, od in opportunity_data.items() if od["evidence"] >= 2}
     sorted_opp_names = sorted(active_opps.keys(),
                                key=lambda x: active_opps[x]["evidence"], reverse=True)
@@ -1214,52 +1005,86 @@ with tabs[4]:
                     row[comp] = "🔴"
             matrix_rows.append(row)
 
-        matrix_df = pd.DataFrame(matrix_rows)
-        st.dataframe(matrix_df, use_container_width=True, hide_index=True)
+        st.dataframe(pd.DataFrame(matrix_rows), use_container_width=True, hide_index=True)
     else:
         st.caption("Not enough data to build the matrix yet.")
 
-    # --- RANKED SIGNAL CARDS ---
-    st.markdown("#### Opportunity Signals")
-    if not opportunity_data:
-        st.info("Not enough data to identify opportunities. Run more scrapes.")
-    else:
-        sorted_opps = sorted(opportunity_data.items(),
-                             key=lambda x: (x[1]["confidence"], x[1]["evidence"]), reverse=True)
+    # --- RANKED: WHAT TO BUILD ---
+    st.markdown("#### What to Build")
+    sorted_opps = sorted(opportunity_data.items(),
+                         key=lambda x: (x[1]["confidence"], x[1]["evidence"]), reverse=True)
 
-        for opp, od in sorted_opps:
-            if od["evidence"] < 2:
-                continue
+    for opp, od in sorted_opps:
+        if od["evidence"] < 2:
+            continue
 
-            companies = sorted(od["companies_tried"])
-            conf = od["confidence"]
-            conf_color = "🔴" if conf >= 70 else ("🟡" if conf >= 40 else "🟢")
+        conf = od["confidence"]
+        conf_color = "🔴" if conf >= 70 else ("🟡" if conf >= 40 else "🟢")
+        asked = od["complaints"] + od["requests"]
+        praised_comps = sorted(od["companies_praised"])
+        complained_comps = sorted(od["companies_complained"])
+        no_coverage = [c for c in top_companies
+                       if c not in od["companies_praised"]
+                       and c not in od["companies_complained"]
+                       and c not in od["companies_tried"]]
 
-            asked = od["complaints"] + od["requests"]
-            tried = len(od["companies_tried"])
-            neg_impl = od["complaints"]
+        # Build rationale from data
+        rationale_parts = []
+        if asked:
+            rationale_parts.append(f"{asked} market signals asking for this")
+        if complained_comps:
+            rationale_parts.append(f"negative reviews at {', '.join(complained_comps[:3])}")
+        if no_coverage:
+            rationale_parts.append(f"no coverage from {', '.join(no_coverage[:3])}")
+        elif od["praise"] == 0:
+            rationale_parts.append("no tool praised for this yet")
+        rationale = ". ".join(rationale_parts) + "." if rationale_parts else ""
 
-            with st.expander(
-                f"{conf_color} **{opp}** — {asked} people asked · "
-                f"{tried} tools tried · {neg_impl} negative reviews · "
-                f"Confidence: {conf}%"
-            ):
-                praised = sorted(od["companies_praised"])
-                complained = sorted(od["companies_complained"])
-                if praised:
-                    st.markdown(f"**Praised at:** {', '.join(praised)}")
-                if complained:
-                    st.markdown(f"**Complaints about:** {', '.join(complained)}")
-                st.markdown(f"**Praise for existing solutions:** {od['praise']} (low = bigger gap)")
+        with st.container(border=True):
+            st.markdown(f"{conf_color} **{opp}** — Confidence: {conf}%")
+            if rationale:
+                st.markdown(f"**Why build it:** {rationale}")
 
-                for q in od["quotes"]:
-                    badge = _sentiment_badge(q["sentiment"])
-                    comp_str = ", ".join(q["companies"]) if q["companies"] else ""
-                    st.markdown(f"> {badge} {q['text']}")
-                    meta = q["source"]
-                    if comp_str:
-                        meta += f" · {comp_str}"
-                    st.caption(meta)
+            # Has it / Doesn't
+            has_it = ", ".join(praised_comps[:5]) if praised_comps else "None"
+            doesnt = ", ".join(no_coverage[:5]) if no_coverage else "All have attempted"
+            st.caption(f"Has it (praised): {has_it} · Not addressed: {doesnt}")
+
+            # Top 3 supporting signals
+            scored_signals = sorted(od["signals"], key=lambda x: _relevance_score(x), reverse=True)
+            top3 = scored_signals[:3]
+            for sig in top3:
+                sig_title = sig.get("title", "")[:100] or sig.get("text", "")[:100]
+                sig_url = sig.get("url", "")
+                sig_source = sig.get("source", "")
+                sig_badge = _sentiment_badge(sig.get("sentiment", "neutral"))
+                sig_icon = _source_icon(sig_source)
+                sig_reason = _relevance_sentence(sig)
+
+                headline = f"[{sig_title}]({sig_url})" if sig_url else sig_title
+                st.markdown(f"  {sig_icon} {sig_badge} {headline}")
+                if sig_reason:
+                    st.caption(f"  {sig_reason} · {sig_source}")
+                else:
+                    st.caption(f"  {sig_source}")
+
+            # Show more evidence
+            remaining = scored_signals[3:15]
+            if remaining:
+                with st.expander(f"Show {len(remaining)} more evidence"):
+                    for sig in remaining:
+                        sig_title = sig.get("title", "")[:100] or sig.get("text", "")[:100]
+                        sig_url = sig.get("url", "")
+                        sig_source = sig.get("source", "")
+                        sig_badge = _sentiment_badge(sig.get("sentiment", "neutral"))
+                        sig_icon = _source_icon(sig_source)
+                        sig_reason = _relevance_sentence(sig)
+
+                        headline = f"[{sig_title}]({sig_url})" if sig_url else sig_title
+                        st.markdown(f"{sig_icon} {sig_badge} {headline}")
+                        reason_parts = [sig_reason] if sig_reason else []
+                        reason_parts.append(sig_source)
+                        st.caption(" · ".join(p for p in reason_parts if p))
 
 
 # ---------------------------------------------------------------------------
