@@ -63,15 +63,19 @@ def _load_companies():
 # ---------------------------------------------------------------------------
 
 GEO_CONTEXT = [
-    "geo", "aeo", "generative engine optimization", "answer engine optimization",
-    "ai search", "ai visibility", "ai answer", "ai citation", "ai overview",
-    "brand visibility", "share of voice", "share of answer",
-    "llm optimization", "llm brand", "llm monitoring",
-    "perplexity", "chatgpt search", "searchgpt", "gemini search",
-    "seo", "search engine optimization", "organic search",
+    "geo", "aeo", "ai search", "llm", "chatgpt", "gemini",
+    "perplexity", "claude", "generative engine", "answer engine",
+    "ai visibility", "ai overview", "seo", "search optimization",
+    "brand visibility", "ai citation", "search generative",
     "content optimization", "structured data", "schema markup",
-    "zero click", "zero-click", "ai overviews",
+    "featured snippet", "knowledge panel", "ai recommend",
+    "brand mention", "citation", "visibility score",
+    "share of voice", "share of answer", "zero click",
+    "ai overviews", "searchgpt",
 ]
+
+# Short GEO terms that need word-boundary matching to avoid false positives
+_GEO_SHORT_TERMS = {"geo", "aeo", "seo", "llm"}
 
 # Sources inherently about GEO/AEO tools (company mention alone is valid)
 GEO_SOURCES = {"G2", "Product Hunt"}
@@ -84,16 +88,35 @@ NOISE_PHRASES = [
     "use my affiliate", "promo code", "discount code",
 ]
 
+# Hard exclusion: always reject these title patterns
 TITLE_BLOCKLIST = re.compile(
-    r"^\s*\[(dead|flagged|deleted)\]\s*$"
+    r"\[(dead|flagged|deleted)\]"
     r"|who is hiring"
     r"|who.s hiring"
-    r"|ask hn:.*hiring"
+    r"|ask hn:"
     r"|hiring thread"
     r"|freelancer.*seeking"
-    r"|monthly.*job",
+    r"|monthly.*job"
+    r"|\btesla\b",
     re.I,
 )
+
+# Conditional exclusion: reject unless title also contains a GEO term
+_CONDITIONAL_BLOCKLIST = re.compile(
+    r"\bmicrosoft\b|\bapple\b|\bnetflix\b", re.I
+)
+
+
+def _has_geo_terms(text):
+    """Check if text contains any GEO context term (word-boundary safe for short terms)."""
+    t = text.lower()
+    for term in GEO_CONTEXT:
+        if term in _GEO_SHORT_TERMS:
+            if re.search(r"\b" + re.escape(term) + r"\b", t):
+                return True
+        elif term in t:
+            return True
+    return False
 
 # ---------------------------------------------------------------------------
 # Sentiment detection
@@ -227,7 +250,7 @@ def enrich_post(post, alias_map, own_brands, context_required_names=None):
     text_lower = text.lower()
 
     # Pre-check GEO context for context_required validation
-    has_geo_context = any(term in text_lower for term in GEO_CONTEXT)
+    has_geo_context = _has_geo_terms(text)
 
     # Company mentions
     companies_mentioned = set()
@@ -308,7 +331,7 @@ def enrich_post(post, alias_map, own_brands, context_required_names=None):
 
 
 def run_enrichment(since_date=None):
-    """Load all scraped data, filter for relevance, enrich, save."""
+    """Load all scraped data, filter for relevance, enrich, deduplicate, save."""
     _, alias_map, own_brands, all_aliases, context_required = _load_companies()
     company_terms = set(alias_map.keys())
 
@@ -327,7 +350,7 @@ def run_enrichment(since_date=None):
 
     print(f"  Total raw posts: {len(all_posts)}")
 
-    # Deduplicate
+    # Pre-dedup by post_id / text prefix
     seen = set()
     unique = []
     for p in all_posts:
@@ -336,32 +359,64 @@ def run_enrichment(since_date=None):
             seen.add(key)
             unique.append(p)
 
-    print(f"  After dedup: {len(unique)}")
+    print(f"  After pre-dedup: {len(unique)}")
 
-    # Relevance gate
+    # ---------------------------------------------------------------
+    # Relevance gate (Steps A-C)
+    # ---------------------------------------------------------------
     relevant = []
+    excluded_hard = 0
+    excluded_cond = 0
+    excluded_noise = 0
+    excluded_no_geo = 0
+
     for post in unique:
-        text = (post.get("text", "") + " " + post.get("title", "")).lower()
+        title = (post.get("title") or "").strip()
+        text = (post.get("text", "") + " " + title)
 
-        # Skip noise
-        if any(n in text for n in NOISE_PHRASES):
+        # (A) Hard exclusion: empty/short titles
+        if len(title) < 10:
+            excluded_hard += 1
             continue
 
-        # Skip dead/deleted/job posts
-        title = post.get("title", "").strip()
-        if not title or TITLE_BLOCKLIST.search(title):
+        # (A) Hard exclusion: blocklisted title patterns (dead, hiring, tesla)
+        if TITLE_BLOCKLIST.search(title):
+            excluded_hard += 1
             continue
 
-        # Company mention requires GEO context or a known GEO source
-        mentions_company = any(alias in text for alias in company_terms if len(alias) >= 3)
-        has_context = any(term in text for term in GEO_CONTEXT)
-        is_geo_source = post.get("source", "") in GEO_SOURCES
+        # (A) Conditional exclusion: microsoft/apple/netflix — require GEO term in title
+        if _CONDITIONAL_BLOCKLIST.search(title) and not _has_geo_terms(title):
+            excluded_cond += 1
+            continue
 
-        if has_context:
-            relevant.append(post)
-        elif mentions_company and is_geo_source:
-            relevant.append(post)
+        # Skip noise phrases
+        text_lower = text.lower()
+        if any(n in text_lower for n in NOISE_PHRASES):
+            excluded_noise += 1
+            continue
 
+        # (B) GEO relevance gate
+        has_geo = _has_geo_terms(text)
+        source = post.get("source", "")
+        is_geo_source = source in GEO_SOURCES
+
+        # Exception: G2/Product Hunt articles mentioning a tracked company pass automatically
+        if is_geo_source:
+            mentions_company = any(
+                alias in text_lower for alias in company_terms if len(alias) >= 3
+            )
+            if mentions_company:
+                relevant.append(post)
+                continue
+
+        # Otherwise require GEO context terms
+        if has_geo:
+            relevant.append(post)
+        else:
+            excluded_no_geo += 1
+
+    print(f"  Excluded: {excluded_hard} hard, {excluded_cond} conditional, "
+          f"{excluded_noise} noise, {excluded_no_geo} no GEO context")
     print(f"  Relevant: {len(relevant)} ({len(relevant)*100//max(len(unique),1)}%)")
 
     # Filter by date if incremental
@@ -369,10 +424,44 @@ def run_enrichment(since_date=None):
         relevant = [p for p in relevant if p.get("post_date", "") >= since_date]
         print(f"  After date filter ({since_date}): {len(relevant)}")
 
-    # Enrich each post
+    # Enrich each post (C: context_required handled inside enrich_post)
     enriched = []
     for post in relevant:
         enriched.append(enrich_post(post, alias_map, own_brands, context_required))
+
+    # ---------------------------------------------------------------
+    # (D) Final dedup by URL then by title
+    # ---------------------------------------------------------------
+    by_url = {}
+    no_url = []
+    for e in enriched:
+        url = (e.get("url") or "").strip().rstrip("/")
+        if not url:
+            no_url.append(e)
+            continue
+        if url not in by_url:
+            by_url[url] = e
+        else:
+            # Keep the one with more enrichment signals
+            new_score = len(e.get("companies_mentioned", [])) + len(e.get("entity_tags", []))
+            old_score = len(by_url[url].get("companies_mentioned", [])) + len(by_url[url].get("entity_tags", []))
+            if new_score > old_score:
+                by_url[url] = e
+
+    # Title dedup for remaining
+    seen_titles = set()
+    deduped = []
+    for e in list(by_url.values()) + no_url:
+        title_raw = (e.get("title") or "").strip().lower()
+        title_key = re.sub(r"[^a-z0-9]", "", title_raw)[:60]
+        if title_key and len(title_key) > 8 and title_key in seen_titles:
+            continue
+        if title_key and len(title_key) > 8:
+            seen_titles.add(title_key)
+        deduped.append(e)
+
+    print(f"  After final dedup: {len(deduped)} (removed {len(enriched) - len(deduped)} dupes)")
+    enriched = deduped
 
     # Sort by date
     enriched.sort(key=lambda x: x.get("post_date", ""), reverse=True)

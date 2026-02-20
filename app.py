@@ -897,14 +897,9 @@ with tabs[1]:
                 cd["this_week"] += 1
             cd["signals"].append(i)
 
-    # WoW deltas
-    wow_deltas = {}
-    if trends:
-        for name, d in trends.get("company_trends", {}).items():
-            wow_deltas[name] = d.get("delta_pct", 0)
-
     # Sort by total mentions
     sorted_comps = sorted(comp_data_map.items(), key=lambda x: x[1]["total"], reverse=True)
+    two_weeks_ago_str = (now - timedelta(days=14)).strftime("%Y-%m-%d")
 
     for comp, cd in sorted_comps:
         total = cd["total"]
@@ -913,17 +908,28 @@ with tabs[1]:
 
         pos_pct = round(cd["pos"] * 100 / max(total, 1))
         neg_pct = round(cd["neg"] * 100 / max(total, 1))
-        delta = wow_deltas.get(comp, 0)
 
-        # Momentum indicator
-        if delta > 20:
-            momentum = f"🟢 +{delta:.0f}% WoW"
-        elif delta < -20:
-            momentum = f"🔴 {delta:.0f}% WoW"
-        elif delta != 0:
-            momentum = f"⚪ {delta:+.0f}% WoW"
+        # Momentum: compute WoW from actual signal dates
+        this_week = cd["this_week"]
+        prior_week = sum(
+            1 for s in cd["signals"]
+            if two_weeks_ago_str <= s.get("post_date", "") < week_ago_str
+        )
+
+        if total < 3:
+            momentum = "Insufficient data"
+        elif prior_week == 0 and this_week == 0:
+            momentum = "No recent activity"
+        elif prior_week == 0:
+            momentum = f"Rising (+{this_week} new)"
         else:
-            momentum = "⚪ Stable"
+            wow_pct = round((this_week - prior_week) / prior_week * 100)
+            if wow_pct >= 20:
+                momentum = f"Rising ({wow_pct:+}% WoW)"
+            elif wow_pct <= -20:
+                momentum = f"Falling ({wow_pct:+}% WoW)"
+            else:
+                momentum = f"Stable ({wow_pct:+}% WoW)"
 
         is_own = comp in own_brands
         meta = company_meta.get(comp, {})
@@ -950,6 +956,9 @@ with tabs[1]:
                 neu_pct = 100 - pos_pct - neg_pct
                 st.markdown(f"{total} mentions · {momentum}")
                 st.caption(f"{pos_pct}% positive · {neg_pct}% negative · {neu_pct}% neutral")
+
+            if total < 5:
+                st.caption("Limited data — results may not be representative.")
 
             # Top 3 most relevant signals this week
             week_signals = [s for s in cd["signals"] if s.get("post_date", "") >= week_ago_str]
@@ -999,16 +1008,16 @@ with tabs[2]:
     )
 
     FEATURE_TOOLTIPS = {
-        "Real-time Tracking": "Updates AI visibility scores continuously vs. periodic snapshots.",
-        "Multi-LLM Coverage": "Tracks visibility across ChatGPT, Gemini, Claude, Perplexity simultaneously.",
-        "Actionable Recs": "Provides specific content changes to improve AI citations.",
-        "ROI Measurement": "Tracks revenue impact of GEO optimization efforts.",
-        "Historical Trends": "Shows how AI visibility has changed over time.",
-        "Comp. Benchmarking": "Compares your AI visibility against named competitors.",
-        "Content Guidance": "Recommends what content to create to improve AI answer inclusion.",
+        "Integrations": "Connects to third-party tools like CMS, analytics, and marketing platforms.",
+        "ROI Measurement": "Tracks revenue or traffic impact of GEO optimization efforts.",
         "Brand Safety": "Monitors for brand misrepresentation in AI-generated answers.",
-        "Integrations": "Connects to third-party tools like CMS, analytics platforms, and marketing stacks.",
-        "Prompt Influence": "Techniques and tools for shaping how AI models reference and describe your brand.",
+        "Real-time Tracking": "Updates AI visibility scores continuously vs. periodic snapshots.",
+        "Historical Trends": "Shows how AI visibility has changed over weeks and months.",
+        "Comp. Benchmarking": "Compares your AI visibility scores against named competitors.",
+        "Actionable Recs": "Provides specific content changes to improve AI citation rates.",
+        "Multi-LLM Coverage": "Tracks visibility across ChatGPT, Gemini, Claude, and Perplexity simultaneously.",
+        "Content Guidance": "Recommends what content to create to improve inclusion in AI answers.",
+        "Prompt Influence": "Techniques and tools for shaping how AI models reference your brand.",
     }
 
     OPPORTUNITY_THEMES = {
@@ -1082,13 +1091,19 @@ with tabs[2]:
                 od["signals"].append(i)
 
     for opp, od in opportunity_data.items():
-        pain = od["complaints"] + od["requests"]
-        satisfaction = od["praise"]
-        od["confidence"] = round(min(pain / max(pain + satisfaction, 1) * 100, 100))
+        # Confidence: 30% base + source diversity + signal depth + G2 trust bonus
+        conf = 30
+        sources_seen = set(s.get("source", "") for s in od["signals"] if s.get("source"))
+        conf += len(sources_seen) * 6  # +6% per unique source type
+        extra_signals = max(od["evidence"] - 1, 0)
+        conf += min(extra_signals * 5, 15)  # +5% per signal beyond first, cap 15%
+        if any("G2" in s.get("source", "") for s in od["signals"]):
+            conf += 10  # G2 is highest trust source
+        od["confidence"] = min(conf, 95)
 
     # --- COMPETITIVE GAP MATRIX ---
     st.markdown("#### Competitive Gap Matrix")
-    st.caption("🟢 Has it (praised) · 🟡 Mentioned in context · 🔴 No data for this feature")
+    st.caption("🟢 Praised (signal count) · 🟡 Mentioned (signal count) · 🔴 No data")
 
     comp_mention_counts = Counter()
     for i in insights:
@@ -1109,33 +1124,30 @@ with tabs[2]:
             with header_cols[ci + 1]:
                 st.markdown(f"**{comp[:10]}**")
 
-        # Data rows with per-cell tooltips
         for opp in sorted_opp_names:
             od = active_opps[opp]
             row_cols = st.columns([2] + [1] * len(top_companies))
-            feat_tip = FEATURE_TOOLTIPS.get(opp, "")
+            feat_def = FEATURE_TOOLTIPS.get(opp, "")
             with row_cols[0]:
-                if feat_tip:
-                    st.markdown(f"**{opp}**", help=feat_tip)
-                else:
-                    st.markdown(f"**{opp}**")
+                st.markdown(f"**{opp}**")
+                if feat_def:
+                    st.caption(feat_def)
             for ci, comp in enumerate(top_companies):
                 detail = od["company_detail"].get(comp, {"count": 0, "latest": ""})
                 count = detail["count"]
                 latest = detail["latest"]
+                recency = _time_ago(latest) if latest else ""
                 with row_cols[ci + 1]:
                     if comp in od["companies_praised"]:
-                        cell = "🟢"
-                        tip = f"Praised. Based on {count} post{'s' if count != 1 else ''}."
+                        st.markdown(f"🟢 {count}")
+                        if recency:
+                            st.caption(recency)
                     elif comp in od["companies_complained"] or comp in od["companies_tried"]:
-                        cell = "🟡"
-                        tip = f"Mentioned. Based on {count} post{'s' if count != 1 else ''}."
+                        st.markdown(f"🟡 {count}")
+                        if recency:
+                            st.caption(recency)
                     else:
-                        cell = "🔴"
-                        tip = "No posts found mentioning this company for this feature."
-                    if latest:
-                        tip += f" Most recent: {_time_ago(latest)}."
-                    st.markdown(cell, help=tip)
+                        st.markdown("🔴")
     else:
         st.caption("Not enough data to build the matrix yet.")
 
@@ -1144,8 +1156,8 @@ with tabs[2]:
     sorted_opps = sorted(opportunity_data.items(),
                          key=lambda x: (x[1]["confidence"], x[1]["evidence"]), reverse=True)
 
-    conf_help = ("Confidence = pain signals (complaints + feature requests) / total signals for this feature. "
-                 "Higher means more unmet demand. Treat scores below 50% as directional, not definitive.")
+    conf_help = ("Confidence starts at 30%. +6% per unique source type. "
+                 "+5% per signal beyond the first (up to +15%). +10% bonus if G2 data exists. Capped at 95%.")
 
     for opp, od in sorted_opps:
         if od["evidence"] < 2:

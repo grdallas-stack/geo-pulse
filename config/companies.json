@@ -52,7 +52,8 @@
         "scrunch.ai"
       ],
       "category": "geo_measurement",
-      "url": "https://scrunch.ai"
+      "url": "https://scrunch.ai",
+      "context_required": true
     },
     {
       "name": "Otterly",
@@ -143,7 +144,8 @@
         "gumshoe"
       ],
       "category": "geo_measurement",
-      "url": "https://www.gumshoe.ai"
+      "url": "https://www.gumshoe.ai",
+      "context_required": true
     },
     {
       "name": "Goodie",
@@ -188,7 +190,8 @@
         "omnia ai"
       ],
       "category": "geo_measurement",
-      "url": "https://www.useomnia.com"
+      "url": "https://www.useomnia.com",
+      "context_required": true
     },
     {
       "name": "Unusual AI",
@@ -215,7 +218,8 @@
         "channel 3"
       ],
       "category": "geo_measurement",
-      "url": ""
+      "url": "",
+      "context_required": true
     },
     {
       "name": "Superagent",
@@ -354,7 +358,8 @@
         "frase.io"
       ],
       "category": "content_optimization",
-      "url": "https://frase.io"
+      "url": "https://frase.io",
+      "context_required": true
     },
     {
       "name": "NeuronWriter",
