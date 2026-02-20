@@ -491,70 +491,80 @@ else:
 
     if "qa_messages" not in st.session_state:
         st.session_state["qa_messages"] = []
-    if "qa_pending" not in st.session_state:
-        st.session_state["qa_pending"] = ""
+    if "qa_submit" not in st.session_state:
+        st.session_state["qa_submit"] = ""
     if "qa_sources_map" not in st.session_state:
         st.session_state["qa_sources_map"] = {}
 
     def _parse_response(raw, sources_map):
-        """Split response into body (with clickable sources) and follow-up questions."""
+        """Split body, build clickable sources from map, extract follow-ups."""
         lines = raw.split("\n")
         body_lines = []
         followups = []
+        in_sources = False
         for line in lines:
             stripped = line.strip()
+            # Follow-up lines: >> question text
             if stripped.startswith(">>"):
-                followups.append(stripped.lstrip("> ").strip())
-            else:
-                body_lines.append(line)
+                q = _re.sub(r'^>+\s*', '', stripped).strip()
+                if q:
+                    followups.append(q)
+                continue
+            # Detect start of Sources section and skip LLM-generated source lines
+            if stripped.lower().startswith("**sources**") or stripped.lower() == "sources":
+                in_sources = True
+                continue
+            if in_sources and _re.match(r'^\[S\d+\]', stripped):
+                continue
+            if in_sources and stripped == "":
+                continue
+            if in_sources and stripped:
+                in_sources = False
+            body_lines.append(line)
 
         body = "\n".join(body_lines).rstrip()
 
-        # Convert source references like [S1] Title (Source) URL into clickable markdown
-        # Match lines like: [S1] Some title (Reddit) https://...
-        def _linkify_source_line(match):
-            sid = match.group(1)
-            title = match.group(2).strip()
-            source_type = match.group(3).strip()
-            url = match.group(4).strip()
-            return f"[{sid}] [{title}]({url}) ({source_type})"
+        # Build our own clickable sources block from the stored map
+        cited = sorted(set(_re.findall(r'\[S(\d+)\]', body)), key=int)
+        source_lines = []
+        for num in cited:
+            sid = f"S{num}"
+            s = sources_map.get(sid)
+            if s and s.get("url"):
+                source_lines.append(f"\\[{sid}\\] [{s['title']}]({s['url']}) ({s['source']})")
+            elif s:
+                source_lines.append(f"\\[{sid}\\] {s['title']} ({s['source']})")
 
-        body = _re.sub(
-            r'\[(S\d+)\]\s+(.+?)\s+\(([^)]+)\)\s+(https?://\S+)',
-            _linkify_source_line,
-            body,
-        )
+        if source_lines:
+            body += "\n\n**Sources**\n\n" + "\n\n".join(source_lines)
 
         return body, followups
 
+    def _do_submit(question):
+        """Set the question to be processed on next rerun."""
+        st.session_state["qa_submit"] = question
+
     # --- Starter question buttons (only when no chat history) ---
-    if not st.session_state["qa_messages"] and not st.session_state["qa_pending"]:
+    if not st.session_state["qa_messages"] and not st.session_state["qa_submit"]:
         starters = _get_starter_questions()
         st.caption("Try asking:")
-        scols = st.columns(len(starters))
         for idx, q in enumerate(starters):
-            with scols[idx]:
-                if st.button(q, key=f"starter_{idx}"):
-                    st.session_state["qa_pending"] = q
-                    st.rerun()
+            st.button(q, key=f"starter_{idx}", on_click=_do_submit, args=(q,))
 
-    # --- Input form (Enter key submits) ---
+    # --- Input form (Enter key submits via form) ---
     with st.form("qa_form", clear_on_submit=True):
         user_question = st.text_input(
             "Ask a question",
             placeholder="e.g., What are buyers complaining about most this week?",
         )
         submitted = st.form_submit_button("Ask AI", type="primary")
-
-    # Capture form submit or pending starter question
-    question_to_ask = ""
     if submitted and user_question.strip():
-        question_to_ask = user_question.strip()
-    elif st.session_state["qa_pending"]:
-        question_to_ask = st.session_state["qa_pending"]
-        st.session_state["qa_pending"] = ""
+        st.session_state["qa_submit"] = user_question.strip()
 
+    # --- Process pending question ---
+    question_to_ask = st.session_state.get("qa_submit", "")
     if question_to_ask:
+        st.session_state["qa_submit"] = ""
         st.session_state["qa_messages"].append({"role": "user", "content": question_to_ask})
 
         # Build context with source IDs
@@ -593,11 +603,9 @@ Format your answer exactly with these headings:
 4) **Recommended actions** (2-4 numbered actions with owner: Product, Engineering, GTM, or Leadership)
 5) **Confidence & gaps** (1-2 bullets on evidence strength and what's missing)
 
-After the structured answer, list **Sources** you cited. Format each EXACTLY as:
-[S1] Title (Source) URL
+Do NOT include a Sources section. Sources will be rendered separately.
 
-The URL must be the full URL on its own after the parenthetical source name. Example:
-[S1] GEO tools are broken (Reddit) https://reddit.com/r/seo/abc123
+Use [S1], [S2] etc. inline to cite the signals below.
 
 Rules:
 - Never invent facts not present in the provided signals.
@@ -613,7 +621,7 @@ DATASET SUMMARY:
 RELEVANT SIGNALS:
 {posts_context}
 
-SOURCE REFERENCE (use for citations):
+SOURCE REFERENCE (for [S1] etc. citations):
 {sources_ref}
 """
         try:
@@ -637,6 +645,7 @@ SOURCE REFERENCE (use for citations):
             st.session_state["qa_messages"].append({"role": "assistant", "content": answer})
         except Exception as e:
             st.session_state["qa_messages"].append({"role": "assistant", "content": f"Error: {e}"})
+        st.rerun()
 
     # --- Render chat history ---
     if st.session_state.get("qa_messages"):
@@ -644,12 +653,12 @@ SOURCE REFERENCE (use for citations):
             for msg in st.session_state["qa_messages"]:
                 with st.chat_message(msg["role"]):
                     if msg["role"] == "assistant":
-                        body, followups = _parse_response(msg["content"], st.session_state.get("qa_sources_map", {}))
+                        body, _ = _parse_response(msg["content"], st.session_state.get("qa_sources_map", {}))
                         st.markdown(body)
                     else:
                         st.markdown(msg["content"])
 
-            # Follow-up question buttons (from the last assistant message)
+            # Follow-up question buttons from the last assistant message
             last_assistant = None
             for msg in reversed(st.session_state["qa_messages"]):
                 if msg["role"] == "assistant":
@@ -658,11 +667,9 @@ SOURCE REFERENCE (use for citations):
             if last_assistant:
                 _, followups = _parse_response(last_assistant, {})
                 if followups:
-                    st.caption("Follow-up questions:")
+                    st.markdown("**Follow-up questions:**")
                     for fidx, fq in enumerate(followups):
-                        if st.button(fq, key=f"followup_{fidx}"):
-                            st.session_state["qa_pending"] = fq
-                            st.rerun()
+                        st.button(fq, key=f"followup_{fidx}", on_click=_do_submit, args=(fq,))
 
             if st.button("Clear chat", key="clear_qa"):
                 st.session_state["qa_messages"] = []
