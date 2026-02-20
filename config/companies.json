@@ -373,10 +373,13 @@
     {
       "name": "Future",
       "aliases": [
-        "future"
+        "future plc",
+        "future optic",
+        "futureplc",
+        "techradar"
       ],
-      "category": "unknown",
-      "url": "",
+      "category": "geo_as_a_service_publisher",
+      "url": "https://www.futureplc.com",
       "context_required": true
     }
   ]

@@ -168,13 +168,21 @@ def _relevance_score(insight):
     return quality * social * recency * enrichment
 
 
-def _relevance_sentence(insight):
-    """One-sentence explanation of why this post matters."""
+def _relevance_sentence(insight, for_company=None):
+    """One-sentence explanation of why this post matters.
+
+    When for_company is set, that company is placed first in rationale text
+    so the sentence makes sense on that company's card.
+    """
     tags = insight.get("entity_tags", [])
-    companies = insight.get("companies_mentioned", [])
+    companies = list(insight.get("companies_mentioned", []))
     features = insight.get("features_mentioned", [])
     sentiment = insight.get("sentiment", "neutral")
     feat_ctx = f" ({', '.join(features[:2])})" if features else ""
+
+    # Reorder so for_company appears first
+    if for_company and for_company in companies:
+        companies = [for_company] + [c for c in companies if c != for_company]
 
     if insight.get("is_competitive_intel"):
         return f"Competitive comparison between {', '.join(companies[:3])}{feat_ctx}."
@@ -246,6 +254,7 @@ def _get_new_companies(_insights_json):
 
 CATEGORY_LABELS = {
     "geo_measurement": "GEO/AEO Measurement",
+    "geo_as_a_service_publisher": "GEO-as-a-Service / Publisher",
     "ai_attribution": "AI Attribution",
     "seo_suite": "SEO Suite",
     "content_optimization": "Content Optimization",
@@ -402,9 +411,10 @@ def _get_starter_questions(active_tab_idx=0):
     # Data-driven additions
     if trends:
         rising = trends.get("rising", [])
-        if rising:
-            top = rising[0]
-            base.append(f"Why is {top['name']} trending up?")
+        for r in rising:
+            if r.get("name") in company_meta:
+                base.append(f"Why is {r['name']} gaining momentum?")
+                break
 
     comp_counts = Counter()
     for i in insights:
@@ -776,6 +786,32 @@ with tabs[0]:
         "Ranked by relevance, recency, and social signal strength."
     )
 
+    # --- Signal of the Week ---
+    st.markdown(
+        """<div style="border-left: 4px solid #e67e22; padding: 0.8rem 1rem; """
+        """background: #fef9f3; border-radius: 4px; margin-bottom: 1rem;">"""
+        """<span style="color: #e67e22; font-size: 0.75rem; font-weight: 600; """
+        """letter-spacing: 0.05em; text-transform: uppercase;">"""
+        """\U0001f534 SIGNAL OF THE WEEK</span><br>"""
+        """<code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px; """
+        """font-size: 0.8rem;">Future</code><br>"""
+        """<a href="https://pressgazette.co.uk/marketing/future-leveragess-high-visibility-on-chatgpt-by-offering-geo-as-a-service/" """
+        """target="_blank" style="font-size: 1.05rem; font-weight: 600; color: #1a1a1a; """
+        """text-decoration: none;">Future PLC launches GEO-as-a-Service division</a>"""
+        """<p style="margin: 0.5rem 0 0.4rem 0; font-size: 0.9rem; color: #333;">"""
+        """Future PLC &mdash; publisher of TechRadar and Tom's Guide, the most-cited publisher """
+        """domain on ChatGPT globally &mdash; has launched a commercial GEO optimization division """
+        """selling AI visibility campaigns to brand clients. They delivered a 33% ChatGPT """
+        """visibility uplift for Samsung and hold a direct content deal with OpenAI. This is the """
+        """first major media publisher to productize GEO expertise, signaling the category is """
+        """moving mainstream.</p>"""
+        """<span style="font-size: 0.75rem; color: #888;">"""
+        """<a href="https://pressgazette.co.uk/marketing/future-leveragess-high-visibility-on-chatgpt-by-offering-geo-as-a-service/" """
+        """target="_blank" style="color: #888;">Press Gazette</a> &middot; 2026-02-20</span>"""
+        """</div>""",
+        unsafe_allow_html=True,
+    )
+
     fc1, fc2, fc3, fc4 = st.columns(4)
     all_companies_in_data = sorted(set(
         c for i in insights for c in i.get("companies_mentioned", [])
@@ -795,6 +831,10 @@ with tabs[0]:
 
     with st.expander("Add a new competitor to monitor"):
         new_comp_name = st.text_input("Company name", key="new_comp_name")
+        new_comp_url = st.text_input(
+            "Company website URL (optional but recommended)", key="new_comp_url",
+            help="Helps us find the right company — especially for common names.",
+        )
         new_comp_aliases = st.text_input("Aliases (comma-separated)", key="new_comp_aliases",
                                          help="e.g. 'acme, acme.ai, acme seo'")
         if st.button("Start Monitoring", key="add_comp_btn"):
@@ -803,7 +843,8 @@ with tabs[0]:
                 aliases = [a.strip().lower() for a in new_comp_aliases.split(",") if a.strip()]
                 if not aliases:
                     aliases = [name.lower()]
-                new_entry = {"name": name, "aliases": aliases, "category": "unknown", "url": ""}
+                url = new_comp_url.strip()
+                new_entry = {"name": name, "aliases": aliases, "category": "unknown", "url": url}
                 cd = load_companies()
                 cd.setdefault("competitors", []).append(new_entry)
                 with open(COMPANIES_PATH, "w") as f:
@@ -966,20 +1007,20 @@ with tabs[1]:
                 week_signals = cd["signals"]
             week_signals.sort(key=lambda x: _relevance_score(x), reverse=True)
 
-            top_signals = [s for s in week_signals if _relevance_sentence(s)][:3]
+            top_signals = [s for s in week_signals if _relevance_sentence(s, for_company=comp)][:3]
             for sig in top_signals:
                 sig_title = sig.get("title", "")[:100] or sig.get("text", "")[:100]
                 sig_url = sig.get("url", "")
                 sig_source = sig.get("source", "")
                 sig_source_label = _source_badge(sig_source)
-                sig_reason = _relevance_sentence(sig)
+                sig_reason = _relevance_sentence(sig, for_company=comp)
 
                 headline = f"[{sig_title}]({sig_url})" if sig_url else sig_title
                 st.markdown(f"  `{sig_source_label}` {headline}")
                 st.caption(f"  _{sig_reason}_ · {_time_ago(sig.get('post_date', ''))}")
 
             # Show more expander
-            remaining = [s for s in week_signals[3:] if _relevance_sentence(s)][:12]
+            remaining = [s for s in week_signals[3:] if _relevance_sentence(s, for_company=comp)][:12]
             if remaining:
                 with st.expander(f"Show {len(remaining)} more signals"):
                     for sig in remaining:
@@ -987,7 +1028,7 @@ with tabs[1]:
                         sig_url = sig.get("url", "")
                         sig_source = sig.get("source", "")
                         sig_source_label = _source_badge(sig_source)
-                        sig_reason = _relevance_sentence(sig)
+                        sig_reason = _relevance_sentence(sig, for_company=comp)
 
                         headline = f"[{sig_title}]({sig_url})" if sig_url else sig_title
                         st.markdown(f"`{sig_source_label}` {headline}")

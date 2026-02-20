@@ -48,7 +48,10 @@ def _load_companies():
     for c in data.get("competitors", []):
         name = c["name"]
         all_companies.append(c)
-        alias_map[name.lower()] = name
+        # For context_required companies, only use explicit aliases
+        # (avoids generic name like "future" matching common English words)
+        if not c.get("context_required"):
+            alias_map[name.lower()] = name
         for a in c.get("aliases", []):
             alias_map[a.lower()] = name
             all_aliases.add(a.lower())
