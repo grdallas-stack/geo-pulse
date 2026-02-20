@@ -416,29 +416,54 @@ with st.sidebar:
         else:
             user_q = st.session_state.chat_messages[-1]["content"]
 
-            # Build context
+            # Build context with source IDs
             data_summary = _build_data_summary()
             relevant_posts = _get_relevant_posts(user_q)
             posts_context = ""
-            for p in relevant_posts[:10]:
+            sources_ref = ""
+            for idx, p in enumerate(relevant_posts[:10], 1):
+                sid = f"S{idx}"
                 comps = ", ".join(p.get("companies_mentioned", []))
+                title = p.get("title", "")[:100] or p.get("text", "")[:60]
                 posts_context += (
-                    f"- [{p.get('source','')}] {p.get('title','')[:100]} "
+                    f"- [{sid}] [{p.get('source','')}] {title} "
                     f"| sentiment={p.get('sentiment','')} "
                     f"| companies={comps} "
                     f"| {p.get('post_date','')}\n"
                     f"  \"{p.get('text','')[:200]}\"\n"
                 )
+                url = p.get("url", "")
+                source = p.get("source", "")
+                sources_ref += f"[{sid}] {title} ({source}) {url}\n"
 
-            system_prompt = f"""You are GEO Pulse, a market intelligence assistant for the GEO/AEO category.
+            system_prompt = f"""You are GEO Pulse, a market intelligence assistant for the GEO/AEO category. ProRata/Gist is the user's own product.
+
+EVERY response must follow this exact structure. No exceptions.
+
+**Executive Answer**
+2-3 sentences. Direct answer to the question. No preamble.
+
+**What the signals show**
+- Bullet points with inline citations [S1], [S2] referencing the sources below.
+- Cite numbers: "12 mentions this week" not "several."
+- If data is thin, say so.
+
+**Implications for ProRata/Gist**
+1-2 sentences on what this means for the product specifically.
+
+**Recommended actions**
+- Specific actions with suggested owner (Product, Engineering, GTM, Leadership).
+- Skip if the question is purely informational.
+
+**Confidence & gaps**
+One sentence. State evidence strength and what data is missing.
+
+**Sources**
+List each cited source as: [S1] Title (Source) URL
+Only include sources you actually cited. Use the reference list below.
 
 RULES:
-- 3-5 sentences max. Shorter is better.
-- Lead with the direct answer. Evidence follows.
-- Bullet points only when listing 4+ items.
-- Cite numbers: "12 mentions this week" not "several mentions."
-- If data is thin, say so: "Only 3 mentions, low confidence."
-- No preamble. No "Great question." No "Based on the data I can see." Start with the answer.
+- No "Great question." No "Based on the data." Start with the executive answer.
 - No hedging, no filler, no enthusiasm. Operator-clean.
 - End with 2-3 follow-up questions on new lines prefixed with ">>".
 
@@ -446,6 +471,9 @@ RULES:
 
 RELEVANT POSTS:
 {posts_context}
+
+SOURCE REFERENCE (use these for citations):
+{sources_ref}
 """
             try:
                 import anthropic
@@ -461,7 +489,7 @@ RELEVANT POSTS:
                         model="claude-haiku-4-5-20251001",
                         system=system_prompt,
                         messages=messages,
-                        max_tokens=800,
+                        max_tokens=1200,
                         temperature=0.3,
                     )
 
