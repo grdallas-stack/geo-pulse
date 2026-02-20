@@ -544,10 +544,11 @@ def _data_missing():
 def _run_pipeline_subprocess():
     """Run the pipeline as a subprocess and reload data on completion."""
     import subprocess
+    import sys
     env = os.environ.copy()
     env["PYTHONPATH"] = os.path.dirname(os.path.abspath(__file__))
     result = subprocess.run(
-        [".venv/bin/python3", "run_pipeline.py"],
+        [sys.executable, "run_pipeline.py"],
         cwd=os.path.dirname(os.path.abspath(__file__)),
         env=env,
         capture_output=True, text=True, timeout=300,
