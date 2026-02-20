@@ -1,0 +1,8 @@
+streamlit>=1.30
+requests
+python-dotenv
+pandas
+beautifulsoup4
+anthropic
+apscheduler
+altair

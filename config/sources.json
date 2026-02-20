@@ -1,0 +1,40 @@
+{
+  "reddit_subreddits": [
+    "marketing", "digital_marketing", "content_marketing",
+    "entrepreneur", "startups", "SaaS",
+    "ChatGPT", "artificial", "SEO"
+  ],
+  "reddit_queries": [
+    "GEO tool", "AEO tool", "AI visibility",
+    "answer engine optimization", "generative engine optimization",
+    "AI search optimization", "brand visibility AI",
+    "ChatGPT mentions brand", "Perplexity search brand",
+    "AI overviews", "share of voice AI", "LLM brand monitoring"
+  ],
+  "hackernews_queries": [
+    "generative engine optimization", "answer engine optimization",
+    "AI search optimization", "GEO SEO", "AI visibility brand",
+    "LLM brand monitoring", "AI overviews"
+  ],
+  "news_rss_queries": [
+    "generative engine optimization", "answer engine optimization",
+    "AI search brand visibility", "GEO marketing",
+    "AEO tools", "AI overviews brands"
+  ],
+  "news_rss_feeds": [
+    {"name": "Search Engine Journal", "url": "https://www.searchenginejournal.com/feed/"},
+    {"name": "Search Engine Land", "url": "https://searchengineland.com/feed"},
+    {"name": "Digiday", "url": "https://digiday.com/feed/"},
+    {"name": "Marketing Brew", "url": "https://links.morningbrew.com/rss/marketing-brew"},
+    {"name": "AdExchanger", "url": "https://www.adexchanger.com/feed/"}
+  ],
+  "producthunt_queries": [
+    "GEO", "AEO", "AI visibility", "answer engine",
+    "AI search", "brand monitoring AI", "LLM optimization"
+  ],
+  "g2_products": [
+    "Profound", "Scrunch", "Otterly", "Peec AI",
+    "Searchable", "AirOps", "Evertune",
+    "Semrush AI Visibility"
+  ]
+}

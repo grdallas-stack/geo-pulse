@@ -1,0 +1,16 @@
+# Environment and secrets
+.env
+.env*
+!.env.example
+
+# Scraped and generated data
+data/*.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+
+# OS
+.DS_Store

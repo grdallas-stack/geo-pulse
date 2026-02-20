@@ -1,0 +1,248 @@
+{
+  "own_brands": [
+    {
+      "name": "ProRata",
+      "aliases": ["prorata", "pro rata", "prorata.ai"],
+      "category": "ai_attribution",
+      "url": "https://prorata.ai",
+      "notes": "Parent company. AI attribution and licensing platform."
+    },
+    {
+      "name": "Gist",
+      "aliases": ["gist", "gist geo", "gist.prorata"],
+      "category": "geo_measurement",
+      "url": "",
+      "notes": "ProRata SaaS product. GEO measurement and brand visibility in AI answers."
+    }
+  ],
+  "competitors": [
+    {
+      "name": "Profound",
+      "aliases": ["profound", "profound.com"],
+      "category": "geo_measurement",
+      "url": "https://profound.com"
+    },
+    {
+      "name": "Peec AI",
+      "aliases": ["peec", "peec ai", "peec.ai"],
+      "category": "geo_measurement",
+      "url": "https://peec.ai"
+    },
+    {
+      "name": "Scrunch",
+      "aliases": ["scrunch", "scrunch ai", "scrunch.ai"],
+      "category": "geo_measurement",
+      "url": "https://scrunch.ai"
+    },
+    {
+      "name": "Otterly",
+      "aliases": ["otterly", "otterly.ai"],
+      "category": "geo_measurement",
+      "url": "https://otterly.ai"
+    },
+    {
+      "name": "Searchable",
+      "aliases": ["searchable", "searchable ai"],
+      "category": "geo_measurement",
+      "url": ""
+    },
+    {
+      "name": "AirOps",
+      "aliases": ["airops", "air ops"],
+      "category": "geo_workflow",
+      "url": "https://airops.com"
+    },
+    {
+      "name": "Evertune",
+      "aliases": ["evertune", "evertune.ai"],
+      "category": "geo_measurement",
+      "url": "https://evertune.ai"
+    },
+    {
+      "name": "Bluefish",
+      "aliases": ["bluefish", "bluefish ai"],
+      "category": "geo_measurement",
+      "url": ""
+    },
+    {
+      "name": "BrandLight",
+      "aliases": ["brandlight", "brand light"],
+      "category": "geo_measurement",
+      "url": ""
+    },
+    {
+      "name": "Emberos",
+      "aliases": ["emberos"],
+      "category": "geo_measurement",
+      "url": ""
+    },
+    {
+      "name": "AthenaHQ",
+      "aliases": ["athenahq", "athena hq", "athena"],
+      "category": "geo_measurement",
+      "url": ""
+    },
+    {
+      "name": "Relixir",
+      "aliases": ["relixir"],
+      "category": "geo_measurement",
+      "url": ""
+    },
+    {
+      "name": "Gumshoe",
+      "aliases": ["gumshoe"],
+      "category": "geo_measurement",
+      "url": ""
+    },
+    {
+      "name": "Goodie",
+      "aliases": ["goodie", "goodie ai"],
+      "category": "geo_optimization",
+      "url": ""
+    },
+    {
+      "name": "RankScale",
+      "aliases": ["rankscale", "rank scale"],
+      "category": "geo_optimization",
+      "url": ""
+    },
+    {
+      "name": "Limy",
+      "aliases": ["limy"],
+      "category": "geo_measurement",
+      "url": ""
+    },
+    {
+      "name": "The Prompting Company",
+      "aliases": ["the prompting company", "prompting company"],
+      "category": "geo_optimization",
+      "url": ""
+    },
+    {
+      "name": "Omnia",
+      "aliases": ["omnia", "omnia ai"],
+      "category": "geo_measurement",
+      "url": ""
+    },
+    {
+      "name": "Unusual AI",
+      "aliases": ["unusual ai", "unusual"],
+      "category": "geo_measurement",
+      "url": ""
+    },
+    {
+      "name": "GoMega",
+      "aliases": ["gomega"],
+      "category": "geo_measurement",
+      "url": ""
+    },
+    {
+      "name": "Channel3",
+      "aliases": ["channel3", "channel 3"],
+      "category": "geo_measurement",
+      "url": ""
+    },
+    {
+      "name": "Superagent",
+      "aliases": ["superagent"],
+      "category": "geo_workflow",
+      "url": ""
+    },
+    {
+      "name": "Daydream",
+      "aliases": ["daydream", "daydream ai"],
+      "category": "geo_optimization",
+      "url": ""
+    },
+    {
+      "name": "Azoma",
+      "aliases": ["azoma"],
+      "category": "geo_optimization",
+      "url": ""
+    },
+    {
+      "name": "Social Native",
+      "aliases": ["social native"],
+      "category": "content_platform",
+      "url": ""
+    },
+    {
+      "name": "Palo AI",
+      "aliases": ["palo ai", "palo"],
+      "category": "geo_measurement",
+      "url": ""
+    },
+    {
+      "name": "Opinly",
+      "aliases": ["opinly"],
+      "category": "competitive_intel",
+      "url": ""
+    },
+    {
+      "name": "Writesonic",
+      "aliases": ["writesonic"],
+      "category": "ai_content",
+      "url": "https://writesonic.com"
+    },
+    {
+      "name": "Clay",
+      "aliases": ["clay", "clay.com"],
+      "category": "data_enrichment",
+      "url": "https://clay.com"
+    },
+    {
+      "name": "Conductor",
+      "aliases": ["conductor"],
+      "category": "seo_platform",
+      "url": "https://conductor.com"
+    },
+    {
+      "name": "Semrush",
+      "aliases": ["semrush"],
+      "category": "seo_platform",
+      "url": "https://semrush.com"
+    },
+    {
+      "name": "Ahrefs",
+      "aliases": ["ahrefs"],
+      "category": "seo_platform",
+      "url": "https://ahrefs.com"
+    },
+    {
+      "name": "Moz",
+      "aliases": ["moz"],
+      "category": "seo_platform",
+      "url": "https://moz.com"
+    },
+    {
+      "name": "Surfer SEO",
+      "aliases": ["surfer seo", "surfer"],
+      "category": "content_optimization",
+      "url": "https://surferseo.com"
+    },
+    {
+      "name": "Clearscope",
+      "aliases": ["clearscope"],
+      "category": "content_optimization",
+      "url": "https://clearscope.io"
+    },
+    {
+      "name": "MarketMuse",
+      "aliases": ["marketmuse", "market muse"],
+      "category": "content_optimization",
+      "url": "https://marketmuse.com"
+    },
+    {
+      "name": "Frase",
+      "aliases": ["frase", "frase.io"],
+      "category": "content_optimization",
+      "url": "https://frase.io"
+    },
+    {
+      "name": "NeuronWriter",
+      "aliases": ["neuronwriter", "neuron writer"],
+      "category": "content_optimization",
+      "url": "https://neuronwriter.com"
+    }
+  ]
+}
