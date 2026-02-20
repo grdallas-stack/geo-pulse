@@ -487,48 +487,99 @@ _anthropic_key = os.environ.get("ANTHROPIC_API_KEY", "")
 if not _anthropic_key:
     st.warning("Anthropic API key not configured. Add `ANTHROPIC_API_KEY` to your `.env` file to enable AI Q&A.")
 else:
+    import re as _re
+
     if "qa_messages" not in st.session_state:
         st.session_state["qa_messages"] = []
-    if "qa_draft" not in st.session_state:
-        st.session_state["qa_draft"] = ""
+    if "qa_pending" not in st.session_state:
+        st.session_state["qa_pending"] = ""
+    if "qa_sources_map" not in st.session_state:
+        st.session_state["qa_sources_map"] = {}
 
-    c1, c2 = st.columns([5, 1])
-    with c1:
+    def _parse_response(raw, sources_map):
+        """Split response into body (with clickable sources) and follow-up questions."""
+        lines = raw.split("\n")
+        body_lines = []
+        followups = []
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith(">>"):
+                followups.append(stripped.lstrip("> ").strip())
+            else:
+                body_lines.append(line)
+
+        body = "\n".join(body_lines).rstrip()
+
+        # Convert source references like [S1] Title (Source) URL into clickable markdown
+        # Match lines like: [S1] Some title (Reddit) https://...
+        def _linkify_source_line(match):
+            sid = match.group(1)
+            title = match.group(2).strip()
+            source_type = match.group(3).strip()
+            url = match.group(4).strip()
+            return f"[{sid}] [{title}]({url}) ({source_type})"
+
+        body = _re.sub(
+            r'\[(S\d+)\]\s+(.+?)\s+\(([^)]+)\)\s+(https?://\S+)',
+            _linkify_source_line,
+            body,
+        )
+
+        return body, followups
+
+    # --- Starter question buttons (only when no chat history) ---
+    if not st.session_state["qa_messages"] and not st.session_state["qa_pending"]:
+        starters = _get_starter_questions()
+        st.caption("Try asking:")
+        scols = st.columns(len(starters))
+        for idx, q in enumerate(starters):
+            with scols[idx]:
+                if st.button(q, key=f"starter_{idx}"):
+                    st.session_state["qa_pending"] = q
+                    st.rerun()
+
+    # --- Input form (Enter key submits) ---
+    with st.form("qa_form", clear_on_submit=True):
         user_question = st.text_input(
             "Ask a question",
-            key="qa_draft",
             placeholder="e.g., What are buyers complaining about most this week?",
         )
-    with c2:
-        st.write("")
-        ask_clicked = st.button("Ask AI", key="qa_ask_btn", type="primary")
+        submitted = st.form_submit_button("Ask AI", type="primary")
 
-    starters = _get_starter_questions()
-    st.caption(f"Try: **{starters[0]}**")
+    # Capture form submit or pending starter question
+    question_to_ask = ""
+    if submitted and user_question.strip():
+        question_to_ask = user_question.strip()
+    elif st.session_state["qa_pending"]:
+        question_to_ask = st.session_state["qa_pending"]
+        st.session_state["qa_pending"] = ""
 
-    if ask_clicked and user_question.strip():
-        question = user_question.strip()
-        st.session_state["qa_messages"].append({"role": "user", "content": question})
+    if question_to_ask:
+        st.session_state["qa_messages"].append({"role": "user", "content": question_to_ask})
 
         # Build context with source IDs
         data_summary = _build_data_summary()
-        relevant_posts = _get_relevant_posts(question)
+        relevant_posts = _get_relevant_posts(question_to_ask)
         posts_context = ""
         sources_ref = ""
+        sources_map = {}
         for idx, p in enumerate(relevant_posts[:10], 1):
             sid = f"S{idx}"
             comps = ", ".join(p.get("companies_mentioned", []))
             title = p.get("title", "")[:100] or p.get("text", "")[:60]
+            url = p.get("url", "")
+            source = p.get("source", "")
             posts_context += (
-                f"- [{sid}] [{p.get('source','')}] {title} "
+                f"- [{sid}] [{source}] {title} "
                 f"| sentiment={p.get('sentiment','')} "
                 f"| companies={comps} "
                 f"| {p.get('post_date','')}\n"
                 f"  \"{p.get('text','')[:200]}\"\n"
             )
-            url = p.get("url", "")
-            source = p.get("source", "")
             sources_ref += f"[{sid}] {title} ({source}) {url}\n"
+            sources_map[sid] = {"title": title, "source": source, "url": url}
+
+        st.session_state["qa_sources_map"] = sources_map
 
         system_prompt = f"""You are GEO Pulse, a market intelligence assistant for the GEO/AEO category. ProRata/Gist is the user's own product.
 
@@ -542,8 +593,11 @@ Format your answer exactly with these headings:
 4) **Recommended actions** (2-4 numbered actions with owner: Product, Engineering, GTM, or Leadership)
 5) **Confidence & gaps** (1-2 bullets on evidence strength and what's missing)
 
-After the structured answer, list **Sources** you cited as:
+After the structured answer, list **Sources** you cited. Format each EXACTLY as:
 [S1] Title (Source) URL
+
+The URL must be the full URL on its own after the parenthetical source name. Example:
+[S1] GEO tools are broken (Reddit) https://reddit.com/r/seo/abc123
 
 Rules:
 - Never invent facts not present in the provided signals.
@@ -584,13 +638,35 @@ SOURCE REFERENCE (use for citations):
         except Exception as e:
             st.session_state["qa_messages"].append({"role": "assistant", "content": f"Error: {e}"})
 
+    # --- Render chat history ---
     if st.session_state.get("qa_messages"):
         with st.expander("AI Q&A responses", expanded=True):
             for msg in st.session_state["qa_messages"]:
                 with st.chat_message(msg["role"]):
-                    st.markdown(msg["content"])
+                    if msg["role"] == "assistant":
+                        body, followups = _parse_response(msg["content"], st.session_state.get("qa_sources_map", {}))
+                        st.markdown(body)
+                    else:
+                        st.markdown(msg["content"])
+
+            # Follow-up question buttons (from the last assistant message)
+            last_assistant = None
+            for msg in reversed(st.session_state["qa_messages"]):
+                if msg["role"] == "assistant":
+                    last_assistant = msg["content"]
+                    break
+            if last_assistant:
+                _, followups = _parse_response(last_assistant, {})
+                if followups:
+                    st.caption("Follow-up questions:")
+                    for fidx, fq in enumerate(followups):
+                        if st.button(fq, key=f"followup_{fidx}"):
+                            st.session_state["qa_pending"] = fq
+                            st.rerun()
+
             if st.button("Clear chat", key="clear_qa"):
                 st.session_state["qa_messages"] = []
+                st.session_state["qa_sources_map"] = {}
                 st.rerun()
 
 
