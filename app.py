@@ -264,8 +264,7 @@ def _within_age_limit(insight):
 # Load data
 # ---------------------------------------------------------------------------
 
-insights = [i for i in load_insights()
-            if _is_display_relevant(i) and _within_age_limit(i)]
+insights = [i for i in load_insights() if _within_age_limit(i)]
 trends = load_trends()
 companies_data = load_companies()
 discovered = load_discovered_sources()
@@ -777,7 +776,7 @@ with tabs[0]:
         else:
             filtered = [i for i in filtered if i.get(f"is_{filter_signal}")]
 
-    filtered = [i for i in filtered if _relevance_sentence(i)]
+    filtered = [i for i in filtered if _is_display_relevant(i) and _relevance_sentence(i)]
     filtered.sort(key=lambda x: _relevance_score(x), reverse=True)
     st.caption(f"Showing {min(25, len(filtered))} of {len(filtered)} signals (sorted by relevance)")
 
@@ -1096,7 +1095,7 @@ with tabs[2]:
 
             # Top 3 supporting signals
             scored_signals = sorted(od["signals"], key=lambda x: _relevance_score(x), reverse=True)
-            top3 = [s for s in scored_signals if _relevance_sentence(s)][:3]
+            top3 = [s for s in scored_signals if _is_display_relevant(s) and _relevance_sentence(s)][:3]
             for sig in top3:
                 sig_title = sig.get("title", "")[:100] or sig.get("text", "")[:100]
                 sig_url = sig.get("url", "")
@@ -1109,7 +1108,7 @@ with tabs[2]:
                 st.caption(f"  _{sig_reason}_")
 
             # Show more evidence
-            remaining = [s for s in scored_signals[3:] if _relevance_sentence(s)][:12]
+            remaining = [s for s in scored_signals[3:] if _is_display_relevant(s) and _relevance_sentence(s)][:12]
             if remaining:
                 with st.expander(f"Show {len(remaining)} more evidence"):
                     for sig in remaining:
