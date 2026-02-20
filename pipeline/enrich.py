@@ -22,7 +22,7 @@ COMPANIES_PATH = "config/companies.json"
 
 def _load_companies():
     if not os.path.exists(COMPANIES_PATH):
-        return [], {}, set(), set()
+        return [], {}, set(), set(), set()
 
     with open(COMPANIES_PATH, "r") as f:
         data = json.load(f)
@@ -31,6 +31,7 @@ def _load_companies():
     alias_map = {}  # alias -> canonical name
     own_brand_names = set()
     all_aliases = set()
+    context_required_names = set()
 
     for c in data.get("own_brands", []):
         name = c["name"]
@@ -41,6 +42,8 @@ def _load_companies():
             alias_map[a.lower()] = name
             own_brand_names.add(a.lower())
             all_aliases.add(a.lower())
+        if c.get("context_required"):
+            context_required_names.add(name)
 
     for c in data.get("competitors", []):
         name = c["name"]
@@ -49,8 +52,10 @@ def _load_companies():
         for a in c.get("aliases", []):
             alias_map[a.lower()] = name
             all_aliases.add(a.lower())
+        if c.get("context_required"):
+            context_required_names.add(name)
 
-    return all_companies, alias_map, own_brand_names, all_aliases
+    return all_companies, alias_map, own_brand_names, all_aliases, context_required_names
 
 
 # ---------------------------------------------------------------------------
@@ -78,6 +83,17 @@ NOISE_PHRASES = [
     "check out my channel", "subscribe to my",
     "use my affiliate", "promo code", "discount code",
 ]
+
+TITLE_BLOCKLIST = re.compile(
+    r"^\s*\[(dead|flagged|deleted)\]\s*$"
+    r"|who is hiring"
+    r"|who.s hiring"
+    r"|ask hn:.*hiring"
+    r"|hiring thread"
+    r"|freelancer.*seeking"
+    r"|monthly.*job",
+    re.I,
+)
 
 # ---------------------------------------------------------------------------
 # Sentiment detection
@@ -205,10 +221,13 @@ def _source_quality(source):
 # Main enrichment
 # ---------------------------------------------------------------------------
 
-def enrich_post(post, alias_map, own_brands):
+def enrich_post(post, alias_map, own_brands, context_required_names=None):
     """Enrich a single post with all signals."""
     text = (post.get("text", "") + " " + post.get("title", "")).strip()
     text_lower = text.lower()
+
+    # Pre-check GEO context for context_required validation
+    has_geo_context = any(term in text_lower for term in GEO_CONTEXT)
 
     # Company mentions
     companies_mentioned = set()
@@ -217,16 +236,20 @@ def enrich_post(post, alias_map, own_brands):
         if len(alias) < 3:
             continue
         # Word boundary match for short names, substring for longer
+        matched = False
         if len(alias) <= 4:
             if re.search(r"\b" + re.escape(alias) + r"\b", text_lower):
-                companies_mentioned.add(canonical)
-                if alias in own_brands:
-                    is_own_brand = True
+                matched = True
         else:
             if alias in text_lower:
-                companies_mentioned.add(canonical)
-                if alias in own_brands:
-                    is_own_brand = True
+                matched = True
+        if matched:
+            # Skip ambiguous names when post lacks GEO context
+            if context_required_names and canonical in context_required_names and not has_geo_context:
+                continue
+            companies_mentioned.add(canonical)
+            if alias in own_brands:
+                is_own_brand = True
 
     # Sentiment
     sentiment, sentiment_reason = _detect_sentiment(text)
@@ -286,7 +309,7 @@ def enrich_post(post, alias_map, own_brands):
 
 def run_enrichment(since_date=None):
     """Load all scraped data, filter for relevance, enrich, save."""
-    _, alias_map, own_brands, all_aliases = _load_companies()
+    _, alias_map, own_brands, all_aliases, context_required = _load_companies()
     company_terms = set(alias_map.keys())
 
     # Load all scraped files
@@ -324,6 +347,11 @@ def run_enrichment(since_date=None):
         if any(n in text for n in NOISE_PHRASES):
             continue
 
+        # Skip dead/deleted/job posts
+        title = post.get("title", "").strip()
+        if not title or TITLE_BLOCKLIST.search(title):
+            continue
+
         # Company mention requires GEO context or a known GEO source
         mentions_company = any(alias in text for alias in company_terms if len(alias) >= 3)
         has_context = any(term in text for term in GEO_CONTEXT)
@@ -344,7 +372,7 @@ def run_enrichment(since_date=None):
     # Enrich each post
     enriched = []
     for post in relevant:
-        enriched.append(enrich_post(post, alias_map, own_brands))
+        enriched.append(enrich_post(post, alias_map, own_brands, context_required))
 
     # Sort by date
     enriched.sort(key=lambda x: x.get("post_date", ""), reverse=True)

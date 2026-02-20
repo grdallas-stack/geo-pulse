@@ -31,7 +31,8 @@
         "profound.com"
       ],
       "category": "geo_measurement",
-      "url": "https://profound.com"
+      "url": "https://profound.com",
+      "context_required": true
     },
     {
       "name": "Peec AI",
@@ -69,7 +70,8 @@
         "searchable ai"
       ],
       "category": "geo_measurement",
-      "url": ""
+      "url": "",
+      "context_required": true
     },
     {
       "name": "AirOps",
@@ -96,7 +98,8 @@
         "bluefish ai"
       ],
       "category": "geo_measurement",
-      "url": "https://www.bluefishai.com"
+      "url": "https://www.bluefishai.com",
+      "context_required": true
     },
     {
       "name": "BrandLight",
@@ -123,7 +126,8 @@
         "athena"
       ],
       "category": "geo_measurement",
-      "url": "https://www.athenahq.ai"
+      "url": "https://www.athenahq.ai",
+      "context_required": true
     },
     {
       "name": "Relixir",
@@ -148,7 +152,8 @@
         "goodie ai"
       ],
       "category": "geo_optimization",
-      "url": "https://higoodie.com"
+      "url": "https://higoodie.com",
+      "context_required": true
     },
     {
       "name": "RankScale",
@@ -192,7 +197,8 @@
         "unusual"
       ],
       "category": "geo_measurement",
-      "url": "https://www.unusual.ai"
+      "url": "https://www.unusual.ai",
+      "context_required": true
     },
     {
       "name": "GoMega",
@@ -226,7 +232,8 @@
         "daydream ai"
       ],
       "category": "geo_optimization",
-      "url": "https://www.withdaydream.com"
+      "url": "https://www.withdaydream.com",
+      "context_required": true
     },
     {
       "name": "Azoma",
@@ -251,7 +258,8 @@
         "palo"
       ],
       "category": "geo_measurement",
-      "url": ""
+      "url": "",
+      "context_required": true
     },
     {
       "name": "Opinly",
@@ -276,7 +284,8 @@
         "clay.com"
       ],
       "category": "data_enrichment",
-      "url": "https://clay.com"
+      "url": "https://clay.com",
+      "context_required": true
     },
     {
       "name": "Conductor",
@@ -284,7 +293,8 @@
         "conductor"
       ],
       "category": "seo_platform",
-      "url": "https://conductor.com"
+      "url": "https://conductor.com",
+      "context_required": true
     },
     {
       "name": "Semrush",
@@ -317,7 +327,8 @@
         "surfer"
       ],
       "category": "content_optimization",
-      "url": "https://surferseo.com"
+      "url": "https://surferseo.com",
+      "context_required": true
     },
     {
       "name": "Clearscope",
@@ -360,7 +371,8 @@
         "future"
       ],
       "category": "unknown",
-      "url": ""
+      "url": "",
+      "context_required": true
     }
   ]
 }

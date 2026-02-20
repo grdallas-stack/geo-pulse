@@ -2,6 +2,7 @@
 import json
 import math
 import os
+import re
 from datetime import datetime, timedelta
 from collections import defaultdict, Counter
 
@@ -78,6 +79,48 @@ def _source_badge(source):
     return source.strip() or "Source"
 
 
+_TITLE_BLOCKLIST = re.compile(
+    r"^\s*\[(dead|flagged|deleted)\]\s*$"
+    r"|who is hiring"
+    r"|who.s hiring"
+    r"|ask hn:.*hiring"
+    r"|hiring thread"
+    r"|freelancer.*seeking"
+    r"|monthly.*job",
+    re.I,
+)
+
+
+def _is_displayable_post(insight):
+    """Filter out dead links, job posts, and empty titles."""
+    title = (insight.get("title") or "").strip()
+    if not title:
+        return False
+    if _TITLE_BLOCKLIST.search(title):
+        return False
+    return True
+
+
+def _dedup_insights(posts):
+    """Remove duplicates by URL, keeping the most enriched version."""
+    by_url = {}
+    no_url = []
+    for p in posts:
+        url = (p.get("url") or "").strip()
+        if not url:
+            no_url.append(p)
+            continue
+        existing = by_url.get(url)
+        if existing is None:
+            by_url[url] = p
+        else:
+            new_score = len(p.get("companies_mentioned", [])) + len(p.get("entity_tags", []))
+            old_score = len(existing.get("companies_mentioned", [])) + len(existing.get("entity_tags", []))
+            if new_score > old_score:
+                by_url[url] = p
+    return list(by_url.values()) + no_url
+
+
 def _time_ago(date_str):
     try:
         dt = datetime.strptime(date_str, "%Y-%m-%d")
@@ -127,39 +170,41 @@ def _relevance_score(insight):
 
 def _relevance_sentence(insight):
     """One-sentence explanation of why this post matters."""
-    parts = []
     tags = insight.get("entity_tags", [])
     companies = insight.get("companies_mentioned", [])
     features = insight.get("features_mentioned", [])
-    source = insight.get("source", "")
+    sentiment = insight.get("sentiment", "neutral")
+    feat_ctx = f" ({', '.join(features[:2])})" if features else ""
 
     if insight.get("is_competitive_intel"):
-        parts.append(f"Competitive comparison between {', '.join(companies[:3])}")
-    elif insight.get("is_feature_request"):
-        feat_str = f" ({', '.join(features[:2])})" if features else ""
-        parts.append(f"Feature request{feat_str}")
-    elif "funding_news" in tags:
-        parts.append("Funding or investment signal")
-    elif "product_launch" in tags:
-        parts.append("New product or feature launch")
-    elif "complaint" in tags and companies:
-        parts.append(f"User complaint about {companies[0]}")
-    elif "praise" in tags and companies:
-        parts.append(f"Positive mention of {companies[0]}")
-    elif insight.get("is_buyer_voice"):
-        parts.append("Buyer evaluating tools")
-    elif insight.get("is_founder_voice"):
-        parts.append("Founder or builder perspective")
-    elif insight.get("is_analyst_voice"):
-        parts.append("Analyst or research signal")
-    elif companies:
-        parts.append(f"Mentions {', '.join(companies[:2])}")
-
-    reason = insight.get("sentiment_reason", "")
-    if reason and "No strong" not in reason:
-        parts.append(reason.lower())
-
-    return ". ".join(parts[:2]) + "." if parts else ""
+        return f"Competitive comparison between {', '.join(companies[:3])}{feat_ctx}."
+    if insight.get("is_feature_request"):
+        voice = "buyer" if insight.get("is_buyer_voice") else "user"
+        return f"Feature request{feat_ctx} from {voice}."
+    if "funding_news" in tags:
+        target = f" for {companies[0]}" if companies else ""
+        return f"Funding or investment signal{target}."
+    if "product_launch" in tags:
+        target = f" from {companies[0]}" if companies else ""
+        return f"Product or feature launch{target}."
+    if "complaint" in tags and companies:
+        return f"User complaint about {companies[0]}{feat_ctx}. Sentiment: negative."
+    if "praise" in tags and companies:
+        return f"Positive mention of {companies[0]}{feat_ctx}. Sentiment: positive."
+    if insight.get("is_buyer_voice"):
+        return f"Buyer evaluating tools{feat_ctx}."
+    if insight.get("is_founder_voice"):
+        target = f" ({companies[0]})" if companies else ""
+        return f"Founder perspective{target}{feat_ctx}."
+    if insight.get("is_analyst_voice"):
+        return f"Analyst or research signal{feat_ctx}."
+    if companies and features:
+        sent = f" Sentiment: {sentiment}." if sentiment != "neutral" else ""
+        return f"Mentions {', '.join(companies[:2])} in context of {', '.join(features[:2])}.{sent}"
+    if companies:
+        sent = f" Sentiment: {sentiment}." if sentiment != "neutral" else ""
+        return f"Mentions {', '.join(companies[:2])}.{sent}"
+    return ""
 
 
 def _keywords_for_card(insight):
@@ -264,7 +309,9 @@ def _within_age_limit(insight):
 # Load data
 # ---------------------------------------------------------------------------
 
-insights = [i for i in load_insights() if _within_age_limit(i)]
+_raw_insights = load_insights()
+insights = _dedup_insights([i for i in _raw_insights
+                            if _within_age_limit(i) and _is_displayable_post(i)])
 trends = load_trends()
 companies_data = load_companies()
 discovered = load_discovered_sources()
@@ -432,7 +479,8 @@ except (ValueError, TypeError):
 h1, h2, h3, h4 = st.columns(4)
 h1.metric("Sources Monitored", f"{len(approved_sources) + 11}",
           help=f"Active scrapers: {SOURCE_LIST}. Plus {len(approved_sources)} auto-approved community sources.")
-h2.metric("Signals Ingested", f"{len(insights):,}")
+h2.metric("Signals Ingested", f"{len(insights):,}",
+          help=f"{len(insights):,} quality signals from {len(_raw_insights):,} total scraped (filtered by age, relevance, and dedup).")
 h3.metric("Companies Tracked", f"{len(company_meta)}")
 h4.metric(f"{fresh_icon} Last Updated", freshness)
 
@@ -712,9 +760,9 @@ SOURCE REFERENCE (for [S1] etc. citations):
 # ---------------------------------------------------------------------------
 
 tabs = st.tabs([
-    "🔴 Live Feed",
-    "🏢 Competitors",
-    "🎯 Roadmap",
+    "Live Feed",
+    "Competitors",
+    "Roadmap",
 ])
 
 
@@ -778,7 +826,7 @@ with tabs[0]:
 
     filtered = [i for i in filtered if _is_display_relevant(i) and _relevance_sentence(i)]
     filtered.sort(key=lambda x: _relevance_score(x), reverse=True)
-    st.caption(f"Showing {min(25, len(filtered))} of {len(filtered)} signals (sorted by relevance)")
+    st.caption(f"Showing {min(25, len(filtered))} of {len(filtered)} GEO-relevant signals from {len(insights):,} total ingested (filtered for relevance)")
 
     new_companies = _get_new_companies(json.dumps(insights))
     page_size = 25
@@ -882,9 +930,16 @@ with tabs[1]:
         positioning = _company_positioning(meta) if meta else ""
         own_tag = " ⭐ own brand" if is_own else ""
 
+        # Find most recent post date for this company
+        latest_date = ""
+        for s in cd["signals"]:
+            d = s.get("post_date", "")
+            if d > latest_date:
+                latest_date = d
+
         with st.container(border=True):
             # Header row
-            hc1, hc2, hc3 = st.columns([3, 2, 2])
+            hc1, hc2 = st.columns([3, 2])
             with hc1:
                 comp_url = meta.get("url", "") if meta else ""
                 site_link = f" · [Visit site]({comp_url})" if comp_url else ""
@@ -892,10 +947,9 @@ with tabs[1]:
                 if positioning:
                     st.caption(positioning)
             with hc2:
-                st.markdown(f"{momentum}")
-            with hc3:
                 neu_pct = 100 - pos_pct - neg_pct
-                st.markdown(f"{pos_pct}% positive · {neg_pct}% negative · {neu_pct}% neutral · {total} mentions")
+                st.markdown(f"{total} mentions · {momentum}")
+                st.caption(f"{pos_pct}% positive · {neg_pct}% negative · {neu_pct}% neutral")
 
             # Top 3 most relevant signals this week
             week_signals = [s for s in cd["signals"] if s.get("post_date", "") >= week_ago_str]
@@ -930,6 +984,9 @@ with tabs[1]:
                         st.markdown(f"`{sig_source_label}` {headline}")
                         st.caption(f"_{sig_reason}_ · {_time_ago(sig.get('post_date', ''))}")
 
+            if latest_date:
+                st.caption(f"Data as of {latest_date}")
+
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # TAB 3: ROADMAP
@@ -942,39 +999,48 @@ with tabs[2]:
     )
 
     FEATURE_TOOLTIPS = {
-        "Real-time Tracking": "Monitoring brand mentions in AI answers as they happen, not batch-processed hours later.",
-        "Multi-LLM Coverage": "Tracking visibility across ChatGPT, Perplexity, Gemini, Claude, and other AI platforms simultaneously.",
-        "Actionable Recs": "Specific, concrete suggestions for what to change (content, schema, links) to improve AI visibility.",
-        "ROI Measurement": "Connecting AI visibility metrics to business outcomes like traffic, leads, and revenue.",
-        "Historical Trends": "Tracking how brand visibility in AI answers changes over weeks and months.",
-        "Comp. Benchmarking": "Comparing your AI visibility against specific competitors on the same queries.",
-        "Content Guidance": "AI-driven recommendations for what topics to write about and how to structure content for AI citations.",
-        "Brand Safety": "Detecting when AI platforms give incorrect, outdated, or harmful information about your brand.",
-        "Integrations": "Connecting GEO data to existing tools like Google Analytics, HubSpot, Slack, or BI dashboards.",
+        "Real-time Tracking": "Updates AI visibility scores continuously vs. periodic snapshots.",
+        "Multi-LLM Coverage": "Tracks visibility across ChatGPT, Gemini, Claude, Perplexity simultaneously.",
+        "Actionable Recs": "Provides specific content changes to improve AI citations.",
+        "ROI Measurement": "Tracks revenue impact of GEO optimization efforts.",
+        "Historical Trends": "Shows how AI visibility has changed over time.",
+        "Comp. Benchmarking": "Compares your AI visibility against named competitors.",
+        "Content Guidance": "Recommends what content to create to improve AI answer inclusion.",
+        "Brand Safety": "Monitors for brand misrepresentation in AI-generated answers.",
+        "Integrations": "Connects to third-party tools like CMS, analytics platforms, and marketing stacks.",
         "Prompt Influence": "Techniques and tools for shaping how AI models reference and describe your brand.",
     }
 
     OPPORTUNITY_THEMES = {
         "Real-time Tracking": ["real-time", "real time", "live tracking", "live monitoring",
-                               "instant", "continuous"],
+                               "instant", "continuous", "live data", "monitor"],
         "Multi-LLM Coverage": ["multiple llm", "all llm", "perplexity and chatgpt", "cross-platform",
-                               "every ai", "all ai", "multi-model"],
+                               "every ai", "all ai", "multi-model", "chatgpt and gemini",
+                               "claude and", "different ai", "llm coverage"],
         "Actionable Recs": ["actionable", "what to do", "next steps", "recommendations",
-                            "how to improve", "specific advice"],
+                            "how to improve", "specific advice", "optimization tip",
+                            "action item"],
         "ROI Measurement": ["roi", "return on investment", "revenue impact", "attribution",
-                            "prove value", "business impact", "conversion"],
+                            "prove value", "business impact", "conversion", "kpi",
+                            "measure results", "performance metric"],
         "Historical Trends": ["historical", "trend", "over time", "change over", "compare week",
-                              "month over month", "trajectory"],
+                              "month over month", "trajectory", "time series",
+                              "tracking progress", "weekly report"],
         "Comp. Benchmarking": ["benchmark", "compare to competitor", "competitive",
-                               "industry average", "how do we compare", "vs competitor"],
+                               "industry average", "how do we compare", "vs competitor",
+                               "competitor analysis", "comparison", "ranking"],
         "Content Guidance": ["what to write", "content recommendations", "topic suggestion",
-                             "content gap", "optimization guide"],
+                             "content gap", "optimization guide", "content strategy",
+                             "content plan"],
         "Brand Safety": ["brand safety", "misinformation", "hallucination about",
-                         "wrong information", "incorrect", "ai says wrong"],
+                         "wrong information", "incorrect", "ai says wrong",
+                         "inaccurate", "false information", "reputation"],
         "Integrations": ["integrate", "integration", "connect to", "plugin",
-                         "works with", "api", "google analytics", "hubspot"],
+                         "works with", "api", "google analytics", "hubspot",
+                         "webhook", "zapier", "export data", "third-party"],
         "Prompt Influence": ["influence prompt", "shape answer", "control what ai says",
-                             "optimize prompt", "prompt engineering", "answer shaping"],
+                             "optimize prompt", "prompt engineering", "answer shaping",
+                             "prompt optimization"],
     }
 
     # Build opportunity data with per-company tracking and full signal refs
@@ -983,6 +1049,7 @@ with tabs[2]:
         "evidence": 0, "companies_tried": set(),
         "companies_praised": set(), "companies_complained": set(),
         "signals": [], "confidence": 0,
+        "company_detail": defaultdict(lambda: {"count": 0, "latest": ""}),
     })
 
     for i in insights:
@@ -1007,6 +1074,11 @@ with tabs[2]:
                         od["companies_praised"].add(c)
                 for c in companies:
                     od["companies_tried"].add(c)
+                    detail = od["company_detail"][c]
+                    detail["count"] += 1
+                    post_date = i.get("post_date", "")
+                    if post_date > detail["latest"]:
+                        detail["latest"] = post_date
                 od["signals"].append(i)
 
     for opp, od in opportunity_data.items():
@@ -1016,7 +1088,7 @@ with tabs[2]:
 
     # --- COMPETITIVE GAP MATRIX ---
     st.markdown("#### Competitive Gap Matrix")
-    st.caption("🟢 Has it (praised) · 🟡 Attempted (complaints exist) · 🔴 Not addressed")
+    st.caption("🟢 Has it (praised) · 🟡 Mentioned in context · 🔴 No data for this feature")
 
     comp_mention_counts = Counter()
     for i in insights:
@@ -1029,22 +1101,41 @@ with tabs[2]:
                                key=lambda x: active_opps[x]["evidence"], reverse=True)
 
     if sorted_opp_names and top_companies:
-        matrix_rows = []
+        # Header row
+        header_cols = st.columns([2] + [1] * len(top_companies))
+        with header_cols[0]:
+            st.markdown("**Feature**")
+        for ci, comp in enumerate(top_companies):
+            with header_cols[ci + 1]:
+                st.markdown(f"**{comp[:10]}**")
+
+        # Data rows with per-cell tooltips
         for opp in sorted_opp_names:
             od = active_opps[opp]
-            row = {"Feature": opp}
-            for comp in top_companies:
-                if comp in od["companies_praised"]:
-                    row[comp] = "🟢"
-                elif comp in od["companies_complained"]:
-                    row[comp] = "🟡"
-                elif comp in od["companies_tried"]:
-                    row[comp] = "🟡"
+            row_cols = st.columns([2] + [1] * len(top_companies))
+            feat_tip = FEATURE_TOOLTIPS.get(opp, "")
+            with row_cols[0]:
+                if feat_tip:
+                    st.markdown(f"**{opp}**", help=feat_tip)
                 else:
-                    row[comp] = "🔴"
-            matrix_rows.append(row)
-
-        st.dataframe(pd.DataFrame(matrix_rows), use_container_width=True, hide_index=True)
+                    st.markdown(f"**{opp}**")
+            for ci, comp in enumerate(top_companies):
+                detail = od["company_detail"].get(comp, {"count": 0, "latest": ""})
+                count = detail["count"]
+                latest = detail["latest"]
+                with row_cols[ci + 1]:
+                    if comp in od["companies_praised"]:
+                        cell = "🟢"
+                        tip = f"Praised. Based on {count} post{'s' if count != 1 else ''}."
+                    elif comp in od["companies_complained"] or comp in od["companies_tried"]:
+                        cell = "🟡"
+                        tip = f"Mentioned. Based on {count} post{'s' if count != 1 else ''}."
+                    else:
+                        cell = "🔴"
+                        tip = "No posts found mentioning this company for this feature."
+                    if latest:
+                        tip += f" Most recent: {_time_ago(latest)}."
+                    st.markdown(cell, help=tip)
     else:
         st.caption("Not enough data to build the matrix yet.")
 
@@ -1053,45 +1144,33 @@ with tabs[2]:
     sorted_opps = sorted(opportunity_data.items(),
                          key=lambda x: (x[1]["confidence"], x[1]["evidence"]), reverse=True)
 
+    conf_help = ("Confidence = pain signals (complaints + feature requests) / total signals for this feature. "
+                 "Higher means more unmet demand. Treat scores below 50% as directional, not definitive.")
+
     for opp, od in sorted_opps:
         if od["evidence"] < 2:
             continue
 
         conf = od["confidence"]
         conf_color = "🔴" if conf >= 70 else ("🟡" if conf >= 40 else "🟢")
-        asked = od["complaints"] + od["requests"]
         praised_comps = sorted(od["companies_praised"])
-        complained_comps = sorted(od["companies_complained"])
         no_coverage = [c for c in top_companies
                        if c not in od["companies_praised"]
                        and c not in od["companies_complained"]
                        and c not in od["companies_tried"]]
 
-        # Build rationale from data
-        rationale_parts = []
-        if asked:
-            rationale_parts.append(f"{asked} market signals asking for this")
-        if complained_comps:
-            rationale_parts.append(f"negative reviews at {', '.join(complained_comps[:3])}")
-        if no_coverage:
-            rationale_parts.append(f"no coverage from {', '.join(no_coverage[:3])}")
-        elif od["praise"] == 0:
-            rationale_parts.append("no tool praised for this yet")
-        rationale = ". ".join(p[0].upper() + p[1:] for p in rationale_parts) + "." if rationale_parts else ""
+        with_it = ", ".join(praised_comps[:5]) if praised_comps else "None yet"
+        without_it = ", ".join(no_coverage[:5]) if no_coverage else "All have attempted"
 
         with st.container(border=True):
             tooltip = FEATURE_TOOLTIPS.get(opp, "")
-            if tooltip:
-                st.markdown(f"{conf_color} **{opp}** — Confidence: {conf}%", help=tooltip)
-            else:
-                st.markdown(f"{conf_color} **{opp}** — Confidence: {conf}%")
-            if rationale:
-                st.markdown(f"**Why build it:** {rationale}")
-
-            # Has it / Doesn't
-            has_it = ", ".join(praised_comps[:5]) if praised_comps else "None"
-            doesnt = ", ".join(no_coverage[:5]) if no_coverage else "All have attempted"
-            st.caption(f"Has it (praised): {has_it} · Not addressed: {doesnt}")
+            st.markdown(f"{conf_color} **{opp}** — Confidence: {conf}%",
+                        help=f"{tooltip}\n\n{conf_help}" if tooltip else conf_help)
+            st.markdown(
+                f"**Market evidence:** {od['evidence']} signals mention this gap. "
+                f"Competitors with this: {with_it}. "
+                f"Competitors without: {without_it}."
+            )
 
             # Top 3 supporting signals
             scored_signals = sorted(od["signals"], key=lambda x: _relevance_score(x), reverse=True)
