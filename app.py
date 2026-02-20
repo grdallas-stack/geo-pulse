@@ -554,8 +554,10 @@ else:
     if not st.session_state["qa_messages"] and not st.session_state["qa_submit"]:
         starters = _get_starter_questions()
         st.caption("Try asking:")
+        cols = st.columns(len(starters))
         for idx, q in enumerate(starters):
-            st.button(q, key=f"starter_{idx}", on_click=_do_submit, args=(q,))
+            with cols[idx]:
+                st.button(q, key=f"starter_{idx}", on_click=_do_submit, args=(q,), use_container_width=True)
 
     # --- Process pending question ---
     question_to_ask = st.session_state.get("qa_submit", "")
