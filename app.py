@@ -530,7 +530,55 @@ with st.expander("How to use this dashboard"):
 Data refreshes every 6 hours from Reddit, Hacker News, G2 reviews, Product Hunt, Google News, and trade press.
 """)
 
-if not insights:
+def _data_missing():
+    """Check if core data files are missing or empty."""
+    if not os.path.exists(INSIGHTS_PATH):
+        return True
+    try:
+        size = os.path.getsize(INSIGHTS_PATH)
+        return size < 10  # empty json "[]" is 2 bytes
+    except OSError:
+        return True
+
+
+def _run_pipeline_subprocess():
+    """Run the pipeline as a subprocess and reload data on completion."""
+    import subprocess
+    env = os.environ.copy()
+    env["PYTHONPATH"] = os.path.dirname(os.path.abspath(__file__))
+    result = subprocess.run(
+        [".venv/bin/python3", "run_pipeline.py"],
+        cwd=os.path.dirname(os.path.abspath(__file__)),
+        env=env,
+        capture_output=True, text=True, timeout=300,
+    )
+    return result.returncode == 0, result.stderr
+
+
+# Auto-initialize on first load if data is missing
+if _data_missing():
+    if "pipeline_ran" not in st.session_state:
+        with st.status("First run detected. Initializing data pipeline...", expanded=True) as status:
+            st.write("Scraping Reddit, Hacker News, G2, Product Hunt, News RSS...")
+            ok, err = _run_pipeline_subprocess()
+            if ok:
+                st.session_state.pipeline_ran = True
+                status.update(label="Pipeline complete. Reloading...", state="complete")
+                st.cache_data.clear()
+                st.rerun()
+            else:
+                st.session_state.pipeline_ran = "failed"
+                status.update(label="Pipeline failed.", state="error")
+                st.code(err[-500:] if err else "No error output captured.")
+
+    # Manual fallback button
+    if not insights:
+        st.warning("No data available. The pipeline may have failed or is still running.")
+        if st.button("Initialize Data", type="primary"):
+            st.session_state.pop("pipeline_ran", None)
+            st.rerun()
+        st.stop()
+elif not insights:
     st.info("New signals ingesting. Check back in minutes.")
     st.stop()
 
