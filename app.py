@@ -540,13 +540,6 @@ else:
         """Set the question to be processed on next rerun."""
         st.session_state["qa_submit"] = question
 
-    # --- Starter question buttons (only when no chat history) ---
-    if not st.session_state["qa_messages"] and not st.session_state["qa_submit"]:
-        starters = _get_starter_questions()
-        st.caption("Try asking:")
-        for idx, q in enumerate(starters):
-            st.button(q, key=f"starter_{idx}", on_click=_do_submit, args=(q,))
-
     # --- Input form (Enter key submits via form) ---
     with st.form("qa_form", clear_on_submit=True):
         user_question = st.text_input(
@@ -556,6 +549,13 @@ else:
         submitted = st.form_submit_button("Ask AI", type="primary")
     if submitted and user_question.strip():
         st.session_state["qa_submit"] = user_question.strip()
+
+    # --- Starter question pills (below input, only when no chat history) ---
+    if not st.session_state["qa_messages"] and not st.session_state["qa_submit"]:
+        starters = _get_starter_questions()
+        st.caption("Try asking:")
+        for idx, q in enumerate(starters):
+            st.button(q, key=f"starter_{idx}", on_click=_do_submit, args=(q,))
 
     # --- Process pending question ---
     question_to_ask = st.session_state.get("qa_submit", "")
@@ -854,7 +854,9 @@ with tabs[1]:
             # Header row
             hc1, hc2, hc3 = st.columns([3, 2, 2])
             with hc1:
-                st.markdown(f"**{comp}**{own_tag}")
+                comp_url = meta.get("url", "") if meta else ""
+                site_link = f" · [Visit site]({comp_url})" if comp_url else ""
+                st.markdown(f"**{comp}**{own_tag}{site_link}")
                 if positioning:
                     st.caption(positioning)
             with hc2:
@@ -914,6 +916,19 @@ with tabs[2]:
         "Product opportunities ranked by market evidence. The gap matrix shows who has what. "
         "Below it: what to build, why, and the signals backing each recommendation."
     )
+
+    FEATURE_TOOLTIPS = {
+        "Real-time Tracking": "Monitoring brand mentions in AI answers as they happen, not batch-processed hours later.",
+        "Multi-LLM Coverage": "Tracking visibility across ChatGPT, Perplexity, Gemini, Claude, and other AI platforms simultaneously.",
+        "Actionable Recs": "Specific, concrete suggestions for what to change (content, schema, links) to improve AI visibility.",
+        "ROI Measurement": "Connecting AI visibility metrics to business outcomes like traffic, leads, and revenue.",
+        "Historical Trends": "Tracking how brand visibility in AI answers changes over weeks and months.",
+        "Comp. Benchmarking": "Comparing your AI visibility against specific competitors on the same queries.",
+        "Content Guidance": "AI-driven recommendations for what topics to write about and how to structure content for AI citations.",
+        "Brand Safety": "Detecting when AI platforms give incorrect, outdated, or harmful information about your brand.",
+        "Integrations": "Connecting GEO data to existing tools like Google Analytics, HubSpot, Slack, or BI dashboards.",
+        "Prompt Influence": "Techniques and tools for shaping how AI models reference and describe your brand.",
+    }
 
     OPPORTUNITY_THEMES = {
         "Real-time Tracking": ["real-time", "real time", "live tracking", "live monitoring",
@@ -1041,7 +1056,11 @@ with tabs[2]:
         rationale = ". ".join(rationale_parts) + "." if rationale_parts else ""
 
         with st.container(border=True):
-            st.markdown(f"{conf_color} **{opp}** — Confidence: {conf}%")
+            tooltip = FEATURE_TOOLTIPS.get(opp, "")
+            if tooltip:
+                st.markdown(f"{conf_color} **{opp}** — Confidence: {conf}%", help=tooltip)
+            else:
+                st.markdown(f"{conf_color} **{opp}** — Confidence: {conf}%")
             if rationale:
                 st.markdown(f"**Why build it:** {rationale}")
 
