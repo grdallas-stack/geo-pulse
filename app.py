@@ -369,146 +369,7 @@ def _get_relevant_posts(query, limit=15):
     return [s[1] for s in scored[:limit]]
 
 
-with st.sidebar:
-    st.markdown("### Ask GEO Pulse")
-    st.caption("Ask questions grounded in the actual data.")
-
-    # Initialize chat history
-    if "chat_messages" not in st.session_state:
-        st.session_state.chat_messages = []
-    if "active_tab" not in st.session_state:
-        st.session_state.active_tab = 0
-
-    # Starter questions
-    starters = _get_starter_questions(st.session_state.get("active_tab", 0))
-    if not st.session_state.chat_messages:
-        st.caption("Try asking:")
-        for idx, q in enumerate(starters):
-            if st.button(q, key=f"starter_{idx}", use_container_width=True):
-                st.session_state.chat_messages.append({"role": "user", "content": q})
-                st.rerun()
-
-    # Display chat history
-    for msg in st.session_state.chat_messages:
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
-
-    # Chat input
-    user_input = st.chat_input("Ask about the GEO/AEO market...", key="chat_input")
-
-    if user_input:
-        st.session_state.chat_messages.append({"role": "user", "content": user_input})
-
-    # Process the last user message if not yet answered
-    if (st.session_state.chat_messages
-            and st.session_state.chat_messages[-1]["role"] == "user"):
-
-        from dotenv import load_dotenv
-        load_dotenv()
-        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
-
-        if not api_key:
-            st.session_state.chat_messages.append({
-                "role": "assistant",
-                "content": "Anthropic API key not configured. Add `ANTHROPIC_API_KEY` to your `.env` file to enable the AI assistant."
-            })
-            st.rerun()
-        else:
-            user_q = st.session_state.chat_messages[-1]["content"]
-
-            # Build context with source IDs
-            data_summary = _build_data_summary()
-            relevant_posts = _get_relevant_posts(user_q)
-            posts_context = ""
-            sources_ref = ""
-            for idx, p in enumerate(relevant_posts[:10], 1):
-                sid = f"S{idx}"
-                comps = ", ".join(p.get("companies_mentioned", []))
-                title = p.get("title", "")[:100] or p.get("text", "")[:60]
-                posts_context += (
-                    f"- [{sid}] [{p.get('source','')}] {title} "
-                    f"| sentiment={p.get('sentiment','')} "
-                    f"| companies={comps} "
-                    f"| {p.get('post_date','')}\n"
-                    f"  \"{p.get('text','')[:200]}\"\n"
-                )
-                url = p.get("url", "")
-                source = p.get("source", "")
-                sources_ref += f"[{sid}] {title} ({source}) {url}\n"
-
-            system_prompt = f"""You are GEO Pulse, a market intelligence assistant for the GEO/AEO category. ProRata/Gist is the user's own product.
-
-EVERY response must follow this exact structure. No exceptions.
-
-**Executive Answer**
-2-3 sentences. Direct answer to the question. No preamble.
-
-**What the signals show**
-- Bullet points with inline citations [S1], [S2] referencing the sources below.
-- Cite numbers: "12 mentions this week" not "several."
-- If data is thin, say so.
-
-**Implications for ProRata/Gist**
-1-2 sentences on what this means for the product specifically.
-
-**Recommended actions**
-- Specific actions with suggested owner (Product, Engineering, GTM, Leadership).
-- Skip if the question is purely informational.
-
-**Confidence & gaps**
-One sentence. State evidence strength and what data is missing.
-
-**Sources**
-List each cited source as: [S1] Title (Source) URL
-Only include sources you actually cited. Use the reference list below.
-
-RULES:
-- No "Great question." No "Based on the data." Start with the executive answer.
-- No hedging, no filler, no enthusiasm. Operator-clean.
-- End with 2-3 follow-up questions on new lines prefixed with ">>".
-
-{data_summary}
-
-RELEVANT POSTS:
-{posts_context}
-
-SOURCE REFERENCE (use these for citations):
-{sources_ref}
-"""
-            try:
-                import anthropic
-                client = anthropic.Anthropic(api_key=api_key)
-
-                # Build messages (Anthropic format: system is separate, not in messages list)
-                messages = []
-                for msg in st.session_state.chat_messages[-6:]:
-                    messages.append({"role": msg["role"], "content": msg["content"]})
-
-                with st.spinner("Analyzing..."):
-                    response = client.messages.create(
-                        model="claude-haiku-4-5-20251001",
-                        system=system_prompt,
-                        messages=messages,
-                        max_tokens=1200,
-                        temperature=0.3,
-                    )
-
-                answer = response.content[0].text
-                st.session_state.chat_messages.append({"role": "assistant", "content": answer})
-                st.rerun()
-
-            except Exception as e:
-                st.session_state.chat_messages.append({
-                    "role": "assistant",
-                    "content": f"Error calling Anthropic: {str(e)}"
-                })
-                st.rerun()
-
-    # Clear chat button
-    if st.session_state.chat_messages:
-        if st.button("Clear conversation", key="clear_chat"):
-            st.session_state.chat_messages = []
-            st.rerun()
+_ASK_AI_RENDERED_ABOVE_TABS = True  # Ask GEO Pulse lives above the tab bar
 
 
 # ---------------------------------------------------------------------------
@@ -610,6 +471,127 @@ if _data_missing():
 elif not insights:
     st.info("New signals ingesting. Check back in minutes.")
     st.stop()
+
+
+# ---------------------------------------------------------------------------
+# Ask GEO Pulse (above tabs, matching SignalSynth-GEO layout)
+# ---------------------------------------------------------------------------
+
+st.markdown("### Ask GEO Pulse")
+st.caption("Ask any question about GEO/AEO market signals and get a data-grounded intelligence brief.")
+
+from dotenv import load_dotenv
+load_dotenv()
+_anthropic_key = os.environ.get("ANTHROPIC_API_KEY", "")
+
+if not _anthropic_key:
+    st.warning("Anthropic API key not configured. Add `ANTHROPIC_API_KEY` to your `.env` file to enable AI Q&A.")
+else:
+    if "qa_messages" not in st.session_state:
+        st.session_state["qa_messages"] = []
+    if "qa_draft" not in st.session_state:
+        st.session_state["qa_draft"] = ""
+
+    c1, c2 = st.columns([5, 1])
+    with c1:
+        user_question = st.text_input(
+            "Ask a question",
+            key="qa_draft",
+            placeholder="e.g., What are buyers complaining about most this week?",
+        )
+    with c2:
+        st.write("")
+        ask_clicked = st.button("Ask AI", key="qa_ask_btn", type="primary")
+
+    starters = _get_starter_questions()
+    st.caption(f"Try: **{starters[0]}**")
+
+    if ask_clicked and user_question.strip():
+        question = user_question.strip()
+        st.session_state["qa_messages"].append({"role": "user", "content": question})
+
+        # Build context with source IDs
+        data_summary = _build_data_summary()
+        relevant_posts = _get_relevant_posts(question)
+        posts_context = ""
+        sources_ref = ""
+        for idx, p in enumerate(relevant_posts[:10], 1):
+            sid = f"S{idx}"
+            comps = ", ".join(p.get("companies_mentioned", []))
+            title = p.get("title", "")[:100] or p.get("text", "")[:60]
+            posts_context += (
+                f"- [{sid}] [{p.get('source','')}] {title} "
+                f"| sentiment={p.get('sentiment','')} "
+                f"| companies={comps} "
+                f"| {p.get('post_date','')}\n"
+                f"  \"{p.get('text','')[:200]}\"\n"
+            )
+            url = p.get("url", "")
+            source = p.get("source", "")
+            sources_ref += f"[{sid}] {title} ({source}) {url}\n"
+
+        system_prompt = f"""You are GEO Pulse, a market intelligence assistant for the GEO/AEO category. ProRata/Gist is the user's own product.
+
+Your response must be boardroom-ready: concise, specific, and grounded only in provided data.
+If evidence is weak, explicitly say so.
+
+Format your answer exactly with these headings:
+1) **Executive answer** (2-3 sentences, direct answer first)
+2) **What the signals show** (3-6 bullets with inline citations [S1], [S2] referencing sources below)
+3) **Implications for ProRata/Gist** (2-3 bullets, what this means for the product)
+4) **Recommended actions** (2-4 numbered actions with owner: Product, Engineering, GTM, or Leadership)
+5) **Confidence & gaps** (1-2 bullets on evidence strength and what's missing)
+
+After the structured answer, list **Sources** you cited as:
+[S1] Title (Source) URL
+
+Rules:
+- Never invent facts not present in the provided signals.
+- Cite numbers: "12 mentions" not "several."
+- No preamble. No "Great question." Start with the executive answer.
+- No hedging, no filler, no enthusiasm. Operator-clean.
+- Keep total response under ~350 words unless explicitly asked for more.
+- End with 2-3 follow-up questions on new lines prefixed with ">>".
+
+DATASET SUMMARY:
+{data_summary}
+
+RELEVANT SIGNALS:
+{posts_context}
+
+SOURCE REFERENCE (use for citations):
+{sources_ref}
+"""
+        try:
+            import anthropic
+            client = anthropic.Anthropic(api_key=_anthropic_key)
+
+            messages = []
+            for msg in st.session_state["qa_messages"][-6:]:
+                messages.append({"role": msg["role"], "content": msg["content"]})
+
+            with st.spinner("Searching signals and generating brief..."):
+                response = client.messages.create(
+                    model="claude-haiku-4-5-20251001",
+                    system=system_prompt,
+                    messages=messages,
+                    max_tokens=1200,
+                    temperature=0.3,
+                )
+
+            answer = response.content[0].text
+            st.session_state["qa_messages"].append({"role": "assistant", "content": answer})
+        except Exception as e:
+            st.session_state["qa_messages"].append({"role": "assistant", "content": f"Error: {e}"})
+
+    if st.session_state.get("qa_messages"):
+        with st.expander("AI Q&A responses", expanded=True):
+            for msg in st.session_state["qa_messages"]:
+                with st.chat_message(msg["role"]):
+                    st.markdown(msg["content"])
+            if st.button("Clear chat", key="clear_qa"):
+                st.session_state["qa_messages"] = []
+                st.rerun()
 
 
 # ---------------------------------------------------------------------------
