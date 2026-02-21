@@ -11,7 +11,6 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 import plotly.graph_objects as go
-from apscheduler.schedulers.background import BackgroundScheduler
 from docx import Document as DocxDocument
 from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -110,25 +109,6 @@ code {
 </style>""", unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
-# Background scheduler — re-runs pipeline every 6 hours
-# ---------------------------------------------------------------------------
-
-def scheduled_refresh():
-    run_enrichment()
-
-def _digest_job():
-    """Wrapper for daily digest sends (defined later in file)."""
-    try:
-        _send_daily_digests()
-    except NameError:
-        pass  # Function not yet defined on first scheduler tick
-
-scheduler = BackgroundScheduler()
-scheduler.add_job(scheduled_refresh, 'interval', hours=6)
-scheduler.add_job(_digest_job, 'interval', hours=1, id='email_digest')
-if not scheduler.running:
-    scheduler.start()
-
 # ---------------------------------------------------------------------------
 # Data loading
 # ---------------------------------------------------------------------------
@@ -1865,23 +1845,13 @@ except (ValueError, TypeError):
     hours_ago = 999
     fresh_icon = "⚪"
 
-h1, h2, h3, h4, h5 = st.columns([2, 2, 2, 3, 1])
+h1, h2, h3, h4 = st.columns([2, 2, 2, 3])
 h1.metric("Sources", f"{len(approved_sources) + 11}",
           help=f"Active scrapers: {SOURCE_LIST}. Plus {len(approved_sources)} auto-approved community sources.")
 h2.metric("Signals", f"{len(insights):,}",
           help=f"{len(insights):,} quality signals from {len(_raw_insights):,} total scraped (filtered by age, relevance, and dedup).")
 h3.metric("Companies", f"{len(company_meta)}")
 h4.metric(f"{fresh_icon} Last Updated", freshness)
-with h5:
-    st.markdown("<div style='height: 24px'></div>", unsafe_allow_html=True)
-    if st.button("↻", help="Refresh data now", key="manual_refresh", use_container_width=False):
-        with st.spinner("Refreshing..."):
-            try:
-                run_enrichment()
-                st.cache_data.clear()
-            except Exception as _refresh_err:
-                st.error(f"Refresh failed: {_refresh_err}")
-        st.rerun()
 
 _sources_count = len(approved_sources) + 11
 _provenance_ts = last_ts[:16].replace("T", " ") if last_ts else "unknown"
