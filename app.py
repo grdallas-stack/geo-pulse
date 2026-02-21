@@ -2501,8 +2501,8 @@ with tabs[0]:
 
     # --- Signal of the Week ---
     st.markdown(
-        """<div style="border-left: 4px solid #FF9D1C; padding: 0.8rem 1rem; """
-        """background: #F8F4EB; margin-bottom: 1rem;">"""
+        """<div style="border-left: 4px solid #FF9D1C; padding: 16px; """
+        """background: #FFFFFF; border: 1px solid #D1CFBA; margin-bottom: 1rem;">"""
         """<span style="color: #FF9D1C; font-family: 'DM Mono', monospace; font-size: 0.75rem; font-weight: 600; """
         """letter-spacing: 0.05em; text-transform: uppercase;">"""
         """SIGNAL OF THE WEEK</span><br>"""
@@ -2535,7 +2535,7 @@ with tabs[0]:
         "sentiment": "positive",
     }
 
-    fc1, fc2, fc3 = st.columns(3)
+    fc1, fc2 = st.columns(2)
     all_companies_in_data = sorted(set(
         c for i in insights for c in i.get("companies_mentioned", [])
     ))
@@ -2544,11 +2544,6 @@ with tabs[0]:
     with fc2:
         sources_in_data = sorted(set(i.get("source", "") for i in insights))
         filter_source = st.selectbox("Source", ["All"] + sources_in_data, key="feed_source")
-    with fc3:
-        signal_options = ["All", "buyer_voice", "founder_voice", "analyst_voice",
-                          "feature_request", "competitive_intel", "complaint", "praise",
-                          "funding_news", "product_launch"]
-        filter_signal = st.selectbox("Signal", signal_options, key="feed_signal")
 
     with st.expander("Add a new competitor to monitor"):
         new_comp_name = st.text_input("Company name", key="new_comp_name")
@@ -2578,11 +2573,6 @@ with tabs[0]:
         filtered = [i for i in filtered if filter_company in i.get("companies_mentioned", [])]
     if filter_source != "All":
         filtered = [i for i in filtered if i.get("source", "") == filter_source]
-    if filter_signal != "All":
-        if filter_signal in ("complaint", "praise", "funding_news", "product_launch"):
-            filtered = [i for i in filtered if filter_signal in i.get("entity_tags", [])]
-        else:
-            filtered = [i for i in filtered if i.get(f"is_{filter_signal}")]
 
     filtered = [i for i in filtered if _is_display_relevant(i) and _relevance_sentence(i)]
     filtered.sort(key=lambda x: (x.get("post_date", ""), _relevance_score(x)), reverse=True)
