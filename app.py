@@ -2188,6 +2188,14 @@ def _build_export_chart_images(all_comps, comp_stats, opp_data):
 # ---------------------------------------------------------------------------
 
 with st.expander("Export"):
+    # Verify dependencies at import time
+    try:
+        from docx import Document as _DocxCheck  # noqa: F811
+        from pptx import Presentation as _PptxCheck  # noqa: F811
+    except ImportError as _imp_err:
+        st.error(f"Missing dependency: {_imp_err}. Add python-docx and python-pptx to requirements.txt")
+        st.stop()
+
     _exp_type = st.selectbox(
         "Export format",
         ["Research Report (.docx)", "Briefing Deck (.pptx)", "PRD (.docx)", "BRD (.docx)"],
@@ -2208,23 +2216,29 @@ with st.expander("Export"):
     else:
         _exp_features = _EXPORT_FEATURE_NAMES
 
-    # All companies for Research Report / Briefing Deck; all for PRD/BRD too
+    # All companies always included
     _exp_comps = _all_comp_names_export
 
-    try:
-        if _exp_type == "Research Report (.docx)":
+    if _exp_type == "Research Report (.docx)":
+        try:
             _buf = _export_research_report(
                 insights, company_meta, _export_opp_data, _exp_comps, _export_all_comp_stats
             )
+            _doc_bytes = _buf.getvalue()
+            st.caption(f"Export ready: {len(_doc_bytes):,} bytes")
             st.download_button(
                 label="Download Research Report",
-                data=_buf.getvalue(),
+                data=_doc_bytes,
                 file_name=f"GEOPulse_ResearchReport_{_date_tag}.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                key="export_dl",
+                key="export_dl_rr",
                 type="primary",
             )
-        elif _exp_type == "Briefing Deck (.pptx)":
+        except Exception as _ex:
+            st.error(f"Research Report export failed: {_ex}")
+
+    elif _exp_type == "Briefing Deck (.pptx)":
+        try:
             _fig1_img, _fig2_img = _build_export_chart_images(
                 _all_comp_names_export, _export_all_comp_stats, _export_opp_data
             )
@@ -2232,36 +2246,50 @@ with st.expander("Export"):
                 insights, company_meta, _export_opp_data, _exp_comps,
                 _export_all_comp_stats, _fig1_img, _fig2_img
             )
+            _doc_bytes = _buf.getvalue()
+            st.caption(f"Export ready: {len(_doc_bytes):,} bytes")
             st.download_button(
                 label="Download Briefing Deck",
-                data=_buf.getvalue(),
+                data=_doc_bytes,
                 file_name=f"GEOPulse_BriefingDeck_{_date_tag}.pptx",
                 mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
-                key="export_dl",
+                key="export_dl_bd",
                 type="primary",
             )
-        elif _exp_type == "PRD (.docx)":
+        except Exception as _ex:
+            st.error(f"Briefing Deck export failed: {_ex}")
+
+    elif _exp_type == "PRD (.docx)":
+        try:
             _buf = _export_prd(_export_opp_data, insights, _exp_features, _exp_comps)
+            _doc_bytes = _buf.getvalue()
+            st.caption(f"Export ready: {len(_doc_bytes):,} bytes")
             st.download_button(
                 label="Download PRD",
-                data=_buf.getvalue(),
+                data=_doc_bytes,
                 file_name=f"GEOPulse_PRD_{_date_tag}.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                key="export_dl",
+                key="export_dl_prd",
                 type="primary",
             )
-        elif _exp_type == "BRD (.docx)":
+        except Exception as _ex:
+            st.error(f"PRD export failed: {_ex}")
+
+    elif _exp_type == "BRD (.docx)":
+        try:
             _buf = _export_brd(_export_opp_data, insights, _exp_features, _exp_comps)
+            _doc_bytes = _buf.getvalue()
+            st.caption(f"Export ready: {len(_doc_bytes):,} bytes")
             st.download_button(
                 label="Download BRD",
-                data=_buf.getvalue(),
+                data=_doc_bytes,
                 file_name=f"GEOPulse_BRD_{_date_tag}.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                key="export_dl",
+                key="export_dl_brd",
                 type="primary",
             )
-    except Exception as _ex:
-        st.error(f"Export generation failed: {_ex}")
+        except Exception as _ex:
+            st.error(f"BRD export failed: {_ex}")
 
 
 # ---------------------------------------------------------------------------
