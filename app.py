@@ -77,6 +77,9 @@ h2, h3 { font-family: 'DM Sans', sans-serif; font-weight: 500; color: #0A0A0A; }
 .streamlit-expander {
   border: 1px solid #D1CFBA; border-radius: 0px; background-color: #F8F4EB;
 }
+.streamlit-expander [data-testid="stExpanderDetails"] {
+  background-color: #FFFFFF; padding: 16px; border-top: 1px solid #D1CFBA;
+}
 
 .element-container div[data-testid="stMarkdownContainer"] {
   font-family: 'DM Sans', sans-serif;
@@ -2506,8 +2509,9 @@ with tabs[0]:
         """<span style="color: #FF9D1C; font-family: 'DM Mono', monospace; font-size: 0.75rem; font-weight: 600; """
         """letter-spacing: 0.05em; text-transform: uppercase;">"""
         """SIGNAL OF THE WEEK</span><br>"""
-        """<code style="background: #D1CFBA; padding: 2px 6px; """
-        """font-size: 0.8rem;">Future</code><br>"""
+        """<span style="display:inline-block; background:#0E3B7E; color:#F8F4EB; """
+        """font-family:'DM Mono',monospace; font-size:11px; padding:2px 8px; """
+        """text-transform:uppercase; letter-spacing:0.03em;">FUTURE</span><br>"""
         """<a href="https://pressgazette.co.uk/marketing/future-leveragess-high-visibility-on-chatgpt-by-offering-geo-as-a-service/" """
         """target="_blank" style="font-size: 1.05rem; font-weight: 600; color: #0A0A0A; """
         """text-decoration: none;">Future PLC launches GEO-as-a-Service division</a>"""
@@ -2567,6 +2571,77 @@ with tabs[0]:
                     json.dump(cd, f, ensure_ascii=False, indent=2)
                 st.cache_data.clear()
                 st.success(f"Now monitoring **{name}**. Will appear in next pipeline run.")
+
+    with st.expander("Daily Email Digest"):
+        st.markdown("Get GEO Pulse insights delivered to your inbox daily.")
+
+        _subs = _load_subscribers()
+        _sub_emails = {s["email"] for s in _subs}
+
+        _d_col1, _d_col2 = st.columns(2)
+        with _d_col1:
+            _sub_email = st.text_input("Email address", key="sub_email")
+            _sub_name = st.text_input("Name (optional)", key="sub_name")
+        with _d_col2:
+            _sub_hour = st.selectbox(
+                "Delivery time",
+                options=list(range(5, 22)),
+                index=3,  # 8 AM default
+                format_func=lambda h: f"{h}:00",
+                key="sub_hour",
+            )
+            _tz_options = {
+                "US/Eastern (UTC-5)": -5, "US/Central (UTC-6)": -6,
+                "US/Mountain (UTC-7)": -7, "US/Pacific (UTC-8)": -8,
+                "UTC": 0, "Europe/London (UTC+0)": 0,
+                "Europe/Berlin (UTC+1)": 1, "Asia/Tokyo (UTC+9)": 9,
+            }
+            _sub_tz_label = st.selectbox("Timezone", options=list(_tz_options.keys()), key="sub_tz")
+            _sub_tz_offset = _tz_options[_sub_tz_label]
+
+        _all_comp_digest = sorted(set(
+            c for i in insights for c in i.get("companies_mentioned", [])
+        ))
+        _sub_comp_filter = st.multiselect(
+            "Competitor filter (leave empty for all)",
+            options=_all_comp_digest,
+            key="sub_comp_filter",
+        )
+
+        _sub_col1, _sub_col2 = st.columns(2)
+        with _sub_col1:
+            if st.button("Subscribe", key="subscribe_btn", type="primary"):
+                if _sub_email and "@" in _sub_email:
+                    if _sub_email in _sub_emails:
+                        st.warning("This email is already subscribed.")
+                    else:
+                        new_sub = {
+                            "email": _sub_email,
+                            "name": _sub_name,
+                            "delivery_hour": _sub_hour,
+                            "tz_offset": _sub_tz_offset,
+                            "competitor_filter": _sub_comp_filter,
+                            "confirmed": True,
+                            "subscribed_at": datetime.now().isoformat(),
+                        }
+                        _subs.append(new_sub)
+                        _save_subscribers(_subs)
+                        _send_confirmation_email(_sub_email, _sub_name)
+                        st.success(f"Subscribed {_sub_email}. Confirmation email sent.")
+                else:
+                    st.error("Enter a valid email address.")
+
+        with _sub_col2:
+            if st.button("Unsubscribe", key="unsub_btn"):
+                if _sub_email and _sub_email in _sub_emails:
+                    _subs = [s for s in _subs if s["email"] != _sub_email]
+                    _save_subscribers(_subs)
+                    st.success(f"Unsubscribed {_sub_email}.")
+                elif _sub_email:
+                    st.info("Email not found in subscriber list.")
+
+        if _subs:
+            st.caption(f"{len(_subs)} active subscriber(s)")
 
     filtered = insights
     if filter_company != "All":
@@ -3370,82 +3445,6 @@ Return ONLY valid Markdown with this exact structure:
         )
 
 
-
-
-# ---------------------------------------------------------------------------
-# Email Digest Subscription
-# ---------------------------------------------------------------------------
-
-with st.expander("Daily Email Digest"):
-    st.markdown("Get GEO Pulse insights delivered to your inbox daily.")
-
-    _subs = _load_subscribers()
-    _sub_emails = {s["email"] for s in _subs}
-
-    _d_col1, _d_col2 = st.columns(2)
-    with _d_col1:
-        _sub_email = st.text_input("Email address", key="sub_email")
-        _sub_name = st.text_input("Name (optional)", key="sub_name")
-    with _d_col2:
-        _sub_hour = st.selectbox(
-            "Delivery time",
-            options=list(range(5, 22)),
-            index=3,  # 8 AM default
-            format_func=lambda h: f"{h}:00",
-            key="sub_hour",
-        )
-        _tz_options = {
-            "US/Eastern (UTC-5)": -5, "US/Central (UTC-6)": -6,
-            "US/Mountain (UTC-7)": -7, "US/Pacific (UTC-8)": -8,
-            "UTC": 0, "Europe/London (UTC+0)": 0,
-            "Europe/Berlin (UTC+1)": 1, "Asia/Tokyo (UTC+9)": 9,
-        }
-        _sub_tz_label = st.selectbox("Timezone", options=list(_tz_options.keys()), key="sub_tz")
-        _sub_tz_offset = _tz_options[_sub_tz_label]
-
-    _all_comp_digest = sorted(set(
-        c for i in insights for c in i.get("companies_mentioned", [])
-    ))
-    _sub_comp_filter = st.multiselect(
-        "Competitor filter (leave empty for all)",
-        options=_all_comp_digest,
-        key="sub_comp_filter",
-    )
-
-    _sub_col1, _sub_col2 = st.columns(2)
-    with _sub_col1:
-        if st.button("Subscribe", key="subscribe_btn", type="primary"):
-            if _sub_email and "@" in _sub_email:
-                if _sub_email in _sub_emails:
-                    st.warning("This email is already subscribed.")
-                else:
-                    new_sub = {
-                        "email": _sub_email,
-                        "name": _sub_name,
-                        "delivery_hour": _sub_hour,
-                        "tz_offset": _sub_tz_offset,
-                        "competitor_filter": _sub_comp_filter,
-                        "confirmed": True,
-                        "subscribed_at": datetime.now().isoformat(),
-                    }
-                    _subs.append(new_sub)
-                    _save_subscribers(_subs)
-                    _send_confirmation_email(_sub_email, _sub_name)
-                    st.success(f"Subscribed {_sub_email}. Confirmation email sent.")
-            else:
-                st.error("Enter a valid email address.")
-
-    with _sub_col2:
-        if st.button("Unsubscribe", key="unsub_btn"):
-            if _sub_email and _sub_email in _sub_emails:
-                _subs = [s for s in _subs if s["email"] != _sub_email]
-                _save_subscribers(_subs)
-                st.success(f"Unsubscribed {_sub_email}.")
-            elif _sub_email:
-                st.info("Email not found in subscriber list.")
-
-    if _subs:
-        st.caption(f"{len(_subs)} active subscriber(s)")
 
 
 # ---------------------------------------------------------------------------
