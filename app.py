@@ -2535,7 +2535,7 @@ with tabs[0]:
         "sentiment": "positive",
     }
 
-    fc1, fc2, fc3, fc4 = st.columns(4)
+    fc1, fc2, fc3 = st.columns(3)
     all_companies_in_data = sorted(set(
         c for i in insights for c in i.get("companies_mentioned", [])
     ))
@@ -2545,8 +2545,6 @@ with tabs[0]:
         sources_in_data = sorted(set(i.get("source", "") for i in insights))
         filter_source = st.selectbox("Source", ["All"] + sources_in_data, key="feed_source")
     with fc3:
-        filter_sentiment = st.selectbox("Sentiment", ["All", "positive", "negative", "neutral"], key="feed_sentiment")
-    with fc4:
         signal_options = ["All", "buyer_voice", "founder_voice", "analyst_voice",
                           "feature_request", "competitive_intel", "complaint", "praise",
                           "funding_news", "product_launch"]
@@ -2580,8 +2578,6 @@ with tabs[0]:
         filtered = [i for i in filtered if filter_company in i.get("companies_mentioned", [])]
     if filter_source != "All":
         filtered = [i for i in filtered if i.get("source", "") == filter_source]
-    if filter_sentiment != "All":
-        filtered = [i for i in filtered if i.get("sentiment", "") == filter_sentiment]
     if filter_signal != "All":
         if filter_signal in ("complaint", "praise", "funding_news", "product_launch"):
             filtered = [i for i in filtered if filter_signal in i.get("entity_tags", [])]
@@ -2589,7 +2585,7 @@ with tabs[0]:
             filtered = [i for i in filtered if i.get(f"is_{filter_signal}")]
 
     filtered = [i for i in filtered if _is_display_relevant(i) and _relevance_sentence(i)]
-    filtered.sort(key=lambda x: _relevance_score(x), reverse=True)
+    filtered.sort(key=lambda x: (x.get("post_date", ""), _relevance_score(x)), reverse=True)
     st.caption(f"Showing {min(25, len(filtered))} of {len(filtered)} GEO-relevant signals from {len(insights):,} total ingested (filtered for relevance)")
 
     new_companies = _get_new_companies(json.dumps(insights))
@@ -2603,36 +2599,50 @@ with tabs[0]:
         date = insight.get("post_date", "")
         time_label = _time_ago(date)
         rel_sentence = _relevance_sentence(insight)
-        kws = _keywords_for_card(insight)
 
-        # Compact newspaper-style card
-        headline = f"[{title}]({url})" if url else title
+        # Title as HTML anchor or plain text
+        if url:
+            title_html = (
+                f'<a href="{url}" target="_blank" '
+                f'style="color:#0A0A0A; text-decoration:none;">{title}</a>'
+            )
+        else:
+            title_html = title
+
+        # Competitor pills
+        comp_pills = ""
+        if companies:
+            pills = "".join(
+                f'<span style="display:inline-block; background:#0E3B7E; color:#F8F4EB; '
+                f'font-family:DM Mono,monospace; font-size:10px; padding:2px 8px; '
+                f'margin-right:4px; letter-spacing:0.03em;">{c}</span>'
+                for c in companies[:5]
+            )
+            comp_pills = (
+                f'<div style="margin-top:6px;">'
+                f'<span style="font-family:DM Mono,monospace; font-size:10px; '
+                f'color:#94a3b8; margin-right:4px;">Competitors:</span>{pills}</div>'
+            )
+
         st.markdown(
-            f'<div style="padding:8px 0; border-bottom:1px solid #E8E4D9;">'
+            f'<div style="background:#FFFFFF; padding:16px; '
+            f'border-bottom:1px solid #D1CFBA;">'
+            f'<div style="display:flex; justify-content:space-between; align-items:center;">'
             f'<span style="font-family:DM Mono,monospace; font-size:10px; '
             f'color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em;">'
             f'{source_label}</span>'
-            f'<span style="color:#D1CFBA; margin:0 6px;">·</span>'
-            f'<span style="font-size:14px; color:#0A0A0A;"><b>{headline}</b></span>'
-            f'<span style="float:right; font-family:DM Mono,monospace; '
-            f'font-size:10px; color:#94a3b8;">{time_label}</span>'
-            f'<br><span style="font-size:12px; color:#6b7280;">{rel_sentence}</span>'
+            f'<span style="font-family:DM Mono,monospace; font-size:10px; '
+            f'color:#94a3b8;">{time_label}</span>'
+            f'</div>'
+            f'<div style="margin-top:6px; font-family:DM Sans,sans-serif; '
+            f'font-size:15px; font-weight:700; color:#0A0A0A; line-height:1.3;">'
+            f'{title_html}</div>'
+            f'<div style="margin-top:4px; font-size:13px; color:#6b7280; '
+            f'line-height:1.4;">{rel_sentence}</div>'
+            f'{comp_pills}'
             f'</div>',
             unsafe_allow_html=True,
         )
-        entity_tags = []
-        for comp in companies[:4]:
-            is_own = comp in own_brands
-            new = comp in new_companies
-            tag = f"**{comp}**" if is_own else comp
-            if new:
-                tag += " 🆕"
-            entity_tags.append(tag)
-        for k in kws:
-            entity_tags.append(k)
-        if entity_tags:
-            tag_str = " ".join(f"`{t}`" for t in entity_tags)
-            st.markdown(tag_str)
 
     if len(filtered) > page_size:
         st.caption(f"+ {len(filtered) - page_size} more signals")
