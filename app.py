@@ -28,9 +28,8 @@ st.set_page_config(page_title="GEO Pulse", page_icon="📡", layout="wide")
 st.markdown("""<style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap');
 
-/* Button overrides — must come first */
+/* Primary button overrides */
 .stButton > button[kind="primary"],
-.stButton > button,
 .stFormSubmitButton > button,
 .stFormSubmitButton > button[kind="primary"],
 .stDownloadButton > button {
@@ -41,12 +40,27 @@ st.markdown("""<style>
   border: none !important;
   border-radius: 0px !important;
 }
-.stButton > button:hover,
+.stButton > button[kind="primary"]:hover,
 .stFormSubmitButton > button:hover,
 .stDownloadButton > button:hover {
   background-color: #FF9D1C !important;
   color: #0A0A0A !important;
 }
+
+/* Secondary buttons — filled navy by default */
+.stButton > button[kind="secondary"] {
+  background-color: #0E3B7E !important;
+  color: #F8F4EB !important;
+  font-family: 'DM Sans', sans-serif !important;
+  font-weight: 500;
+  border: none !important;
+  border-radius: 0px !important;
+}
+.stButton > button[kind="secondary"]:hover {
+  background-color: #FF9D1C !important;
+  color: #0A0A0A !important;
+}
+
 
 html, body, [class*="css"] {
   font-family: 'DM Sans', sans-serif;
@@ -1827,23 +1841,17 @@ last_run = runs[-1] if runs else {}
 last_ts = last_run.get("completed_at", "")
 try:
     last_dt = datetime.fromisoformat(last_ts)
-    hours_ago = (datetime.now() - last_dt).total_seconds() / 3600
-    if hours_ago < 1:
-        freshness = "< 1 hour ago"
-    elif hours_ago < 24:
-        freshness = f"{hours_ago:.0f}h ago"
+    _delta_sec = (datetime.now() - last_dt).total_seconds()
+    if _delta_sec < 60:
+        freshness = "just now"
+    elif _delta_sec < 3600:
+        freshness = f"{int(_delta_sec // 60)}m ago"
+    elif _delta_sec < 86400:
+        freshness = f"{int(_delta_sec // 3600)}h ago"
     else:
-        freshness = f"{hours_ago / 24:.1f}d ago"
-    if hours_ago < 6:
-        fresh_icon = "🟢"
-    elif hours_ago < 12:
-        fresh_icon = "🟡"
-    else:
-        fresh_icon = "🔴"
+        freshness = f"{_delta_sec / 86400:.1f}d ago"
 except (ValueError, TypeError):
     freshness = "unknown"
-    hours_ago = 999
-    fresh_icon = "⚪"
 
 h1, h2, h3, h4 = st.columns([2, 2, 2, 3])
 h1.metric("Sources", f"{len(approved_sources) + 11}",
@@ -1851,7 +1859,7 @@ h1.metric("Sources", f"{len(approved_sources) + 11}",
 h2.metric("Signals", f"{len(insights):,}",
           help=f"{len(insights):,} quality signals from {len(_raw_insights):,} total scraped (filtered by age, relevance, and dedup).")
 h3.metric("Companies", f"{len(company_meta)}")
-h4.metric(f"{fresh_icon} Last Updated", freshness)
+h4.metric("Last Updated", freshness)
 
 _sources_count = len(approved_sources) + 11
 _provenance_ts = last_ts[:16].replace("T", " ") if last_ts else "unknown"
@@ -2039,36 +2047,36 @@ else:
         "What should our team know today?",
     ]
 
+    # Render pill buttons as styled HTML, click sets query param -> triggers rerun
+    _pill_html_items = ""
+    for _pi, _pq in enumerate(_pill_questions):
+        _encoded_q = _pq.replace("'", "&#39;").replace('"', "&quot;")
+        _pill_html_items += (
+            f'<a href="?pill_q={_pi}" target="_self" '
+            f'style="display:inline-block; background:transparent; color:#0E3B7E; '
+            f'border:1px solid #0E3B7E; font-family:DM Mono,monospace; font-size:11px; '
+            f'text-transform:uppercase; padding:5px 12px; margin:0 4px 4px 0; '
+            f'text-decoration:none; letter-spacing:0.03em; white-space:nowrap;"'
+            f' onmouseover="this.style.backgroundColor=\'#0E3B7E\';this.style.color=\'#F8F4EB\'"'
+            f' onmouseout="this.style.backgroundColor=\'transparent\';this.style.color=\'#0E3B7E\'"'
+            f'>{_pq}</a>'
+        )
     st.markdown(
-        '<style>.pill-row .stButton > button { '
-        'background-color: transparent !important; '
-        'color: #0E3B7E !important; '
-        'border: 1px solid #0E3B7E !important; '
-        'font-family: "DM Mono", monospace !important; '
-        'font-size: 11px !important; '
-        'text-transform: uppercase !important; '
-        'padding: 4px 10px !important; '
-        'border-radius: 0px !important; '
-        '} '
-        '.pill-row .stButton > button:hover { '
-        'background-color: #0E3B7E !important; '
-        'color: #F8F4EB !important; '
-        '}</style>',
+        f'<div style="display:flex; flex-wrap:wrap; margin-top:8px;">{_pill_html_items}</div>',
         unsafe_allow_html=True,
     )
 
-    def _pill_click(q):
-        st.session_state["qa_submit"] = q
-
-    _pill_container = st.container()
-    with _pill_container:
-        st.markdown('<div class="pill-row">', unsafe_allow_html=True)
-        _pc = st.columns(len(_pill_questions))
-        for _pi, _pq in enumerate(_pill_questions):
-            with _pc[_pi]:
-                st.button(_pq, key=f"pill_{_pi}", on_click=_pill_click, args=(_pq,),
-                          use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+    # Check if a pill was clicked via query param
+    _qp = st.query_params.get("pill_q")
+    if _qp is not None:
+        try:
+            _pill_idx = int(_qp)
+            if 0 <= _pill_idx < len(_pill_questions):
+                st.session_state["qa_submit"] = _pill_questions[_pill_idx]
+        except (ValueError, IndexError):
+            pass
+        st.query_params.clear()
+        st.rerun()
 
     # --- Process pending question ---
     question_to_ask = st.session_state.get("qa_submit", "")
