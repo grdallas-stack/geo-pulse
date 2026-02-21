@@ -23,6 +23,80 @@ from pipeline.enrich import run_enrichment
 st.set_page_config(page_title="GEO Pulse", page_icon="📡", layout="wide")
 
 # ---------------------------------------------------------------------------
+# Gist brand theme
+# ---------------------------------------------------------------------------
+
+st.markdown("""<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap');
+
+html, body, [class*="css"] {
+  font-family: 'DM Sans', sans-serif;
+  background-color: #F8F4EB;
+  color: #0A0A0A;
+}
+.stApp { background-color: #F8F4EB; }
+
+h1 { font-family: 'DM Sans', sans-serif; font-weight: 700; color: #0A0A0A; }
+h2, h3 { font-family: 'DM Sans', sans-serif; font-weight: 500; color: #0A0A0A; }
+
+.stMetric label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.08em; color: #0A0A0A;
+}
+.stMetric [data-testid="metric-value"] {
+  font-family: 'DM Sans', sans-serif; font-weight: 700; color: #0A0A0A;
+}
+
+.stButton > button[kind="primary"], .stButton > button {
+  background-color: #0A0A0A; color: #F8F4EB;
+  font-family: 'DM Sans', sans-serif; font-weight: 500;
+  border: none; border-radius: 0px;
+}
+.stButton > button:hover { background-color: #FF9D1C; color: #0A0A0A; }
+
+.stDownloadButton > button {
+  background-color: #0A0A0A; color: #F8F4EB;
+  font-family: 'DM Sans', sans-serif; border-radius: 0px; border: none;
+}
+.stDownloadButton > button:hover { background-color: #FF9D1C; color: #0A0A0A; }
+
+.stTabs [data-baseweb="tab"] {
+  font-family: 'DM Mono', monospace; font-size: 12px;
+  text-transform: uppercase; letter-spacing: 0.06em; color: #0A0A0A;
+}
+.stTabs [aria-selected="true"] { border-bottom: 2px solid #0A0A0A; color: #0A0A0A; }
+
+.streamlit-expander {
+  border: 1px solid #D1CFBA; border-radius: 0px; background-color: #F8F4EB;
+}
+
+.element-container div[data-testid="stMarkdownContainer"] {
+  font-family: 'DM Sans', sans-serif;
+}
+
+code {
+  font-family: 'DM Mono', monospace;
+  background-color: #D1CFBA; color: #0A0A0A;
+  padding: 2px 6px; border-radius: 0px; font-size: 11px;
+}
+
+[data-testid="stAlert"] { border-radius: 0px; border-left: 4px solid #FF9D1C; }
+
+.css-1d391kg { background-color: #D1CFBA; }
+
+.stSelectbox > div > div {
+  border-radius: 0px; border: 1px solid #D1CFBA;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.stMultiSelect span[data-baseweb="tag"] {
+  background-color: #0A0A0A; color: #F8F4EB;
+  border-radius: 0px; font-family: 'DM Mono', monospace; font-size: 11px;
+}
+</style>""", unsafe_allow_html=True)
+
+# ---------------------------------------------------------------------------
 # Background scheduler — re-runs pipeline every 6 hours
 # ---------------------------------------------------------------------------
 
@@ -322,7 +396,7 @@ def _share_button(section_id, label="Share", key_suffix="", extra_params=None):
             f"""<script>
             navigator.clipboard.writeText(window.location.origin + window.location.pathname + '{full_url}');
             </script>
-            <div style="background:#22c55e;color:white;padding:6px 12px;border-radius:4px;
+            <div style="background:#0A0A0A;color:#F8F4EB;padding:6px 12px;
             font-size:0.8rem;text-align:center;">Link copied to clipboard</div>""",
             height=36,
         )
@@ -364,7 +438,7 @@ def _cite_button(insight, key_id):
             escaped = citation_text.replace("\\", "\\\\").replace("`", "\\`").replace("\n", "\\n")
             components.html(
                 f"""<script>navigator.clipboard.writeText(`{escaped}`);</script>
-                <div style="background:#22c55e;color:white;padding:4px 10px;border-radius:4px;
+                <div style="background:#0A0A0A;color:#F8F4EB;padding:4px 10px;
                 font-size:0.75rem;text-align:center;">Copied</div>""",
                 height=30,
             )
@@ -1414,16 +1488,17 @@ def _send_email(to_email, subject, html_content):
 def _send_confirmation_email(email, name):
     """Send a subscription confirmation email."""
     html = f"""
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #1a1a1a;">Welcome to GEO Pulse Daily Digest</h2>
+    <div style="font-family: 'DM Sans', Arial, sans-serif; max-width: 600px; margin: 0 auto;
+    background: #F8F4EB; color: #0A0A0A; padding: 24px;">
+        <h2 style="color: #0A0A0A;">Welcome to GEO Pulse Daily Digest</h2>
         <p>Hi {name or 'there'},</p>
         <p>You're now subscribed to the GEO Pulse daily digest.
         You'll receive market intelligence updates at your preferred time.</p>
-        <p style="color: #666; font-size: 0.85rem;">
+        <p style="color: #0A0A0A; font-size: 0.85rem;">
             To unsubscribe, visit the GEO Pulse dashboard and remove your subscription
             in the Email Digest section.</p>
-        <hr style="border: none; border-top: 1px solid #eee;">
-        <p style="color: #999; font-size: 0.75rem;">GEO Pulse Market Intelligence</p>
+        <hr style="border: none; border-top: 1px solid #D1CFBA;">
+        <p style="color: #D1CFBA; font-size: 0.75rem;">GEO Pulse Market Intelligence</p>
     </div>
     """
     return _send_email(email, "Welcome to GEO Pulse Daily Digest", html)
@@ -1464,12 +1539,12 @@ def _build_digest_html(insights_list, company_meta_dict, comp_filter=None):
         url = s.get("url", "")
         source = s.get("source", "")
         date = s.get("post_date", "")
-        link = f'<a href="{url}" style="color: #1a73e8; text-decoration: none;">{title}</a>' if url else title
+        link = f'<a href="{url}" style="color: #0E3B7E; text-decoration: none;">{title}</a>' if url else title
         signal_rows += f"""
         <tr>
-            <td style="padding: 8px; border-bottom: 1px solid #f0f0f0;">
-                <span style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;
-                font-size: 0.75rem;">{source}</span>
+            <td style="padding: 8px; border-bottom: 1px solid #D1CFBA;">
+                <span style="background: #D1CFBA; padding: 2px 6px;
+                font-family: monospace; font-size: 0.75rem;">{source}</span>
                 {link}
                 <br><span style="color: #888; font-size: 0.8rem;">{date}</span>
             </td>
@@ -1480,40 +1555,40 @@ def _build_digest_html(insights_list, company_meta_dict, comp_filter=None):
     for comp, count in top_comps:
         momentum_rows += f"""
         <tr>
-            <td style="padding: 4px 8px; border-bottom: 1px solid #f0f0f0;">{comp}</td>
-            <td style="padding: 4px 8px; border-bottom: 1px solid #f0f0f0;">{count} signals</td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid #D1CFBA;">{comp}</td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid #D1CFBA;">{count} signals</td>
         </tr>
         """
 
     html = f"""
-    <div style="font-family: Arial, sans-serif; max-width: 650px; margin: 0 auto;
-    background: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;">
-        <div style="background: #1a1a1a; color: white; padding: 16px 24px; border-radius: 8px 8px 0 0;">
+    <div style="font-family: 'DM Sans', Arial, sans-serif; max-width: 650px; margin: 0 auto;
+    background: #F8F4EB; border: 1px solid #D1CFBA;">
+        <div style="background: #0A0A0A; color: #F8F4EB; padding: 16px 24px;">
             <h1 style="margin: 0; font-size: 1.3rem;">GEO Pulse Daily Digest</h1>
-            <p style="margin: 4px 0 0 0; color: #aaa; font-size: 0.85rem;">
+            <p style="margin: 4px 0 0 0; color: #D1CFBA; font-size: 0.85rem;">
                 {now.strftime('%B %d, %Y')}</p>
         </div>
 
         <div style="padding: 20px 24px;">
-            <h2 style="font-size: 1.1rem; color: #333; margin-top: 0;">Momentum Snapshot</h2>
+            <h2 style="font-size: 1.1rem; color: #0A0A0A; margin-top: 0;">Momentum Snapshot</h2>
             <table style="width: 100%; border-collapse: collapse;">
                 {momentum_rows}
             </table>
 
-            <h2 style="font-size: 1.1rem; color: #333; margin-top: 24px;">Top Signals</h2>
+            <h2 style="font-size: 1.1rem; color: #0A0A0A; margin-top: 24px;">Top Signals</h2>
             <table style="width: 100%; border-collapse: collapse;">
                 {signal_rows}
             </table>
 
-            <div style="margin-top: 24px; padding: 12px; background: #f9f9f9;
-            border-radius: 4px; font-size: 0.85rem; color: #666;">
-                Open the <a href="#" style="color: #1a73e8;">GEO Pulse dashboard</a>
+            <div style="margin-top: 24px; padding: 12px; background: #D1CFBA;
+            font-size: 0.85rem; color: #0A0A0A;">
+                Open the <a href="#" style="color: #0E3B7E;">GEO Pulse dashboard</a>
                 for full details, charts, and export options.
             </div>
         </div>
 
-        <div style="padding: 12px 24px; background: #f5f5f5; border-radius: 0 0 8px 8px;
-        font-size: 0.75rem; color: #999;">
+        <div style="padding: 12px 24px; background: #D1CFBA;
+        font-size: 0.75rem; color: #0A0A0A;">
             GEO Pulse Market Intelligence | To unsubscribe, visit the dashboard settings.
         </div>
     </div>
@@ -2176,8 +2251,8 @@ for _ecomp in _all_comp_names_export:
 def _build_export_chart_images(all_comps, comp_stats, opp_data):
     """Build Plotly chart images for the briefing deck export."""
     momentum_colors = {
-        "Rising": "#22c55e", "Falling": "#ef4444", "Stable": "#94a3b8",
-        "No recent activity": "#cbd5e1", "Insufficient data": "#e2e8f0",
+        "Rising": "#BDDEC3", "Falling": "#F44C63", "Stable": "#D1CFBA",
+        "No recent activity": "#D1CFBA", "Insufficient data": "#D1CFBA",
     }
 
     # Filter to companies with signals
@@ -2200,11 +2275,12 @@ def _build_export_chart_images(all_comps, comp_stats, opp_data):
                 marker=dict(size=14, color=m_color), name=m_label, showlegend=True,
             ))
     mean_sig = sum(comp_stats[c]["total"] for c in chart_comps) / max(len(chart_comps), 1)
-    fig1.add_vline(x=mean_sig, line_dash="dash", line_color="#94a3b8", line_width=1)
+    fig1.add_vline(x=mean_sig, line_dash="dash", line_color="#0A0A0A", line_width=1)
     fig1.update_layout(
-        plot_bgcolor="white", paper_bgcolor="white",
-        xaxis=dict(title="Total signals", gridcolor="#f0f0f0", zeroline=False),
-        yaxis=dict(title="", gridcolor="#f0f0f0"),
+        plot_bgcolor="#F8F4EB", paper_bgcolor="#F8F4EB",
+        font=dict(family="DM Sans, Arial, sans-serif", color="#0A0A0A"),
+        xaxis=dict(title="Total signals", gridcolor="#D1CFBA", zeroline=False),
+        yaxis=dict(title="", gridcolor="#D1CFBA"),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0),
         margin=dict(l=10, r=20, t=40, b=20),
         height=max(300, len(chart_comps) * 32 + 80),
@@ -2239,11 +2315,12 @@ def _build_export_chart_images(all_comps, comp_stats, opp_data):
 
     fig2 = go.Figure(data=go.Heatmap(
         z=heat_z, x=top_comps, y=feature_names,
-        colorscale=[[0, "#ffffff"], [1, "#00695c"]],
+        colorscale=[[0, "#F8F4EB"], [1, "#0E3B7E"]],
         xgap=2, ygap=2, zmin=0, zmax=10,
     ))
     fig2.update_layout(
-        plot_bgcolor="white", paper_bgcolor="white",
+        plot_bgcolor="#F8F4EB", paper_bgcolor="#F8F4EB",
+        font=dict(family="DM Sans, Arial, sans-serif", color="#0A0A0A"),
         xaxis=dict(tickangle=-35, tickfont=dict(size=11), side="bottom"),
         yaxis=dict(autorange="reversed", tickfont=dict(size=11)),
         margin=dict(l=10, r=20, t=30, b=100),
@@ -2410,26 +2487,26 @@ with tabs[0]:
 
     # --- Signal of the Week ---
     st.markdown(
-        """<div style="border-left: 4px solid #e67e22; padding: 0.8rem 1rem; """
-        """background: #fef9f3; border-radius: 4px; margin-bottom: 1rem;">"""
-        """<span style="color: #e67e22; font-size: 0.75rem; font-weight: 600; """
+        """<div style="border-left: 4px solid #FF9D1C; padding: 0.8rem 1rem; """
+        """background: #F8F4EB; margin-bottom: 1rem;">"""
+        """<span style="color: #FF9D1C; font-family: 'DM Mono', monospace; font-size: 0.75rem; font-weight: 600; """
         """letter-spacing: 0.05em; text-transform: uppercase;">"""
-        """\U0001f534 SIGNAL OF THE WEEK</span><br>"""
-        """<code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px; """
+        """SIGNAL OF THE WEEK</span><br>"""
+        """<code style="background: #D1CFBA; padding: 2px 6px; """
         """font-size: 0.8rem;">Future</code><br>"""
         """<a href="https://pressgazette.co.uk/marketing/future-leveragess-high-visibility-on-chatgpt-by-offering-geo-as-a-service/" """
-        """target="_blank" style="font-size: 1.05rem; font-weight: 600; color: #1a1a1a; """
+        """target="_blank" style="font-size: 1.05rem; font-weight: 600; color: #0A0A0A; """
         """text-decoration: none;">Future PLC launches GEO-as-a-Service division</a>"""
-        """<p style="margin: 0.5rem 0 0.4rem 0; font-size: 0.9rem; color: #333;">"""
+        """<p style="margin: 0.5rem 0 0.4rem 0; font-size: 0.9rem; color: #0A0A0A;">"""
         """Future PLC &mdash; publisher of TechRadar and Tom's Guide, the most-cited publisher """
         """domain on ChatGPT globally &mdash; has launched a commercial GEO optimization division """
         """selling AI visibility campaigns to brand clients. They delivered a 33% ChatGPT """
         """visibility uplift for Samsung and hold a direct content deal with OpenAI. This is the """
         """first major media publisher to productize GEO expertise, signaling the category is """
         """moving mainstream.</p>"""
-        """<span style="font-size: 0.75rem; color: #888;">"""
+        """<span style="font-size: 0.75rem; color: #D1CFBA;">"""
         """<a href="https://pressgazette.co.uk/marketing/future-leveragess-high-visibility-on-chatgpt-by-offering-geo-as-a-service/" """
-        """target="_blank" style="color: #888;">Press Gazette</a> &middot; 2026-02-20</span>"""
+        """target="_blank" style="color: #D1CFBA;">Press Gazette</a> &middot; 2026-02-20</span>"""
         """</div>""",
         unsafe_allow_html=True,
     )
@@ -2892,9 +2969,9 @@ with tabs[2]:
         _top_rising = max(_rising_selected, key=lambda c: _comp_stats[c]["total"])
         _tr_total = _comp_stats[_top_rising]["total"]
         st.markdown(
-            f'<div style="background: #fff7ed; border-left: 4px solid #f59e0b; '
-            f'padding: 0.6rem 1rem; border-radius: 4px; margin-bottom: 0.5rem;">'
-            f'<span style="color: #b45309; font-weight: 600;">'
+            f'<div style="background: #F8F4EB; border-left: 4px solid #FF9D1C; '
+            f'padding: 0.6rem 1rem; margin-bottom: 0.5rem;">'
+            f'<span style="color: #0A0A0A; font-weight: 600;">'
             f'{_top_rising}</span> is the most active rising competitor '
             f'with {_tr_total} total signals and growing week-over-week mentions.'
             f'</div>',
@@ -2910,16 +2987,16 @@ with tabs[2]:
         "market conversations happening about them."
     )
     st.caption(
-        "Green = gaining mentions week over week. "
-        "Gray = flat or declining."
+        "Mint = gaining mentions week over week. "
+        "Gray = flat or declining. Red = falling."
     )
 
     MOMENTUM_COLORS = {
-        "Rising": "#22c55e",
-        "Falling": "#ef4444",
-        "Stable": "#94a3b8",
-        "No recent activity": "#cbd5e1",
-        "Insufficient data": "#e2e8f0",
+        "Rising": "#BDDEC3",
+        "Falling": "#F44C63",
+        "Stable": "#D1CFBA",
+        "No recent activity": "#D1CFBA",
+        "Insufficient data": "#D1CFBA",
     }
 
     # Sort by total signal count descending (top = highest)
@@ -2964,18 +3041,19 @@ with tabs[2]:
     # Category average vertical line
     mean_signals = sum(_comp_stats[c]["total"] for c in selected_comps) / max(len(selected_comps), 1)
     fig1.add_vline(
-        x=mean_signals, line_dash="dash", line_color="#94a3b8", line_width=1,
+        x=mean_signals, line_dash="dash", line_color="#0A0A0A", line_width=1,
         annotation_text="Category average",
         annotation_position="top",
         annotation_font_size=11,
-        annotation_font_color="#94a3b8",
+        annotation_font_color="#0A0A0A",
     )
 
     fig1.update_layout(
-        plot_bgcolor="white",
-        paper_bgcolor="white",
-        xaxis=dict(title="Total signals", gridcolor="#f0f0f0", zeroline=False),
-        yaxis=dict(title="", gridcolor="#f0f0f0"),
+        plot_bgcolor="#F8F4EB",
+        paper_bgcolor="#F8F4EB",
+        font=dict(family="DM Sans, Arial, sans-serif", color="#0A0A0A"),
+        xaxis=dict(title="Total signals", gridcolor="#D1CFBA", zeroline=False),
+        yaxis=dict(title="", gridcolor="#D1CFBA"),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0),
         margin=dict(l=10, r=20, t=40, b=20),
         height=max(300, len(selected_comps) * 32 + 80),
@@ -2993,8 +3071,8 @@ with tabs[2]:
     st.markdown("#### Feature Heat Map")
     st.caption(
         "Each cell = how much recent market conversation exists about a "
-        "competitor in that feature area. Dark teal = active recent signals. "
-        "White = no data."
+        "competitor in that feature area. Dark blue = active recent signals. "
+        "Light = no data."
     )
 
     # Build the heat matrix: rows = features, columns = selected_comps
@@ -3056,7 +3134,7 @@ with tabs[2]:
         y=feature_names,
         hovertext=hover_text,
         hovertemplate="%{hovertext}<extra></extra>",
-        colorscale=[[0, "#ffffff"], [1, "#00695c"]],
+        colorscale=[[0, "#F8F4EB"], [1, "#0E3B7E"]],
         colorbar=dict(
             title=dict(text="Cold \u2192 Hot (recent activity)", side="right"),
             thickness=14,
@@ -3066,8 +3144,9 @@ with tabs[2]:
     ))
 
     fig2.update_layout(
-        plot_bgcolor="white",
-        paper_bgcolor="white",
+        plot_bgcolor="#F8F4EB",
+        paper_bgcolor="#F8F4EB",
+        font=dict(family="DM Sans, Arial, sans-serif", color="#0A0A0A"),
         xaxis=dict(
             tickangle=-35,
             tickfont=dict(size=11),
