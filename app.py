@@ -374,6 +374,106 @@ def _cite_button(insight, key_id):
 # Export generators
 # ---------------------------------------------------------------------------
 
+_METHODOLOGY_NOTE = (
+    "Data collected via automated pipeline monitoring 11 public sources. "
+    "Signals filtered for GEO/AEO relevance. Sentiment scored by LLM enrichment. "
+    "Competitor coverage based on public mentions only \u2014 absence of data does not "
+    "indicate absence of a feature. Signal counts reflect volume of public conversation, "
+    "not product capability assessments."
+)
+
+_CONFIDENCE_FOOTNOTE = (
+    "Confidence score reflects source diversity and signal volume, "
+    "not predictive accuracy."
+)
+
+_SOURCE_DESCRIPTIONS = [
+    ("Hacker News", "Founder and builder discussions"),
+    ("Reddit", "Practitioner community signals"),
+    ("G2", "Buyer reviews and comparisons"),
+    ("Product Hunt", "Product launches and feature announcements"),
+    ("Google News", "Industry news aggregation"),
+    ("Search Engine Journal", "SEO/GEO trade analysis"),
+    ("Search Engine Land", "Search marketing news"),
+    ("Digiday", "Digital media and marketing coverage"),
+    ("AdExchanger", "Ad-tech and martech industry reporting"),
+    ("RSS feeds", "Curated trade and blog sources"),
+    ("Slack communities", "Private practitioner channels (opted-in)"),
+]
+
+
+def _docx_source_caption(doc, total_signals, date_str=None):
+    """Add a small gray italic data-source line to a docx document."""
+    if not date_str:
+        date_str = datetime.now().strftime("%Y-%m-%d")
+    p = doc.add_paragraph()
+    run = p.add_run(
+        f"Source: GEO Pulse | {total_signals:,} signals from Hacker News, Reddit, G2, "
+        f"Product Hunt, and trade press | Data as of {date_str}"
+    )
+    run.font.size = Pt(8)
+    run.font.color.rgb = RGBColor(0x99, 0x99, 0x99)
+    run.font.italic = True
+    return p
+
+
+def _docx_confidence_footnote(doc):
+    """Add a confidence disclosure footnote to a docx document."""
+    p = doc.add_paragraph()
+    run = p.add_run(f"* {_CONFIDENCE_FOOTNOTE}")
+    run.font.size = Pt(8)
+    run.font.color.rgb = RGBColor(0x99, 0x99, 0x99)
+    run.font.italic = True
+    return p
+
+
+def _docx_methodology_appendix(doc, total_signals):
+    """Add a full methodology section to a docx document."""
+    doc.add_heading("Methodology", level=1)
+    doc.add_paragraph(_METHODOLOGY_NOTE)
+
+    doc.add_heading("Sources Monitored", level=2)
+    for name, desc in _SOURCE_DESCRIPTIONS:
+        p = doc.add_paragraph(style="List Bullet")
+        run_name = p.add_run(f"{name}")
+        run_name.bold = True
+        p.add_run(f" \u2014 {desc}")
+
+    doc.add_paragraph("")
+    p = doc.add_paragraph()
+    run = p.add_run(
+        f"Pipeline refreshes every 6 hours. Total signals in database: {total_signals:,}."
+    )
+    run.font.size = Pt(9)
+    run.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
+
+
+def _pptx_slide_footer(slide, date_str, total_signals):
+    """Add bottom-left corner annotation to a pptx slide."""
+    box = slide.shapes.add_textbox(
+        PptxInches(0.3), PptxInches(7.0), PptxInches(6), PptxInches(0.4)
+    )
+    tf = box.text_frame
+    p = tf.paragraphs[0]
+    p.text = f"GEO Pulse | {date_str} | {total_signals:,} signals analyzed"
+    p.font.size = PptxPt(9)
+    p.font.color.rgb = PptxRGBColor(0x99, 0x99, 0x99)
+
+
+def _pptx_callout_box(slide, bullets, top_inches=5.6):
+    """Add a text box with bullet callouts below a chart image."""
+    box = slide.shapes.add_textbox(
+        PptxInches(0.5), PptxInches(top_inches), PptxInches(12), PptxInches(1.5)
+    )
+    tf = box.text_frame
+    tf.word_wrap = True
+    for idx, bullet in enumerate(bullets):
+        p = tf.paragraphs[0] if idx == 0 else tf.add_paragraph()
+        p.text = bullet
+        p.font.size = PptxPt(12)
+        p.font.color.rgb = PptxRGBColor(0x33, 0x33, 0x33)
+
+
 def _export_research_report(insights, company_meta, opportunity_data, selected_comps, comp_stats):
     """Generate a Research Report .docx and return bytes."""
     doc = DocxDocument()
@@ -381,15 +481,18 @@ def _export_research_report(insights, company_meta, opportunity_data, selected_c
     style.font.name = "Calibri"
     style.font.size = Pt(11)
 
+    total_signals = len(insights)
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    date_display = datetime.now().strftime("%B %d, %Y")
+
     # Title
     title = doc.add_heading("GEO Pulse Research Report", level=0)
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    doc.add_paragraph(f"Generated {datetime.now().strftime('%B %d, %Y')}")
+    doc.add_paragraph(f"Generated {date_display}")
     doc.add_paragraph("")
 
     # Section 1: Market Overview
     doc.add_heading("1. Market Overview", level=1)
-    total_signals = len(insights)
     sources = set(i.get("source", "") for i in insights)
     companies_tracked = len(company_meta)
     doc.add_paragraph(
@@ -412,6 +515,7 @@ def _export_research_report(insights, company_meta, opportunity_data, selected_c
         row[2].text = f"{cs.get('pos_pct', 0)}%"
         row[3].text = cs.get("momentum", "N/A")
         row[4].text = cs.get("latest", "N/A")
+    _docx_source_caption(doc, total_signals, date_str)
 
     # Section 3: Feature Gap Analysis
     doc.add_heading("3. Feature Gap Analysis", level=1)
@@ -419,11 +523,14 @@ def _export_research_report(insights, company_meta, opportunity_data, selected_c
         if od["evidence"] < 2:
             continue
         doc.add_heading(opp, level=2)
-        doc.add_paragraph(f"Evidence: {od['evidence']} signals | Confidence: {od['confidence']}%")
+        doc.add_paragraph(
+            f"Evidence: {od['evidence']} signals | Confidence: {od['confidence']}%*"
+        )
         praised = ", ".join(od["companies_praised"]) or "None"
         complained = ", ".join(od["companies_complained"]) or "None"
         doc.add_paragraph(f"Praised: {praised}")
         doc.add_paragraph(f"Complaints: {complained}")
+    _docx_confidence_footnote(doc)
 
     # Section 4: Build Now Recommendations
     doc.add_heading("4. Build Now Recommendations", level=1)
@@ -440,18 +547,33 @@ def _export_research_report(insights, company_meta, opportunity_data, selected_c
         if red_count > len(selected_comps) / 2:
             has_build_now = True
             doc.add_heading(opp, level=2)
-            doc.add_paragraph(f"Confidence: {od['confidence']}% | Evidence: {od['evidence']} signals")
+            doc.add_paragraph(
+                f"Confidence: {od['confidence']}%* | Evidence: {od['evidence']} signals"
+            )
             doc.add_paragraph("No competitor has a clear solution in this area.")
     if not has_build_now:
         doc.add_paragraph("No features currently meet Build Now criteria.")
+    _docx_confidence_footnote(doc)
 
-    # Section 5: Methodology
+    # Section 5: Methodology (expanded)
     doc.add_heading("5. Methodology", level=1)
-    doc.add_paragraph(
-        f"Data collected from {SOURCE_LIST}. Signals enriched via Claude with entity extraction, "
-        f"sentiment analysis, feature tagging, and relevance scoring. "
-        f"Pipeline refreshes every 6 hours."
+    doc.add_paragraph(_METHODOLOGY_NOTE)
+
+    doc.add_heading("Sources Monitored", level=2)
+    for name, desc in _SOURCE_DESCRIPTIONS:
+        p = doc.add_paragraph(style="List Bullet")
+        run_name = p.add_run(f"{name}")
+        run_name.bold = True
+        p.add_run(f" \u2014 {desc}")
+
+    doc.add_paragraph("")
+    p = doc.add_paragraph()
+    run = p.add_run(
+        f"Pipeline refreshes every 6 hours. Total signals in database: {total_signals:,}. "
+        f"Report generated {date_display}."
     )
+    run.font.size = Pt(9)
+    run.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
 
     buf = io.BytesIO()
     doc.save(buf)
@@ -465,8 +587,43 @@ def _export_briefing_deck(insights, company_meta, opportunity_data, selected_com
     prs.slide_width = PptxInches(13.333)
     prs.slide_height = PptxInches(7.5)
 
+    total_signals = len(insights)
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    date_display = datetime.now().strftime("%B %d, %Y")
+
+    # Pre-compute callout data
+    rising = [c for c in selected_comps if comp_stats.get(c, {}).get("momentum") == "Rising"]
+    falling = [c for c in selected_comps if comp_stats.get(c, {}).get("momentum") == "Falling"]
+    mean_signals = sum(
+        comp_stats.get(c, {}).get("total", 0) for c in selected_comps
+    ) / max(len(selected_comps), 1)
+    leader = max(selected_comps, key=lambda c: comp_stats.get(c, {}).get("total", 0)) if selected_comps else ""
+    leader_total = comp_stats.get(leader, {}).get("total", 0) if leader else 0
+    above_avg = [c for c in selected_comps if comp_stats.get(c, {}).get("total", 0) > mean_signals]
+    below_avg = [c for c in selected_comps if comp_stats.get(c, {}).get("total", 0) < mean_signals]
+
+    # Heat map callout data
+    feat_totals = {}
+    best_cell_score = 0
+    best_cell_comp = ""
+    best_cell_feat = ""
+    for opp, od in opportunity_data.items():
+        feat_sum = sum(
+            od["company_detail"].get(c, {}).get("count", 0) if hasattr(od["company_detail"], "get") else 0
+            for c in selected_comps
+        )
+        feat_totals[opp] = feat_sum
+        for c in selected_comps:
+            cd = od["company_detail"].get(c, {}) if hasattr(od["company_detail"], "get") else {}
+            ct = cd.get("count", 0) if isinstance(cd, dict) else 0
+            if ct > best_cell_score:
+                best_cell_score = ct
+                best_cell_comp = c
+                best_cell_feat = opp
+    hottest_feat = max(feat_totals, key=feat_totals.get) if feat_totals else ""
+
     # Slide 1: Title
-    slide = prs.slides.add_slide(prs.slide_layouts[6])  # Blank
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
     txBox = slide.shapes.add_textbox(PptxInches(1), PptxInches(2.5), PptxInches(11), PptxInches(2))
     tf = txBox.text_frame
     p = tf.paragraphs[0]
@@ -474,7 +631,7 @@ def _export_briefing_deck(insights, company_meta, opportunity_data, selected_com
     p.font.size = PptxPt(44)
     p.font.bold = True
     p2 = tf.add_paragraph()
-    p2.text = f"Market Intelligence Report | {datetime.now().strftime('%B %d, %Y')}"
+    p2.text = f"Market Intelligence Report | {date_display}"
     p2.font.size = PptxPt(20)
     p2.font.color.rgb = PptxRGBColor(0x64, 0x64, 0x64)
 
@@ -490,13 +647,11 @@ def _export_briefing_deck(insights, company_meta, opportunity_data, selected_com
     tf2 = stats_box.text_frame
     tf2.word_wrap = True
     lines = [
-        f"Total Signals: {len(insights):,}",
+        f"Total Signals: {total_signals:,}",
         f"Companies Tracked: {len(company_meta)}",
         f"Competitors in View: {len(selected_comps)}",
         "",
     ]
-    rising = [c for c in selected_comps if comp_stats.get(c, {}).get("momentum") == "Rising"]
-    falling = [c for c in selected_comps if comp_stats.get(c, {}).get("momentum") == "Falling"]
     if rising:
         lines.append(f"Rising: {', '.join(rising)}")
     if falling:
@@ -507,28 +662,64 @@ def _export_briefing_deck(insights, company_meta, opportunity_data, selected_com
         p = tf2.add_paragraph()
         p.text = line
         p.font.size = PptxPt(18)
+    _pptx_slide_footer(slide, date_str, total_signals)
 
     # Slide 3: Momentum Chart
     if fig1_bytes:
         slide = prs.slides.add_slide(prs.slide_layouts[6])
-        txBox = slide.shapes.add_textbox(PptxInches(0.5), PptxInches(0.3), PptxInches(12), PptxInches(1))
+        txBox = slide.shapes.add_textbox(PptxInches(0.5), PptxInches(0.3), PptxInches(12), PptxInches(0.6))
         tf = txBox.text_frame
         tf.paragraphs[0].text = "Competitor Presence & Momentum"
         tf.paragraphs[0].font.size = PptxPt(28)
         tf.paragraphs[0].font.bold = True
         img_stream = io.BytesIO(fig1_bytes)
-        slide.shapes.add_picture(img_stream, PptxInches(0.5), PptxInches(1.2), PptxInches(12), PptxInches(5.8))
+        slide.shapes.add_picture(img_stream, PptxInches(0.5), PptxInches(1.0), PptxInches(12), PptxInches(4.2))
+
+        # Auto-generated callouts
+        momentum_bullets = []
+        if leader:
+            momentum_bullets.append(
+                f"\u2022 {leader} leads in signal volume with {leader_total} mentions"
+            )
+        if rising:
+            momentum_bullets.append(
+                f"\u2022 {', '.join(rising[:3])} {'is' if len(rising) == 1 else 'are'} "
+                f"gaining momentum week over week"
+            )
+        above_str = ", ".join(above_avg[:3]) if above_avg else "none"
+        momentum_bullets.append(
+            f"\u2022 Category average is {mean_signals:.0f} signals \u2014 "
+            f"{above_str} stand{'s' if len(above_avg) == 1 else ''} out above average"
+        )
+        _pptx_callout_box(slide, momentum_bullets, top_inches=5.3)
+        _pptx_slide_footer(slide, date_str, total_signals)
 
     # Slide 4: Heat Map
     if fig2_bytes:
         slide = prs.slides.add_slide(prs.slide_layouts[6])
-        txBox = slide.shapes.add_textbox(PptxInches(0.5), PptxInches(0.3), PptxInches(12), PptxInches(1))
+        txBox = slide.shapes.add_textbox(PptxInches(0.5), PptxInches(0.3), PptxInches(12), PptxInches(0.6))
         tf = txBox.text_frame
         tf.paragraphs[0].text = "Feature Heat Map"
         tf.paragraphs[0].font.size = PptxPt(28)
         tf.paragraphs[0].font.bold = True
         img_stream = io.BytesIO(fig2_bytes)
-        slide.shapes.add_picture(img_stream, PptxInches(0.5), PptxInches(1.2), PptxInches(12), PptxInches(5.8))
+        slide.shapes.add_picture(img_stream, PptxInches(0.5), PptxInches(1.0), PptxInches(12), PptxInches(4.2))
+
+        # Auto-generated callouts
+        heat_bullets = []
+        if hottest_feat:
+            heat_bullets.append(
+                f"\u2022 {hottest_feat} shows the most market activity across competitors"
+            )
+        if best_cell_comp and best_cell_feat:
+            heat_bullets.append(
+                f"\u2022 {best_cell_comp} has the strongest recent coverage in {best_cell_feat}"
+            )
+        heat_bullets.append(
+            "\u2022 White cells = no public signals found, not confirmed absence of capability"
+        )
+        _pptx_callout_box(slide, heat_bullets, top_inches=5.3)
+        _pptx_slide_footer(slide, date_str, total_signals)
 
     # Slide 5: Build Now
     slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -537,7 +728,7 @@ def _export_briefing_deck(insights, company_meta, opportunity_data, selected_com
     tf.paragraphs[0].text = "Build Now Opportunities"
     tf.paragraphs[0].font.size = PptxPt(28)
     tf.paragraphs[0].font.bold = True
-    bn_box = slide.shapes.add_textbox(PptxInches(0.5), PptxInches(1.5), PptxInches(12), PptxInches(5))
+    bn_box = slide.shapes.add_textbox(PptxInches(0.5), PptxInches(1.5), PptxInches(12), PptxInches(4.5))
     tf2 = bn_box.text_frame
     tf2.word_wrap = True
     bn_count = 0
@@ -552,29 +743,53 @@ def _export_briefing_deck(insights, company_meta, opportunity_data, selected_com
         )
         if red_count > len(selected_comps) / 2:
             p = tf2.add_paragraph() if bn_count > 0 else tf2.paragraphs[0]
-            p.text = f"{opp} ({od['confidence']}% confidence, {od['evidence']} signals)"
+            p.text = f"{opp} ({od['confidence']}% confidence*, {od['evidence']} signals)"
             p.font.size = PptxPt(16)
             bn_count += 1
     if bn_count == 0:
         tf2.paragraphs[0].text = "No features currently meet Build Now criteria."
         tf2.paragraphs[0].font.size = PptxPt(16)
+    # Confidence footnote
+    fn_box = slide.shapes.add_textbox(PptxInches(0.5), PptxInches(6.3), PptxInches(12), PptxInches(0.5))
+    fn_tf = fn_box.text_frame
+    fn_tf.paragraphs[0].text = f"* {_CONFIDENCE_FOOTNOTE}"
+    fn_tf.paragraphs[0].font.size = PptxPt(9)
+    fn_tf.paragraphs[0].font.color.rgb = PptxRGBColor(0x99, 0x99, 0x99)
+    fn_tf.paragraphs[0].font.italic = True
+    _pptx_slide_footer(slide, date_str, total_signals)
 
-    # Slide 6: Methodology
+    # Slide 6: About This Data
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     txBox = slide.shapes.add_textbox(PptxInches(0.5), PptxInches(0.3), PptxInches(12), PptxInches(1))
     tf = txBox.text_frame
-    tf.paragraphs[0].text = "Methodology"
+    tf.paragraphs[0].text = "About This Data"
     tf.paragraphs[0].font.size = PptxPt(28)
     tf.paragraphs[0].font.bold = True
-    meth_box = slide.shapes.add_textbox(PptxInches(0.5), PptxInches(1.5), PptxInches(12), PptxInches(5))
-    tf2 = meth_box.text_frame
-    tf2.word_wrap = True
-    tf2.paragraphs[0].text = (
-        f"Data collected from {SOURCE_LIST}. "
-        f"Signals enriched via Claude with entity extraction, sentiment analysis, "
-        f"feature tagging, and relevance scoring. Pipeline refreshes every 6 hours."
-    )
-    tf2.paragraphs[0].font.size = PptxPt(14)
+
+    meth_box = slide.shapes.add_textbox(PptxInches(0.5), PptxInches(1.3), PptxInches(12), PptxInches(2.5))
+    meth_tf = meth_box.text_frame
+    meth_tf.word_wrap = True
+    meth_tf.paragraphs[0].text = _METHODOLOGY_NOTE
+    meth_tf.paragraphs[0].font.size = PptxPt(13)
+
+    src_box = slide.shapes.add_textbox(PptxInches(0.5), PptxInches(3.8), PptxInches(12), PptxInches(3.2))
+    src_tf = src_box.text_frame
+    src_tf.word_wrap = True
+    p0 = src_tf.paragraphs[0]
+    p0.text = "Sources Monitored"
+    p0.font.size = PptxPt(16)
+    p0.font.bold = True
+    for name, desc in _SOURCE_DESCRIPTIONS:
+        p = src_tf.add_paragraph()
+        p.text = f"\u2022 {name} \u2014 {desc}"
+        p.font.size = PptxPt(11)
+        p.font.color.rgb = PptxRGBColor(0x33, 0x33, 0x33)
+
+    p_total = src_tf.add_paragraph()
+    p_total.text = f"\nTotal signals in database: {total_signals:,}. Pipeline refreshes every 6 hours."
+    p_total.font.size = PptxPt(10)
+    p_total.font.color.rgb = PptxRGBColor(0x66, 0x66, 0x66)
+    _pptx_slide_footer(slide, date_str, total_signals)
 
     buf = io.BytesIO()
     prs.save(buf)
@@ -589,8 +804,21 @@ def _export_prd(opportunity_data, insights, selected_features, selected_comps):
     style.font.name = "Calibri"
     style.font.size = Pt(11)
 
+    total_signals = len(insights)
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    date_display = datetime.now().strftime("%B %d, %Y")
+
     doc.add_heading("Product Requirements Document", level=0)
-    doc.add_paragraph(f"Generated {datetime.now().strftime('%B %d, %Y')} by GEO Pulse")
+    doc.add_paragraph(f"Generated {date_display} by GEO Pulse")
+    # Cover page footer
+    p = doc.add_paragraph()
+    run = p.add_run(
+        "Market data sourced from GEO Pulse. All signals are public. "
+        "Original sources linked in Signal Appendix."
+    )
+    run.font.size = Pt(9)
+    run.font.color.rgb = RGBColor(0x99, 0x99, 0x99)
+    run.font.italic = True
     doc.add_paragraph("")
 
     _90d = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
@@ -606,8 +834,9 @@ def _export_prd(opportunity_data, insights, selected_features, selected_comps):
         doc.add_heading("Overview", level=2)
         doc.add_paragraph(
             f"This feature has {od['evidence']} evidence signals with "
-            f"{od['confidence']}% confidence score."
+            f"{od['confidence']}% confidence score.*"
         )
+        _docx_confidence_footnote(doc)
 
         # Problem Statement
         doc.add_heading("Problem Statement", level=2)
@@ -617,8 +846,8 @@ def _export_prd(opportunity_data, insights, selected_features, selected_comps):
                 f"{len(complaints)} complaint signals identified. Key themes:"
             )
             for s in complaints[:5]:
-                title = s.get("title", "")[:100] or s.get("text", "")[:100]
-                doc.add_paragraph(f"- {title}", style="List Bullet")
+                stitle = s.get("title", "")[:100] or s.get("text", "")[:100]
+                doc.add_paragraph(f"- {stitle}", style="List Bullet")
         else:
             doc.add_paragraph("No direct complaints found. Demand driven by feature requests and market gaps.")
 
@@ -648,23 +877,29 @@ def _export_prd(opportunity_data, insights, selected_features, selected_comps):
         doc.add_heading("Open Questions", level=2)
         doc.add_paragraph("[To be completed by product team]")
 
-        # Signal Appendix
+        # Signal Appendix (expanded with full citations)
         doc.add_heading("Signal Appendix", level=2)
         recent = [s for s in od["signals"] if s.get("post_date", "") >= _90d]
         display_sigs = recent[:20] if recent else od["signals"][:20]
-        table = doc.add_table(rows=1, cols=4)
+        table = doc.add_table(rows=1, cols=6)
         table.style = "Table Grid"
         hdr = table.rows[0].cells
-        for i, h in enumerate(["Date", "Source", "Title", "Sentiment"]):
+        for i, h in enumerate(["Title", "Source", "URL", "Date", "Sentiment", "Rationale"]):
             hdr[i].text = h
         for s in display_sigs:
             row = table.add_row().cells
-            row[0].text = s.get("post_date", "")
+            row[0].text = (s.get("title", "") or s.get("text", ""))[:80]
             row[1].text = s.get("source", "")
-            row[2].text = (s.get("title", "") or s.get("text", ""))[:80]
-            row[3].text = s.get("sentiment", "")
+            row[2].text = s.get("url", "")
+            row[3].text = s.get("post_date", "")
+            row[4].text = s.get("sentiment", "")
+            row[5].text = _relevance_sentence(s) or ""
+        _docx_source_caption(doc, total_signals, date_str)
 
         doc.add_page_break()
+
+    # Document-level methodology
+    _docx_methodology_appendix(doc, total_signals)
 
     buf = io.BytesIO()
     doc.save(buf)
@@ -679,8 +914,21 @@ def _export_brd(opportunity_data, insights, selected_features, selected_comps):
     style.font.name = "Calibri"
     style.font.size = Pt(11)
 
+    total_signals = len(insights)
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    date_display = datetime.now().strftime("%B %d, %Y")
+
     doc.add_heading("Business Requirements Document", level=0)
-    doc.add_paragraph(f"Generated {datetime.now().strftime('%B %d, %Y')} by GEO Pulse")
+    doc.add_paragraph(f"Generated {date_display} by GEO Pulse")
+    # Cover page footer
+    p = doc.add_paragraph()
+    run = p.add_run(
+        "Market data sourced from GEO Pulse. All signals are public. "
+        "Original sources linked in Signal Appendix."
+    )
+    run.font.size = Pt(9)
+    run.font.color.rgb = RGBColor(0x99, 0x99, 0x99)
+    run.font.italic = True
     doc.add_paragraph("")
 
     _90d = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
@@ -696,8 +944,9 @@ def _export_brd(opportunity_data, insights, selected_features, selected_comps):
         doc.add_heading("Executive Summary", level=2)
         doc.add_paragraph(
             f"Market evidence supports investment in {feat}. "
-            f"{od['evidence']} signals identified with {od['confidence']}% confidence."
+            f"{od['evidence']} signals identified with {od['confidence']}% confidence.*"
         )
+        _docx_confidence_footnote(doc)
 
         # Business Objective
         doc.add_heading("Business Objective", level=2)
@@ -728,23 +977,29 @@ def _export_brd(opportunity_data, insights, selected_features, selected_comps):
         doc.add_heading("Approval", level=2)
         doc.add_paragraph("[Pending approval]")
 
-        # Signal Appendix
+        # Signal Appendix (expanded with full citations)
         doc.add_heading("Signal Appendix", level=2)
         recent = [s for s in od["signals"] if s.get("post_date", "") >= _90d]
         display_sigs = recent[:20] if recent else od["signals"][:20]
-        table = doc.add_table(rows=1, cols=4)
+        table = doc.add_table(rows=1, cols=6)
         table.style = "Table Grid"
         hdr = table.rows[0].cells
-        for i, h in enumerate(["Date", "Source", "Title", "Sentiment"]):
+        for i, h in enumerate(["Title", "Source", "URL", "Date", "Sentiment", "Rationale"]):
             hdr[i].text = h
         for s in display_sigs:
             row = table.add_row().cells
-            row[0].text = s.get("post_date", "")
+            row[0].text = (s.get("title", "") or s.get("text", ""))[:80]
             row[1].text = s.get("source", "")
-            row[2].text = (s.get("title", "") or s.get("text", ""))[:80]
-            row[3].text = s.get("sentiment", "")
+            row[2].text = s.get("url", "")
+            row[3].text = s.get("post_date", "")
+            row[4].text = s.get("sentiment", "")
+            row[5].text = _relevance_sentence(s) or ""
+        _docx_source_caption(doc, total_signals, date_str)
 
         doc.add_page_break()
+
+    # Document-level methodology
+    _docx_methodology_appendix(doc, total_signals)
 
     buf = io.BytesIO()
     doc.save(buf)
@@ -1490,21 +1745,69 @@ with st.expander("Export"):
     else:
         _exp_features = _EXPORT_FEATURE_NAMES
 
-    if st.button("Generate Export", key="export_btn", type="primary"):
-        st.session_state["_run_export"] = _exp_type
-        st.session_state["_export_comps"] = _exp_comps
-        st.session_state["_export_features"] = _exp_features
+    _date_tag = datetime.now().strftime("%Y-%m-%d")
+    _has_rd_data = "_rd_opportunity_data" in st.session_state
 
-    # Show download button if export was generated
-    if "_export_bytes" in st.session_state and st.session_state.get("_export_bytes"):
-        _eb = st.session_state["_export_bytes"]
-        st.download_button(
-            label=f"Download {_eb['name']}",
-            data=_eb["data"],
-            file_name=_eb["name"],
-            mime=_eb["mime"],
-            key="export_download",
-        )
+    if not _has_rd_data:
+        st.caption("Open the Roadmap tab once to load chart data, then return here to export.")
+    else:
+        _rd_opp = st.session_state["_rd_opportunity_data"]
+        _rd_cs = st.session_state["_rd_comp_stats"]
+        _rd_sc = st.session_state["_rd_selected_comps"]
+
+        # Build comp_stats for export-selected comps
+        _e_comp_stats = {}
+        for c in _exp_comps:
+            if c in _rd_cs:
+                _e_comp_stats[c] = _rd_cs[c]
+            else:
+                _e_comp_stats[c] = {"total": 0, "pos": 0, "neg": 0, "pos_pct": 0, "momentum": "N/A", "latest": ""}
+
+        try:
+            if _exp_type == "Research Report (.docx)":
+                _buf = _export_research_report(insights, company_meta, _rd_opp, _exp_comps, _e_comp_stats)
+                st.download_button(
+                    label="Download Research Report",
+                    data=_buf.getvalue(),
+                    file_name=f"GEOPulse_ResearchReport_{_date_tag}.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    key="export_dl",
+                    type="primary",
+                )
+            elif _exp_type == "Briefing Deck (.pptx)":
+                _fig1_img = st.session_state.get("_rd_fig1_img")
+                _fig2_img = st.session_state.get("_rd_fig2_img")
+                _buf = _export_briefing_deck(insights, company_meta, _rd_opp, _exp_comps, _e_comp_stats, _fig1_img, _fig2_img)
+                st.download_button(
+                    label="Download Briefing Deck",
+                    data=_buf.getvalue(),
+                    file_name=f"GEOPulse_BriefingDeck_{_date_tag}.pptx",
+                    mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                    key="export_dl",
+                    type="primary",
+                )
+            elif _exp_type == "PRD (.docx)":
+                _buf = _export_prd(_rd_opp, insights, _exp_features, _exp_comps)
+                st.download_button(
+                    label="Download PRD",
+                    data=_buf.getvalue(),
+                    file_name=f"GEOPulse_PRD_{_date_tag}.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    key="export_dl",
+                    type="primary",
+                )
+            elif _exp_type == "BRD (.docx)":
+                _buf = _export_brd(_rd_opp, insights, _exp_features, _exp_comps)
+                st.download_button(
+                    label="Download BRD",
+                    data=_buf.getvalue(),
+                    file_name=f"GEOPulse_BRD_{_date_tag}.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    key="export_dl",
+                    type="primary",
+                )
+        except Exception as _ex:
+            st.error(f"Export generation failed: {_ex}")
 
 
 # ---------------------------------------------------------------------------
@@ -2293,51 +2596,18 @@ with tabs[2]:
             "(3+ signals, majority competitor gap)."
         )
 
-    # ── EXPORT GENERATION (triggered by Export button above tabs) ─────────────
-    if st.session_state.get("_run_export"):
-        _etype = st.session_state.pop("_run_export")
-        _ecomps = st.session_state.pop("_export_comps", selected_comps)
-        _efeats = st.session_state.pop("_export_features", list(opportunity_data.keys()))
-
-        # Build comp_stats for export comps (reuse existing if overlap)
-        _export_comp_stats = {}
-        for c in _ecomps:
-            if c in _comp_stats:
-                _export_comp_stats[c] = _comp_stats[c]
-            else:
-                _export_comp_stats[c] = {"total": 0, "pos": 0, "neg": 0, "pos_pct": 0, "momentum": "N/A", "latest": ""}
-
-        try:
-            if _etype == "Research Report (.docx)":
-                buf = _export_research_report(insights, company_meta, opportunity_data, _ecomps, _export_comp_stats)
-                st.session_state["_export_bytes"] = {
-                    "data": buf.getvalue(), "name": "geo_pulse_research_report.docx",
-                    "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                }
-            elif _etype == "Briefing Deck (.pptx)":
-                fig1_img = fig1.to_image(format="png", width=1200, height=600, scale=2) if fig1 else None
-                fig2_img = fig2.to_image(format="png", width=1200, height=600, scale=2) if fig2 else None
-                buf = _export_briefing_deck(insights, company_meta, opportunity_data, _ecomps, _export_comp_stats, fig1_img, fig2_img)
-                st.session_state["_export_bytes"] = {
-                    "data": buf.getvalue(), "name": "geo_pulse_briefing_deck.pptx",
-                    "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-                }
-            elif _etype == "PRD (.docx)":
-                buf = _export_prd(opportunity_data, insights, _efeats, _ecomps)
-                st.session_state["_export_bytes"] = {
-                    "data": buf.getvalue(), "name": "geo_pulse_prd.docx",
-                    "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                }
-            elif _etype == "BRD (.docx)":
-                buf = _export_brd(opportunity_data, insights, _efeats, _ecomps)
-                st.session_state["_export_bytes"] = {
-                    "data": buf.getvalue(), "name": "geo_pulse_brd.docx",
-                    "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                }
-            st.success(f"{_etype} generated. Use the Download button in the Export section above.")
-            st.rerun()
-        except Exception as e:
-            st.error(f"Export failed: {e}")
+    # ── Cache Roadmap data for export ────────────────────────────────────────
+    st.session_state["_rd_opportunity_data"] = dict(opportunity_data)
+    st.session_state["_rd_comp_stats"] = dict(_comp_stats)
+    st.session_state["_rd_selected_comps"] = list(selected_comps)
+    try:
+        st.session_state["_rd_fig1_img"] = fig1.to_image(format="png", width=1200, height=600, scale=2)
+    except Exception:
+        st.session_state["_rd_fig1_img"] = None
+    try:
+        st.session_state["_rd_fig2_img"] = fig2.to_image(format="png", width=1200, height=600, scale=2)
+    except Exception:
+        st.session_state["_rd_fig2_img"] = None
 
 
 
