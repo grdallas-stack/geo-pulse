@@ -474,6 +474,59 @@ def _pptx_callout_box(slide, bullets, top_inches=5.6):
         p.font.color.rgb = PptxRGBColor(0x33, 0x33, 0x33)
 
 
+def _docx_add_hyperlink(paragraph, text, url, font_size=None, bold=False, color="336699"):
+    """Add a clickable hyperlink to a python-docx paragraph."""
+    from docx.oxml.ns import qn
+    from docx.oxml import OxmlElement
+
+    part = paragraph.part
+    r_id = part.relate_to(url, "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink", is_external=True)
+    hyperlink = OxmlElement("w:hyperlink")
+    hyperlink.set(qn("r:id"), r_id)
+    new_run = OxmlElement("w:r")
+    rPr = OxmlElement("w:rPr")
+    c = OxmlElement("w:color")
+    c.set(qn("w:val"), color)
+    rPr.append(c)
+    u = OxmlElement("w:u")
+    u.set(qn("w:val"), "single")
+    rPr.append(u)
+    if bold:
+        rPr.append(OxmlElement("w:b"))
+    if font_size:
+        sz = OxmlElement("w:sz")
+        sz.set(qn("w:val"), str(int(font_size * 2)))
+        rPr.append(sz)
+        szCs = OxmlElement("w:szCs")
+        szCs.set(qn("w:val"), str(int(font_size * 2)))
+        rPr.append(szCs)
+    new_run.append(rPr)
+    t = OxmlElement("w:t")
+    t.text = text
+    t.set(qn("xml:space"), "preserve")
+    new_run.append(t)
+    hyperlink.append(new_run)
+    paragraph._p.append(hyperlink)
+
+
+# Signal of the Week data (mirrors the hardcoded editorial pick in the Live Feed tab)
+_SOTW = {
+    "company": "Future",
+    "title": "Future PLC launches GEO-as-a-Service division",
+    "url": "https://pressgazette.co.uk/marketing/future-leveragess-high-visibility-on-chatgpt-by-offering-geo-as-a-service/",
+    "date": "2026-02-20",
+    "source": "Press Gazette",
+    "brief": (
+        "Future PLC, publisher of TechRadar and Tom's Guide and the most-cited "
+        "publisher domain on ChatGPT globally, has launched a commercial GEO "
+        "optimization division selling AI visibility campaigns to brand clients. "
+        "They delivered a 33% ChatGPT visibility uplift for Samsung and hold a "
+        "direct content deal with OpenAI. This is the first major media publisher "
+        "to productize GEO expertise, signaling the category is moving mainstream."
+    ),
+}
+
+
 def _export_research_report(insights, company_meta, opportunity_data, selected_comps, comp_stats):
     """Generate a Research Report .docx styled as an analyst newsletter."""
     doc = DocxDocument()
@@ -528,49 +581,63 @@ def _export_research_report(insights, company_meta, opportunity_data, selected_c
     # ── Section 1: Top Story ────────────────────────────────────────────────
     doc.add_heading("Top Story", level=1)
 
-    # Pick the highest-relevance signal from the last 7 days
-    top = recent_signals[0] if recent_signals else None
-    if top:
-        hl = _sig_headline(top)
-        url = _sig_url(top)
-        comps = top.get("companies_mentioned", [])
-        sent = top.get("sentiment", "neutral")
-        why = _relevance_sentence(top)
+    # Use Signal of the Week if available, otherwise fall back to pipeline
+    if _SOTW.get("title"):
+        p = doc.add_paragraph()
+        _docx_add_hyperlink(p, _SOTW["title"], _SOTW["url"], font_size=13, bold=True)
+
+        doc.add_paragraph(_SOTW["brief"])
 
         p = doc.add_paragraph()
-        r = p.add_run(hl)
-        r.bold = True
-        r.font.size = Pt(13)
-        if url:
-            p = doc.add_paragraph()
-            r = p.add_run(url)
-            r.font.size = Pt(9)
-            r.font.color.rgb = RGBColor(0x33, 0x66, 0x99)
-
-        # Narrative paragraph
-        comp_str = ", ".join(comps[:3]) if comps else "multiple players"
-        source = top.get("source", "community forums")
-        narrative = (
-            f"This week's most significant signal comes from {source}. "
-            f"It involves {comp_str} and carries {sent} sentiment. "
-        )
-        if why:
-            narrative += why + " "
-        narrative += (
-            f"This signal scored highest among {len(recent_signals)} "
-            f"posts from the past seven days based on source quality, "
-            f"social engagement, and enrichment depth."
-        )
-        doc.add_paragraph(narrative)
+        r = p.add_run(f"{_SOTW['source']} | {_SOTW['date']}")
+        r.font.size = Pt(9)
+        r.font.color.rgb = RGBColor(0x88, 0x88, 0x88)
     else:
-        doc.add_paragraph("No high-confidence signals surfaced this week.")
+        # Fallback: highest-relevance signal from the last 7 days
+        top = recent_signals[0] if recent_signals else None
+        if top:
+            hl = _sig_headline(top)
+            url = _sig_url(top)
+            comps = top.get("companies_mentioned", [])
+            sent = top.get("sentiment", "neutral")
+            why = _relevance_sentence(top)
+
+            p = doc.add_paragraph()
+            if url:
+                _docx_add_hyperlink(p, hl, url, font_size=13, bold=True)
+            else:
+                r = p.add_run(hl)
+                r.bold = True
+                r.font.size = Pt(13)
+
+            comp_str = ", ".join(comps[:3]) if comps else "multiple players"
+            source = top.get("source", "community forums")
+            narrative = (
+                f"This week's most significant signal comes from {source}, "
+                f"involving {comp_str}. "
+            )
+            if why:
+                narrative += why
+            doc.add_paragraph(narrative)
+        else:
+            doc.add_paragraph("No high-confidence signals surfaced this week.")
 
     # ── Section 2: Who's Moving ─────────────────────────────────────────────
     doc.add_heading("Who's Moving", level=1)
 
-    rising = [c for c in selected_comps if comp_stats.get(c, {}).get("momentum") == "Rising"]
-    falling = [c for c in selected_comps if comp_stats.get(c, {}).get("momentum") == "Falling"]
-    stable = [c for c in selected_comps if comp_stats.get(c, {}).get("momentum") == "Stable"]
+    # Filter to companies with 3+ signals for the table
+    qualified_comps = [
+        c for c in selected_comps
+        if comp_stats.get(c, {}).get("total", 0) >= 3
+    ]
+    qualified_comps.sort(
+        key=lambda c: comp_stats.get(c, {}).get("total", 0), reverse=True,
+    )
+    table_comps = qualified_comps[:10]
+
+    rising = [c for c in table_comps if comp_stats.get(c, {}).get("momentum") == "Rising"]
+    falling = [c for c in table_comps if comp_stats.get(c, {}).get("momentum") == "Falling"]
+    stable = [c for c in table_comps if comp_stats.get(c, {}).get("momentum") == "Stable"]
 
     # Narrative paragraph
     parts = []
@@ -594,18 +661,13 @@ def _export_research_report(insights, company_meta, opportunity_data, selected_c
     else:
         doc.add_paragraph("Insufficient data to determine momentum trends this period.")
 
-    # Momentum table
-    sorted_comps = sorted(
-        selected_comps,
-        key=lambda c: comp_stats.get(c, {}).get("total", 0),
-        reverse=True,
-    )
+    # Momentum table (3+ signals only, max 10 rows)
     table = doc.add_table(rows=1, cols=5)
     table.style = "Table Grid"
     hdr = table.rows[0].cells
     for i, h in enumerate(["Company", "Signals", "Positive %", "Momentum", "Last Signal"]):
         hdr[i].text = h
-    for comp in sorted_comps:
+    for comp in table_comps:
         cs = comp_stats.get(comp, {})
         row = table.add_row().cells
         row[0].text = comp
@@ -632,49 +694,47 @@ def _export_research_report(insights, company_meta, opportunity_data, selected_c
         if s not in buyer_sigs and _is_displayable_post(s)
     ]
 
+    def _render_signal_item(doc, s):
+        """Render a signal as hyperlinked headline + metadata line."""
+        hl = _sig_headline(s)
+        url = _sig_url(s)
+        src = _source_badge(s.get("source", ""))
+        why = _relevance_sentence(s)
+        comps = ", ".join(s.get("companies_mentioned", [])[:3])
+        date = s.get("post_date", "")
+
+        p = doc.add_paragraph(style="List Bullet")
+        p.add_run(f"[{src}] ")
+        if url:
+            _docx_add_hyperlink(p, hl, url, font_size=11, bold=True)
+        else:
+            r = p.add_run(hl)
+            r.bold = True
+
+        # Metadata line: rationale | company | date
+        meta_parts = []
+        if why:
+            meta_parts.append(why)
+        if comps:
+            meta_parts.append(comps)
+        if date:
+            meta_parts.append(date)
+        if meta_parts:
+            p2 = doc.add_paragraph()
+            r2 = p2.add_run("  " + " | ".join(meta_parts))
+            r2.font.size = Pt(9)
+            r2.font.italic = True
+            r2.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
+
     if buyer_sigs:
         doc.add_heading("Buyer Signals", level=2)
         for s in buyer_sigs[:5]:
-            hl = _sig_headline(s)
-            url = _sig_url(s)
-            src = _source_badge(s.get("source", ""))
-            why = _relevance_sentence(s)
-            p = doc.add_paragraph(style="List Bullet")
-            r = p.add_run(f"[{src}] {hl}")
-            r.bold = True
-            if url:
-                p2 = doc.add_paragraph()
-                r2 = p2.add_run(f"  {url}")
-                r2.font.size = Pt(8)
-                r2.font.color.rgb = RGBColor(0x33, 0x66, 0x99)
-            if why:
-                p3 = doc.add_paragraph()
-                r3 = p3.add_run(f"  {why}")
-                r3.font.size = Pt(9)
-                r3.font.italic = True
-                r3.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
+            _render_signal_item(doc, s)
 
     if market_sigs:
         doc.add_heading("Market Signals", level=2)
         for s in market_sigs[:5]:
-            hl = _sig_headline(s)
-            url = _sig_url(s)
-            src = _source_badge(s.get("source", ""))
-            why = _relevance_sentence(s)
-            p = doc.add_paragraph(style="List Bullet")
-            r = p.add_run(f"[{src}] {hl}")
-            r.bold = True
-            if url:
-                p2 = doc.add_paragraph()
-                r2 = p2.add_run(f"  {url}")
-                r2.font.size = Pt(8)
-                r2.font.color.rgb = RGBColor(0x33, 0x66, 0x99)
-            if why:
-                p3 = doc.add_paragraph()
-                r3 = p3.add_run(f"  {why}")
-                r3.font.size = Pt(9)
-                r3.font.italic = True
-                r3.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
+            _render_signal_item(doc, s)
 
     if not buyer_sigs and not market_sigs:
         doc.add_paragraph("No notable signals this period.")
@@ -724,19 +784,10 @@ def _export_research_report(insights, company_meta, opportunity_data, selected_c
             )
         doc.add_paragraph(" ".join(narrative_parts))
 
-        # Top evidence signals with links
+        # Top evidence signals with hyperlinked headlines
         top_ev = sorted(od["signals"], key=lambda s: _relevance_score(s), reverse=True)[:3]
         for s in top_ev:
-            hl = _sig_headline(s)
-            url = _sig_url(s)
-            src = _source_badge(s.get("source", ""))
-            p = doc.add_paragraph(style="List Bullet")
-            p.add_run(f"[{src}] {hl}")
-            if url:
-                p2 = doc.add_paragraph()
-                r2 = p2.add_run(f"  {url}")
-                r2.font.size = Pt(8)
-                r2.font.color.rgb = RGBColor(0x33, 0x66, 0x99)
+            _render_signal_item(doc, s)
 
     if not top_feats:
         doc.add_paragraph("No features have enough evidence to highlight this period.")
@@ -750,8 +801,7 @@ def _export_research_report(insights, company_meta, opportunity_data, selected_c
         "activity patterns worth monitoring."
     )
 
-    # Find companies with momentum = Rising and relatively low total signals
-    # (emerging players, not established leaders)
+    # Find rising or newly-appeared companies
     watch_candidates = []
     median_total = sorted(
         [comp_stats.get(c, {}).get("total", 0) for c in selected_comps]
@@ -761,13 +811,9 @@ def _export_research_report(insights, company_meta, opportunity_data, selected_c
         cs = comp_stats.get(comp, {})
         total = cs.get("total", 0)
         mom = cs.get("momentum", "")
-        if mom == "Rising" and total <= median_total and total >= 2:
-            watch_candidates.append((comp, cs))
-        elif mom == "Rising" and total > median_total:
-            # Still interesting if rising, just lower priority
+        if mom == "Rising" and total >= 2:
             watch_candidates.append((comp, cs))
 
-    # Also check for companies first seen recently
     try:
         new_cos = _get_new_companies(json.dumps(insights))
     except Exception:
@@ -775,54 +821,86 @@ def _export_research_report(insights, company_meta, opportunity_data, selected_c
     for comp in selected_comps:
         if comp in new_cos and comp not in [w[0] for w in watch_candidates]:
             cs = comp_stats.get(comp, {})
-            watch_candidates.append((comp, cs))
+            if cs.get("total", 0) >= 2:
+                watch_candidates.append((comp, cs))
 
+    # Sort: below-median rising first (emerging), then above-median rising
+    watch_candidates.sort(
+        key=lambda x: (0 if x[1].get("total", 0) <= median_total else 1, -x[1].get("total", 0))
+    )
     watch_candidates = watch_candidates[:3]
 
     if watch_candidates:
         for comp, cs in watch_candidates:
             meta = company_meta.get(comp, {})
             positioning = _company_positioning(meta) if meta else ""
+            total = cs.get("total", 0)
+            pos_pct = cs.get("pos_pct", 0)
+            mom = cs.get("momentum", "N/A")
+            is_new = comp in new_cos
+
             p = doc.add_paragraph()
             r = p.add_run(comp)
             r.bold = True
             r.font.size = Pt(12)
 
-            desc_parts = []
-            if positioning:
-                desc_parts.append(positioning)
-            desc_parts.append(
-                f"{cs.get('total', 0)} signals, "
-                f"{cs.get('pos_pct', 0)}% positive, "
-                f"momentum: {cs.get('momentum', 'N/A')}"
-            )
-            if comp in new_cos:
-                desc_parts.append("First appeared in data within the last 7 days.")
-            latest = cs.get("latest", "")
-            if latest:
-                desc_parts.append(f"Most recent signal: {latest}.")
-
-            doc.add_paragraph(" ".join(desc_parts))
-
-            # Best recent signal for this company
-            comp_recent = [
+            # Build analyst narrative
+            comp_sigs = [
                 s for s in insights
                 if comp in s.get("companies_mentioned", [])
                 and _is_displayable_post(s)
             ]
-            comp_recent.sort(key=lambda s: _relevance_score(s), reverse=True)
-            if comp_recent:
-                best = comp_recent[0]
-                hl = _sig_headline(best)
-                url = _sig_url(best)
-                src = _source_badge(best.get("source", ""))
+            comp_sigs.sort(key=lambda s: _relevance_score(s), reverse=True)
+            best = comp_sigs[0] if comp_sigs else None
+            best_why = _relevance_sentence(best, for_company=comp) if best else ""
+
+            sentences = []
+            if positioning and total > median_total:
+                sentences.append(
+                    f"{comp} ({positioning}) is one of the most active competitors "
+                    f"in the dataset this week with {total} signals."
+                )
+            elif positioning and is_new:
+                sentences.append(
+                    f"{comp} ({positioning}) is a new entrant, first appearing in "
+                    f"the data within the last seven days with {total} signals."
+                )
+            elif positioning:
+                sentences.append(
+                    f"{comp} ({positioning}) is gaining momentum with {total} "
+                    f"signals and {pos_pct}% positive sentiment."
+                )
+            else:
+                sentences.append(
+                    f"{comp} is showing rising activity with {total} signals "
+                    f"tracked so far."
+                )
+
+            if best_why:
+                sentences.append(f"The top signal: {best_why}")
+
+            if best:
+                best_src = best.get("source", "")
+                best_hl = _sig_headline(best)
+                best_url = _sig_url(best)
+                if best_url and best_src:
+                    sentences.append(
+                        f"Most notable mention came via {best_src}."
+                    )
+
+            doc.add_paragraph(" ".join(sentences))
+
+            # Hyperlinked top signal
+            if best:
+                best_hl = _sig_headline(best)
+                best_url = _sig_url(best)
+                best_src = _source_badge(best.get("source", ""))
                 p = doc.add_paragraph(style="List Bullet")
-                p.add_run(f"[{src}] {hl}")
-                if url:
-                    p2 = doc.add_paragraph()
-                    r2 = p2.add_run(f"  {url}")
-                    r2.font.size = Pt(8)
-                    r2.font.color.rgb = RGBColor(0x33, 0x66, 0x99)
+                p.add_run(f"[{best_src}] ")
+                if best_url:
+                    _docx_add_hyperlink(p, best_hl, best_url, font_size=11, bold=False)
+                else:
+                    p.add_run(best_hl)
     else:
         doc.add_paragraph("No emerging players flagged this period.")
 
