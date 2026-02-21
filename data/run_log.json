@@ -1,0 +1,38 @@
+[
+  {
+    "run_type": "full",
+    "started_at": "2026-02-20T07:57:18.494126",
+    "completed_at": "2026-02-20T07:57:22.742260",
+    "status": "failed",
+    "new_posts": 0,
+    "since_date": null,
+    "error": "'domain'"
+  },
+  {
+    "run_type": "full",
+    "started_at": "2026-02-20T07:57:36.034710",
+    "completed_at": "2026-02-20T07:57:40.673433",
+    "status": "completed",
+    "new_posts": 0,
+    "since_date": null,
+    "error": null
+  },
+  {
+    "run_type": "full",
+    "started_at": "2026-02-20T08:15:03.198175",
+    "completed_at": "2026-02-20T08:15:06.867781",
+    "status": "completed",
+    "new_posts": 0,
+    "since_date": null,
+    "error": null
+  },
+  {
+    "run_type": "full",
+    "started_at": "2026-02-20T08:41:59.855436",
+    "completed_at": "2026-02-20T08:42:03.645468",
+    "status": "completed",
+    "new_posts": 1752,
+    "since_date": null,
+    "error": null
+  }
+]

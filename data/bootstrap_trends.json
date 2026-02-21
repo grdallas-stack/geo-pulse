@@ -1,0 +1,6262 @@
+{
+  "metadata": {
+    "generated_at": "2026-02-19T22:20:22.256887",
+    "total_insights": 3219,
+    "weeks_tracked": 62,
+    "week_range": [
+      "2017-W09",
+      "2026-W08"
+    ]
+  },
+  "total_series": [
+    {
+      "week": "2017-W09",
+      "count": 1
+    },
+    {
+      "week": "2017-W23",
+      "count": 1
+    },
+    {
+      "week": "2019-W37",
+      "count": 1
+    },
+    {
+      "week": "2024-W19",
+      "count": 1
+    },
+    {
+      "week": "2024-W25",
+      "count": 1
+    },
+    {
+      "week": "2024-W26",
+      "count": 1
+    },
+    {
+      "week": "2024-W27",
+      "count": 1
+    },
+    {
+      "week": "2024-W47",
+      "count": 1
+    },
+    {
+      "week": "2024-W49",
+      "count": 1
+    },
+    {
+      "week": "2025-W08",
+      "count": 16
+    },
+    {
+      "week": "2025-W09",
+      "count": 16
+    },
+    {
+      "week": "2025-W10",
+      "count": 19
+    },
+    {
+      "week": "2025-W11",
+      "count": 15
+    },
+    {
+      "week": "2025-W12",
+      "count": 17
+    },
+    {
+      "week": "2025-W13",
+      "count": 30
+    },
+    {
+      "week": "2025-W14",
+      "count": 16
+    },
+    {
+      "week": "2025-W15",
+      "count": 21
+    },
+    {
+      "week": "2025-W16",
+      "count": 29
+    },
+    {
+      "week": "2025-W17",
+      "count": 34
+    },
+    {
+      "week": "2025-W18",
+      "count": 30
+    },
+    {
+      "week": "2025-W19",
+      "count": 25
+    },
+    {
+      "week": "2025-W20",
+      "count": 20
+    },
+    {
+      "week": "2025-W21",
+      "count": 31
+    },
+    {
+      "week": "2025-W22",
+      "count": 22
+    },
+    {
+      "week": "2025-W23",
+      "count": 32
+    },
+    {
+      "week": "2025-W24",
+      "count": 36
+    },
+    {
+      "week": "2025-W25",
+      "count": 37
+    },
+    {
+      "week": "2025-W26",
+      "count": 36
+    },
+    {
+      "week": "2025-W27",
+      "count": 37
+    },
+    {
+      "week": "2025-W28",
+      "count": 35
+    },
+    {
+      "week": "2025-W29",
+      "count": 35
+    },
+    {
+      "week": "2025-W30",
+      "count": 31
+    },
+    {
+      "week": "2025-W31",
+      "count": 47
+    },
+    {
+      "week": "2025-W32",
+      "count": 51
+    },
+    {
+      "week": "2025-W33",
+      "count": 54
+    },
+    {
+      "week": "2025-W34",
+      "count": 36
+    },
+    {
+      "week": "2025-W35",
+      "count": 43
+    },
+    {
+      "week": "2025-W36",
+      "count": 43
+    },
+    {
+      "week": "2025-W37",
+      "count": 41
+    },
+    {
+      "week": "2025-W38",
+      "count": 46
+    },
+    {
+      "week": "2025-W39",
+      "count": 38
+    },
+    {
+      "week": "2025-W40",
+      "count": 35
+    },
+    {
+      "week": "2025-W41",
+      "count": 44
+    },
+    {
+      "week": "2025-W42",
+      "count": 45
+    },
+    {
+      "week": "2025-W43",
+      "count": 42
+    },
+    {
+      "week": "2025-W44",
+      "count": 51
+    },
+    {
+      "week": "2025-W45",
+      "count": 57
+    },
+    {
+      "week": "2025-W46",
+      "count": 52
+    },
+    {
+      "week": "2025-W47",
+      "count": 57
+    },
+    {
+      "week": "2025-W48",
+      "count": 45
+    },
+    {
+      "week": "2025-W49",
+      "count": 47
+    },
+    {
+      "week": "2025-W50",
+      "count": 51
+    },
+    {
+      "week": "2025-W51",
+      "count": 49
+    },
+    {
+      "week": "2025-W52",
+      "count": 33
+    },
+    {
+      "week": "2026-W01",
+      "count": 47
+    },
+    {
+      "week": "2026-W02",
+      "count": 55
+    },
+    {
+      "week": "2026-W03",
+      "count": 79
+    },
+    {
+      "week": "2026-W04",
+      "count": 66
+    },
+    {
+      "week": "2026-W05",
+      "count": 94
+    },
+    {
+      "week": "2026-W06",
+      "count": 127
+    },
+    {
+      "week": "2026-W07",
+      "count": 243
+    },
+    {
+      "week": "2026-W08",
+      "count": 872
+    }
+  ],
+  "subtag_series": {
+    "General": [
+      {
+        "week": "2017-W09",
+        "count": 1
+      },
+      {
+        "week": "2017-W23",
+        "count": 1
+      },
+      {
+        "week": "2019-W37",
+        "count": 1
+      },
+      {
+        "week": "2024-W19",
+        "count": 1
+      },
+      {
+        "week": "2024-W25",
+        "count": 1
+      },
+      {
+        "week": "2024-W26",
+        "count": 1
+      },
+      {
+        "week": "2024-W27",
+        "count": 1
+      },
+      {
+        "week": "2024-W47",
+        "count": 1
+      },
+      {
+        "week": "2024-W49",
+        "count": 1
+      },
+      {
+        "week": "2025-W08",
+        "count": 13
+      },
+      {
+        "week": "2025-W09",
+        "count": 10
+      },
+      {
+        "week": "2025-W10",
+        "count": 15
+      },
+      {
+        "week": "2025-W11",
+        "count": 5
+      },
+      {
+        "week": "2025-W12",
+        "count": 14
+      },
+      {
+        "week": "2025-W13",
+        "count": 27
+      },
+      {
+        "week": "2025-W14",
+        "count": 10
+      },
+      {
+        "week": "2025-W15",
+        "count": 15
+      },
+      {
+        "week": "2025-W16",
+        "count": 22
+      },
+      {
+        "week": "2025-W17",
+        "count": 24
+      },
+      {
+        "week": "2025-W18",
+        "count": 20
+      },
+      {
+        "week": "2025-W19",
+        "count": 16
+      },
+      {
+        "week": "2025-W20",
+        "count": 13
+      },
+      {
+        "week": "2025-W21",
+        "count": 18
+      },
+      {
+        "week": "2025-W22",
+        "count": 12
+      },
+      {
+        "week": "2025-W23",
+        "count": 16
+      },
+      {
+        "week": "2025-W24",
+        "count": 18
+      },
+      {
+        "week": "2025-W25",
+        "count": 19
+      },
+      {
+        "week": "2025-W26",
+        "count": 21
+      },
+      {
+        "week": "2025-W27",
+        "count": 15
+      },
+      {
+        "week": "2025-W28",
+        "count": 19
+      },
+      {
+        "week": "2025-W29",
+        "count": 17
+      },
+      {
+        "week": "2025-W30",
+        "count": 15
+      },
+      {
+        "week": "2025-W31",
+        "count": 27
+      },
+      {
+        "week": "2025-W32",
+        "count": 26
+      },
+      {
+        "week": "2025-W33",
+        "count": 31
+      },
+      {
+        "week": "2025-W34",
+        "count": 18
+      },
+      {
+        "week": "2025-W35",
+        "count": 22
+      },
+      {
+        "week": "2025-W36",
+        "count": 19
+      },
+      {
+        "week": "2025-W37",
+        "count": 19
+      },
+      {
+        "week": "2025-W38",
+        "count": 25
+      },
+      {
+        "week": "2025-W39",
+        "count": 17
+      },
+      {
+        "week": "2025-W40",
+        "count": 17
+      },
+      {
+        "week": "2025-W41",
+        "count": 20
+      },
+      {
+        "week": "2025-W42",
+        "count": 23
+      },
+      {
+        "week": "2025-W43",
+        "count": 16
+      },
+      {
+        "week": "2025-W44",
+        "count": 26
+      },
+      {
+        "week": "2025-W45",
+        "count": 23
+      },
+      {
+        "week": "2025-W46",
+        "count": 23
+      },
+      {
+        "week": "2025-W47",
+        "count": 28
+      },
+      {
+        "week": "2025-W48",
+        "count": 25
+      },
+      {
+        "week": "2025-W49",
+        "count": 17
+      },
+      {
+        "week": "2025-W50",
+        "count": 20
+      },
+      {
+        "week": "2025-W51",
+        "count": 19
+      },
+      {
+        "week": "2025-W52",
+        "count": 15
+      },
+      {
+        "week": "2026-W01",
+        "count": 13
+      },
+      {
+        "week": "2026-W02",
+        "count": 20
+      },
+      {
+        "week": "2026-W03",
+        "count": 36
+      },
+      {
+        "week": "2026-W04",
+        "count": 31
+      },
+      {
+        "week": "2026-W05",
+        "count": 31
+      },
+      {
+        "week": "2026-W06",
+        "count": 56
+      },
+      {
+        "week": "2026-W07",
+        "count": 138
+      },
+      {
+        "week": "2026-W08",
+        "count": 694
+      }
+    ],
+    "Content Optimization": [
+      {
+        "week": "2025-W08",
+        "count": 2
+      },
+      {
+        "week": "2025-W09",
+        "count": 1
+      },
+      {
+        "week": "2025-W10",
+        "count": 1
+      },
+      {
+        "week": "2025-W11",
+        "count": 2
+      },
+      {
+        "week": "2025-W12",
+        "count": 1
+      },
+      {
+        "week": "2025-W15",
+        "count": 2
+      },
+      {
+        "week": "2025-W16",
+        "count": 1
+      },
+      {
+        "week": "2025-W17",
+        "count": 1
+      },
+      {
+        "week": "2025-W19",
+        "count": 1
+      },
+      {
+        "week": "2025-W21",
+        "count": 3
+      },
+      {
+        "week": "2025-W23",
+        "count": 4
+      },
+      {
+        "week": "2025-W24",
+        "count": 3
+      },
+      {
+        "week": "2025-W25",
+        "count": 2
+      },
+      {
+        "week": "2025-W26",
+        "count": 1
+      },
+      {
+        "week": "2025-W28",
+        "count": 2
+      },
+      {
+        "week": "2025-W29",
+        "count": 5
+      },
+      {
+        "week": "2025-W31",
+        "count": 3
+      },
+      {
+        "week": "2025-W32",
+        "count": 1
+      },
+      {
+        "week": "2025-W33",
+        "count": 3
+      },
+      {
+        "week": "2025-W34",
+        "count": 2
+      },
+      {
+        "week": "2025-W35",
+        "count": 3
+      },
+      {
+        "week": "2025-W36",
+        "count": 4
+      },
+      {
+        "week": "2025-W37",
+        "count": 3
+      },
+      {
+        "week": "2025-W38",
+        "count": 4
+      },
+      {
+        "week": "2025-W40",
+        "count": 4
+      },
+      {
+        "week": "2025-W41",
+        "count": 3
+      },
+      {
+        "week": "2025-W42",
+        "count": 3
+      },
+      {
+        "week": "2025-W43",
+        "count": 3
+      },
+      {
+        "week": "2025-W44",
+        "count": 3
+      },
+      {
+        "week": "2025-W45",
+        "count": 3
+      },
+      {
+        "week": "2025-W46",
+        "count": 7
+      },
+      {
+        "week": "2025-W47",
+        "count": 13
+      },
+      {
+        "week": "2025-W48",
+        "count": 2
+      },
+      {
+        "week": "2025-W49",
+        "count": 5
+      },
+      {
+        "week": "2025-W50",
+        "count": 4
+      },
+      {
+        "week": "2025-W51",
+        "count": 4
+      },
+      {
+        "week": "2026-W01",
+        "count": 3
+      },
+      {
+        "week": "2026-W02",
+        "count": 2
+      },
+      {
+        "week": "2026-W03",
+        "count": 3
+      },
+      {
+        "week": "2026-W04",
+        "count": 2
+      },
+      {
+        "week": "2026-W05",
+        "count": 10
+      },
+      {
+        "week": "2026-W06",
+        "count": 6
+      },
+      {
+        "week": "2026-W07",
+        "count": 8
+      },
+      {
+        "week": "2026-W08",
+        "count": 14
+      }
+    ],
+    "Link Building & Authority": [
+      {
+        "week": "2025-W08",
+        "count": 1
+      },
+      {
+        "week": "2025-W09",
+        "count": 1
+      },
+      {
+        "week": "2025-W11",
+        "count": 2
+      },
+      {
+        "week": "2025-W14",
+        "count": 1
+      },
+      {
+        "week": "2025-W18",
+        "count": 3
+      },
+      {
+        "week": "2025-W20",
+        "count": 1
+      },
+      {
+        "week": "2025-W21",
+        "count": 1
+      },
+      {
+        "week": "2025-W22",
+        "count": 3
+      },
+      {
+        "week": "2025-W25",
+        "count": 2
+      },
+      {
+        "week": "2025-W27",
+        "count": 2
+      },
+      {
+        "week": "2025-W28",
+        "count": 2
+      },
+      {
+        "week": "2025-W29",
+        "count": 1
+      },
+      {
+        "week": "2025-W30",
+        "count": 2
+      },
+      {
+        "week": "2025-W31",
+        "count": 2
+      },
+      {
+        "week": "2025-W33",
+        "count": 1
+      },
+      {
+        "week": "2025-W35",
+        "count": 4
+      },
+      {
+        "week": "2025-W37",
+        "count": 4
+      },
+      {
+        "week": "2025-W38",
+        "count": 1
+      },
+      {
+        "week": "2025-W39",
+        "count": 2
+      },
+      {
+        "week": "2025-W44",
+        "count": 3
+      },
+      {
+        "week": "2025-W45",
+        "count": 3
+      },
+      {
+        "week": "2025-W46",
+        "count": 1
+      },
+      {
+        "week": "2025-W47",
+        "count": 1
+      },
+      {
+        "week": "2025-W48",
+        "count": 1
+      },
+      {
+        "week": "2025-W49",
+        "count": 3
+      },
+      {
+        "week": "2025-W50",
+        "count": 1
+      },
+      {
+        "week": "2025-W52",
+        "count": 2
+      },
+      {
+        "week": "2026-W02",
+        "count": 3
+      },
+      {
+        "week": "2026-W05",
+        "count": 1
+      },
+      {
+        "week": "2026-W06",
+        "count": 2
+      },
+      {
+        "week": "2026-W07",
+        "count": 3
+      },
+      {
+        "week": "2026-W08",
+        "count": 17
+      }
+    ],
+    "Traffic & Visibility Impact": [
+      {
+        "week": "2025-W09",
+        "count": 1
+      },
+      {
+        "week": "2025-W14",
+        "count": 1
+      },
+      {
+        "week": "2025-W18",
+        "count": 1
+      },
+      {
+        "week": "2025-W20",
+        "count": 4
+      },
+      {
+        "week": "2025-W21",
+        "count": 1
+      },
+      {
+        "week": "2025-W22",
+        "count": 1
+      },
+      {
+        "week": "2025-W23",
+        "count": 2
+      },
+      {
+        "week": "2025-W24",
+        "count": 1
+      },
+      {
+        "week": "2025-W25",
+        "count": 1
+      },
+      {
+        "week": "2025-W26",
+        "count": 1
+      },
+      {
+        "week": "2025-W27",
+        "count": 3
+      },
+      {
+        "week": "2025-W28",
+        "count": 2
+      },
+      {
+        "week": "2025-W29",
+        "count": 3
+      },
+      {
+        "week": "2025-W32",
+        "count": 2
+      },
+      {
+        "week": "2025-W33",
+        "count": 3
+      },
+      {
+        "week": "2025-W34",
+        "count": 1
+      },
+      {
+        "week": "2025-W35",
+        "count": 1
+      },
+      {
+        "week": "2025-W36",
+        "count": 5
+      },
+      {
+        "week": "2025-W37",
+        "count": 1
+      },
+      {
+        "week": "2025-W38",
+        "count": 1
+      },
+      {
+        "week": "2025-W40",
+        "count": 2
+      },
+      {
+        "week": "2025-W42",
+        "count": 1
+      },
+      {
+        "week": "2025-W43",
+        "count": 1
+      },
+      {
+        "week": "2025-W44",
+        "count": 2
+      },
+      {
+        "week": "2025-W45",
+        "count": 1
+      },
+      {
+        "week": "2025-W46",
+        "count": 6
+      },
+      {
+        "week": "2025-W47",
+        "count": 1
+      },
+      {
+        "week": "2025-W48",
+        "count": 2
+      },
+      {
+        "week": "2025-W49",
+        "count": 4
+      },
+      {
+        "week": "2025-W50",
+        "count": 3
+      },
+      {
+        "week": "2025-W51",
+        "count": 4
+      },
+      {
+        "week": "2025-W52",
+        "count": 1
+      },
+      {
+        "week": "2026-W01",
+        "count": 2
+      },
+      {
+        "week": "2026-W02",
+        "count": 4
+      },
+      {
+        "week": "2026-W03",
+        "count": 2
+      },
+      {
+        "week": "2026-W04",
+        "count": 1
+      },
+      {
+        "week": "2026-W05",
+        "count": 1
+      },
+      {
+        "week": "2026-W06",
+        "count": 4
+      },
+      {
+        "week": "2026-W07",
+        "count": 9
+      },
+      {
+        "week": "2026-W08",
+        "count": 10
+      }
+    ],
+    "Platform Dynamics": [
+      {
+        "week": "2025-W09",
+        "count": 2
+      },
+      {
+        "week": "2025-W12",
+        "count": 2
+      },
+      {
+        "week": "2025-W14",
+        "count": 1
+      },
+      {
+        "week": "2025-W15",
+        "count": 3
+      },
+      {
+        "week": "2025-W16",
+        "count": 1
+      },
+      {
+        "week": "2025-W17",
+        "count": 2
+      },
+      {
+        "week": "2025-W18",
+        "count": 3
+      },
+      {
+        "week": "2025-W19",
+        "count": 2
+      },
+      {
+        "week": "2025-W21",
+        "count": 2
+      },
+      {
+        "week": "2025-W22",
+        "count": 2
+      },
+      {
+        "week": "2025-W23",
+        "count": 3
+      },
+      {
+        "week": "2025-W24",
+        "count": 4
+      },
+      {
+        "week": "2025-W25",
+        "count": 2
+      },
+      {
+        "week": "2025-W26",
+        "count": 3
+      },
+      {
+        "week": "2025-W27",
+        "count": 1
+      },
+      {
+        "week": "2025-W28",
+        "count": 2
+      },
+      {
+        "week": "2025-W29",
+        "count": 2
+      },
+      {
+        "week": "2025-W30",
+        "count": 2
+      },
+      {
+        "week": "2025-W31",
+        "count": 4
+      },
+      {
+        "week": "2025-W32",
+        "count": 7
+      },
+      {
+        "week": "2025-W33",
+        "count": 7
+      },
+      {
+        "week": "2025-W34",
+        "count": 5
+      },
+      {
+        "week": "2025-W35",
+        "count": 3
+      },
+      {
+        "week": "2025-W36",
+        "count": 4
+      },
+      {
+        "week": "2025-W37",
+        "count": 3
+      },
+      {
+        "week": "2025-W38",
+        "count": 3
+      },
+      {
+        "week": "2025-W39",
+        "count": 2
+      },
+      {
+        "week": "2025-W40",
+        "count": 6
+      },
+      {
+        "week": "2025-W41",
+        "count": 6
+      },
+      {
+        "week": "2025-W42",
+        "count": 1
+      },
+      {
+        "week": "2025-W43",
+        "count": 7
+      },
+      {
+        "week": "2025-W44",
+        "count": 3
+      },
+      {
+        "week": "2025-W45",
+        "count": 6
+      },
+      {
+        "week": "2025-W46",
+        "count": 5
+      },
+      {
+        "week": "2025-W47",
+        "count": 4
+      },
+      {
+        "week": "2025-W48",
+        "count": 3
+      },
+      {
+        "week": "2025-W49",
+        "count": 3
+      },
+      {
+        "week": "2025-W50",
+        "count": 6
+      },
+      {
+        "week": "2025-W51",
+        "count": 2
+      },
+      {
+        "week": "2025-W52",
+        "count": 3
+      },
+      {
+        "week": "2026-W01",
+        "count": 6
+      },
+      {
+        "week": "2026-W02",
+        "count": 2
+      },
+      {
+        "week": "2026-W03",
+        "count": 5
+      },
+      {
+        "week": "2026-W04",
+        "count": 3
+      },
+      {
+        "week": "2026-W05",
+        "count": 9
+      },
+      {
+        "week": "2026-W06",
+        "count": 8
+      },
+      {
+        "week": "2026-W07",
+        "count": 12
+      },
+      {
+        "week": "2026-W08",
+        "count": 37
+      }
+    ],
+    "Structured Data & Schema": [
+      {
+        "week": "2025-W09",
+        "count": 1
+      },
+      {
+        "week": "2025-W10",
+        "count": 1
+      },
+      {
+        "week": "2025-W18",
+        "count": 1
+      },
+      {
+        "week": "2025-W24",
+        "count": 1
+      },
+      {
+        "week": "2025-W31",
+        "count": 1
+      },
+      {
+        "week": "2025-W35",
+        "count": 2
+      },
+      {
+        "week": "2025-W38",
+        "count": 1
+      },
+      {
+        "week": "2025-W41",
+        "count": 2
+      },
+      {
+        "week": "2025-W43",
+        "count": 1
+      },
+      {
+        "week": "2025-W44",
+        "count": 1
+      },
+      {
+        "week": "2025-W45",
+        "count": 2
+      },
+      {
+        "week": "2025-W46",
+        "count": 1
+      },
+      {
+        "week": "2025-W47",
+        "count": 1
+      },
+      {
+        "week": "2025-W49",
+        "count": 2
+      },
+      {
+        "week": "2025-W50",
+        "count": 1
+      },
+      {
+        "week": "2025-W51",
+        "count": 3
+      },
+      {
+        "week": "2026-W01",
+        "count": 1
+      },
+      {
+        "week": "2026-W02",
+        "count": 1
+      },
+      {
+        "week": "2026-W03",
+        "count": 2
+      },
+      {
+        "week": "2026-W04",
+        "count": 4
+      },
+      {
+        "week": "2026-W05",
+        "count": 4
+      },
+      {
+        "week": "2026-W06",
+        "count": 6
+      },
+      {
+        "week": "2026-W07",
+        "count": 8
+      },
+      {
+        "week": "2026-W08",
+        "count": 4
+      }
+    ],
+    "Industry Trends": [
+      {
+        "week": "2025-W10",
+        "count": 1
+      },
+      {
+        "week": "2025-W41",
+        "count": 1
+      },
+      {
+        "week": "2025-W42",
+        "count": 2
+      },
+      {
+        "week": "2025-W47",
+        "count": 1
+      },
+      {
+        "week": "2026-W03",
+        "count": 1
+      },
+      {
+        "week": "2026-W05",
+        "count": 1
+      }
+    ],
+    "Tool Comparisons": [
+      {
+        "week": "2025-W10",
+        "count": 1
+      },
+      {
+        "week": "2025-W26",
+        "count": 1
+      },
+      {
+        "week": "2025-W32",
+        "count": 1
+      },
+      {
+        "week": "2025-W37",
+        "count": 1
+      },
+      {
+        "week": "2025-W41",
+        "count": 1
+      },
+      {
+        "week": "2025-W43",
+        "count": 1
+      },
+      {
+        "week": "2025-W44",
+        "count": 1
+      },
+      {
+        "week": "2025-W48",
+        "count": 2
+      },
+      {
+        "week": "2025-W51",
+        "count": 1
+      },
+      {
+        "week": "2026-W04",
+        "count": 1
+      },
+      {
+        "week": "2026-W08",
+        "count": 1
+      }
+    ],
+    "Algorithm Updates": [
+      {
+        "week": "2025-W11",
+        "count": 3
+      },
+      {
+        "week": "2025-W16",
+        "count": 1
+      },
+      {
+        "week": "2025-W17",
+        "count": 2
+      },
+      {
+        "week": "2025-W27",
+        "count": 1
+      },
+      {
+        "week": "2025-W30",
+        "count": 1
+      },
+      {
+        "week": "2025-W36",
+        "count": 1
+      },
+      {
+        "week": "2025-W50",
+        "count": 1
+      },
+      {
+        "week": "2026-W02",
+        "count": 1
+      },
+      {
+        "week": "2026-W03",
+        "count": 1
+      },
+      {
+        "week": "2026-W05",
+        "count": 2
+      },
+      {
+        "week": "2026-W07",
+        "count": 3
+      },
+      {
+        "week": "2026-W08",
+        "count": 5
+      }
+    ],
+    "Technical SEO": [
+      {
+        "week": "2025-W11",
+        "count": 2
+      },
+      {
+        "week": "2025-W13",
+        "count": 1
+      },
+      {
+        "week": "2025-W16",
+        "count": 2
+      },
+      {
+        "week": "2025-W17",
+        "count": 1
+      },
+      {
+        "week": "2025-W18",
+        "count": 2
+      },
+      {
+        "week": "2025-W19",
+        "count": 3
+      },
+      {
+        "week": "2025-W21",
+        "count": 3
+      },
+      {
+        "week": "2025-W23",
+        "count": 2
+      },
+      {
+        "week": "2025-W24",
+        "count": 3
+      },
+      {
+        "week": "2025-W25",
+        "count": 4
+      },
+      {
+        "week": "2025-W26",
+        "count": 1
+      },
+      {
+        "week": "2025-W27",
+        "count": 6
+      },
+      {
+        "week": "2025-W28",
+        "count": 3
+      },
+      {
+        "week": "2025-W31",
+        "count": 1
+      },
+      {
+        "week": "2025-W32",
+        "count": 2
+      },
+      {
+        "week": "2025-W34",
+        "count": 1
+      },
+      {
+        "week": "2025-W35",
+        "count": 2
+      },
+      {
+        "week": "2025-W36",
+        "count": 1
+      },
+      {
+        "week": "2025-W37",
+        "count": 1
+      },
+      {
+        "week": "2025-W38",
+        "count": 3
+      },
+      {
+        "week": "2025-W39",
+        "count": 3
+      },
+      {
+        "week": "2025-W40",
+        "count": 1
+      },
+      {
+        "week": "2025-W41",
+        "count": 2
+      },
+      {
+        "week": "2025-W42",
+        "count": 1
+      },
+      {
+        "week": "2025-W44",
+        "count": 3
+      },
+      {
+        "week": "2025-W45",
+        "count": 3
+      },
+      {
+        "week": "2025-W46",
+        "count": 3
+      },
+      {
+        "week": "2025-W47",
+        "count": 4
+      },
+      {
+        "week": "2025-W48",
+        "count": 2
+      },
+      {
+        "week": "2025-W50",
+        "count": 1
+      },
+      {
+        "week": "2025-W51",
+        "count": 3
+      },
+      {
+        "week": "2025-W52",
+        "count": 2
+      },
+      {
+        "week": "2026-W01",
+        "count": 2
+      },
+      {
+        "week": "2026-W02",
+        "count": 4
+      },
+      {
+        "week": "2026-W03",
+        "count": 4
+      },
+      {
+        "week": "2026-W04",
+        "count": 4
+      },
+      {
+        "week": "2026-W05",
+        "count": 3
+      },
+      {
+        "week": "2026-W06",
+        "count": 9
+      },
+      {
+        "week": "2026-W07",
+        "count": 6
+      },
+      {
+        "week": "2026-W08",
+        "count": 31
+      }
+    ],
+    "AI Overviews & SGE": [
+      {
+        "week": "2025-W11",
+        "count": 1
+      },
+      {
+        "week": "2025-W19",
+        "count": 2
+      },
+      {
+        "week": "2025-W20",
+        "count": 1
+      },
+      {
+        "week": "2025-W21",
+        "count": 2
+      },
+      {
+        "week": "2025-W22",
+        "count": 2
+      },
+      {
+        "week": "2025-W23",
+        "count": 2
+      },
+      {
+        "week": "2025-W24",
+        "count": 4
+      },
+      {
+        "week": "2025-W25",
+        "count": 3
+      },
+      {
+        "week": "2025-W26",
+        "count": 3
+      },
+      {
+        "week": "2025-W27",
+        "count": 5
+      },
+      {
+        "week": "2025-W28",
+        "count": 2
+      },
+      {
+        "week": "2025-W29",
+        "count": 2
+      },
+      {
+        "week": "2025-W30",
+        "count": 3
+      },
+      {
+        "week": "2025-W31",
+        "count": 3
+      },
+      {
+        "week": "2025-W32",
+        "count": 6
+      },
+      {
+        "week": "2025-W34",
+        "count": 3
+      },
+      {
+        "week": "2025-W35",
+        "count": 4
+      },
+      {
+        "week": "2025-W36",
+        "count": 1
+      },
+      {
+        "week": "2025-W37",
+        "count": 1
+      },
+      {
+        "week": "2025-W38",
+        "count": 1
+      },
+      {
+        "week": "2025-W39",
+        "count": 3
+      },
+      {
+        "week": "2025-W40",
+        "count": 1
+      },
+      {
+        "week": "2025-W41",
+        "count": 2
+      },
+      {
+        "week": "2025-W42",
+        "count": 1
+      },
+      {
+        "week": "2025-W43",
+        "count": 3
+      },
+      {
+        "week": "2025-W44",
+        "count": 2
+      },
+      {
+        "week": "2025-W45",
+        "count": 5
+      },
+      {
+        "week": "2025-W48",
+        "count": 1
+      },
+      {
+        "week": "2025-W49",
+        "count": 2
+      },
+      {
+        "week": "2025-W50",
+        "count": 6
+      },
+      {
+        "week": "2025-W51",
+        "count": 2
+      },
+      {
+        "week": "2025-W52",
+        "count": 3
+      },
+      {
+        "week": "2026-W01",
+        "count": 2
+      },
+      {
+        "week": "2026-W02",
+        "count": 6
+      },
+      {
+        "week": "2026-W03",
+        "count": 3
+      },
+      {
+        "week": "2026-W04",
+        "count": 4
+      },
+      {
+        "week": "2026-W05",
+        "count": 8
+      },
+      {
+        "week": "2026-W06",
+        "count": 8
+      },
+      {
+        "week": "2026-W07",
+        "count": 12
+      },
+      {
+        "week": "2026-W08",
+        "count": 15
+      }
+    ],
+    "Zero-Click & Answer Engines": [
+      {
+        "week": "2025-W13",
+        "count": 2
+      },
+      {
+        "week": "2025-W16",
+        "count": 1
+      },
+      {
+        "week": "2025-W21",
+        "count": 1
+      },
+      {
+        "week": "2025-W22",
+        "count": 1
+      },
+      {
+        "week": "2025-W24",
+        "count": 2
+      },
+      {
+        "week": "2025-W26",
+        "count": 1
+      },
+      {
+        "week": "2025-W27",
+        "count": 1
+      },
+      {
+        "week": "2025-W29",
+        "count": 1
+      },
+      {
+        "week": "2025-W30",
+        "count": 1
+      },
+      {
+        "week": "2025-W31",
+        "count": 1
+      },
+      {
+        "week": "2025-W32",
+        "count": 2
+      },
+      {
+        "week": "2025-W37",
+        "count": 3
+      },
+      {
+        "week": "2025-W38",
+        "count": 1
+      },
+      {
+        "week": "2025-W39",
+        "count": 2
+      },
+      {
+        "week": "2025-W40",
+        "count": 2
+      },
+      {
+        "week": "2025-W42",
+        "count": 1
+      },
+      {
+        "week": "2025-W43",
+        "count": 1
+      },
+      {
+        "week": "2025-W44",
+        "count": 3
+      },
+      {
+        "week": "2025-W45",
+        "count": 1
+      },
+      {
+        "week": "2025-W49",
+        "count": 1
+      },
+      {
+        "week": "2025-W51",
+        "count": 3
+      },
+      {
+        "week": "2026-W01",
+        "count": 1
+      },
+      {
+        "week": "2026-W02",
+        "count": 1
+      },
+      {
+        "week": "2026-W03",
+        "count": 5
+      },
+      {
+        "week": "2026-W04",
+        "count": 1
+      },
+      {
+        "week": "2026-W05",
+        "count": 5
+      },
+      {
+        "week": "2026-W06",
+        "count": 5
+      },
+      {
+        "week": "2026-W07",
+        "count": 5
+      },
+      {
+        "week": "2026-W08",
+        "count": 1
+      }
+    ],
+    "AI Citations & Mentions": [
+      {
+        "week": "2025-W14",
+        "count": 2
+      },
+      {
+        "week": "2025-W15",
+        "count": 1
+      },
+      {
+        "week": "2025-W17",
+        "count": 4
+      },
+      {
+        "week": "2025-W19",
+        "count": 1
+      },
+      {
+        "week": "2025-W20",
+        "count": 1
+      },
+      {
+        "week": "2025-W22",
+        "count": 1
+      },
+      {
+        "week": "2025-W23",
+        "count": 3
+      },
+      {
+        "week": "2025-W25",
+        "count": 3
+      },
+      {
+        "week": "2025-W26",
+        "count": 2
+      },
+      {
+        "week": "2025-W28",
+        "count": 3
+      },
+      {
+        "week": "2025-W29",
+        "count": 2
+      },
+      {
+        "week": "2025-W30",
+        "count": 6
+      },
+      {
+        "week": "2025-W31",
+        "count": 3
+      },
+      {
+        "week": "2025-W32",
+        "count": 4
+      },
+      {
+        "week": "2025-W33",
+        "count": 6
+      },
+      {
+        "week": "2025-W34",
+        "count": 5
+      },
+      {
+        "week": "2025-W35",
+        "count": 2
+      },
+      {
+        "week": "2025-W36",
+        "count": 5
+      },
+      {
+        "week": "2025-W37",
+        "count": 2
+      },
+      {
+        "week": "2025-W38",
+        "count": 2
+      },
+      {
+        "week": "2025-W39",
+        "count": 8
+      },
+      {
+        "week": "2025-W40",
+        "count": 2
+      },
+      {
+        "week": "2025-W41",
+        "count": 4
+      },
+      {
+        "week": "2025-W42",
+        "count": 11
+      },
+      {
+        "week": "2025-W43",
+        "count": 8
+      },
+      {
+        "week": "2025-W44",
+        "count": 2
+      },
+      {
+        "week": "2025-W45",
+        "count": 8
+      },
+      {
+        "week": "2025-W46",
+        "count": 5
+      },
+      {
+        "week": "2025-W48",
+        "count": 6
+      },
+      {
+        "week": "2025-W49",
+        "count": 7
+      },
+      {
+        "week": "2025-W50",
+        "count": 7
+      },
+      {
+        "week": "2025-W51",
+        "count": 7
+      },
+      {
+        "week": "2025-W52",
+        "count": 5
+      },
+      {
+        "week": "2026-W01",
+        "count": 12
+      },
+      {
+        "week": "2026-W02",
+        "count": 7
+      },
+      {
+        "week": "2026-W03",
+        "count": 10
+      },
+      {
+        "week": "2026-W04",
+        "count": 7
+      },
+      {
+        "week": "2026-W05",
+        "count": 17
+      },
+      {
+        "week": "2026-W06",
+        "count": 14
+      },
+      {
+        "week": "2026-W07",
+        "count": 27
+      },
+      {
+        "week": "2026-W08",
+        "count": 29
+      }
+    ],
+    "Local SEO": [
+      {
+        "week": "2025-W14",
+        "count": 1
+      },
+      {
+        "week": "2025-W33",
+        "count": 1
+      },
+      {
+        "week": "2025-W38",
+        "count": 1
+      },
+      {
+        "week": "2025-W45",
+        "count": 1
+      },
+      {
+        "week": "2026-W02",
+        "count": 1
+      },
+      {
+        "week": "2026-W03",
+        "count": 1
+      },
+      {
+        "week": "2026-W07",
+        "count": 1
+      },
+      {
+        "week": "2026-W08",
+        "count": 3
+      }
+    ],
+    "Brand Visibility in AI": [
+      {
+        "week": "2025-W16",
+        "count": 1
+      },
+      {
+        "week": "2025-W25",
+        "count": 1
+      },
+      {
+        "week": "2025-W26",
+        "count": 1
+      },
+      {
+        "week": "2025-W27",
+        "count": 3
+      },
+      {
+        "week": "2025-W29",
+        "count": 2
+      },
+      {
+        "week": "2025-W30",
+        "count": 1
+      },
+      {
+        "week": "2025-W31",
+        "count": 2
+      },
+      {
+        "week": "2025-W33",
+        "count": 1
+      },
+      {
+        "week": "2025-W36",
+        "count": 3
+      },
+      {
+        "week": "2025-W37",
+        "count": 3
+      },
+      {
+        "week": "2025-W38",
+        "count": 3
+      },
+      {
+        "week": "2025-W39",
+        "count": 1
+      },
+      {
+        "week": "2025-W41",
+        "count": 2
+      },
+      {
+        "week": "2025-W42",
+        "count": 1
+      },
+      {
+        "week": "2025-W43",
+        "count": 1
+      },
+      {
+        "week": "2025-W44",
+        "count": 1
+      },
+      {
+        "week": "2025-W47",
+        "count": 4
+      },
+      {
+        "week": "2025-W48",
+        "count": 1
+      },
+      {
+        "week": "2025-W49",
+        "count": 2
+      },
+      {
+        "week": "2025-W50",
+        "count": 1
+      },
+      {
+        "week": "2025-W51",
+        "count": 1
+      },
+      {
+        "week": "2025-W52",
+        "count": 1
+      },
+      {
+        "week": "2026-W01",
+        "count": 3
+      },
+      {
+        "week": "2026-W02",
+        "count": 2
+      },
+      {
+        "week": "2026-W03",
+        "count": 6
+      },
+      {
+        "week": "2026-W04",
+        "count": 5
+      },
+      {
+        "week": "2026-W05",
+        "count": 1
+      },
+      {
+        "week": "2026-W06",
+        "count": 8
+      },
+      {
+        "week": "2026-W07",
+        "count": 5
+      },
+      {
+        "week": "2026-W08",
+        "count": 3
+      }
+    ],
+    "Competitive Intelligence": [
+      {
+        "week": "2025-W26",
+        "count": 1
+      },
+      {
+        "week": "2025-W34",
+        "count": 1
+      },
+      {
+        "week": "2025-W44",
+        "count": 1
+      },
+      {
+        "week": "2025-W45",
+        "count": 1
+      },
+      {
+        "week": "2025-W46",
+        "count": 1
+      },
+      {
+        "week": "2026-W01",
+        "count": 2
+      },
+      {
+        "week": "2026-W05",
+        "count": 1
+      },
+      {
+        "week": "2026-W07",
+        "count": 6
+      },
+      {
+        "week": "2026-W08",
+        "count": 2
+      }
+    ],
+    "E-commerce SEO": [
+      {
+        "week": "2025-W33",
+        "count": 1
+      },
+      {
+        "week": "2025-W49",
+        "count": 1
+      },
+      {
+        "week": "2026-W08",
+        "count": 4
+      }
+    ],
+    "Measurement & ROI": [
+      {
+        "week": "2025-W41",
+        "count": 1
+      },
+      {
+        "week": "2025-W52",
+        "count": 1
+      },
+      {
+        "week": "2026-W02",
+        "count": 1
+      },
+      {
+        "week": "2026-W04",
+        "count": 3
+      },
+      {
+        "week": "2026-W06",
+        "count": 1
+      },
+      {
+        "week": "2026-W08",
+        "count": 2
+      }
+    ]
+  },
+  "company_series": {
+    "claude": [
+      {
+        "week": "2025-W08",
+        "count": 1
+      },
+      {
+        "week": "2025-W12",
+        "count": 1
+      },
+      {
+        "week": "2025-W15",
+        "count": 1
+      },
+      {
+        "week": "2025-W16",
+        "count": 2
+      },
+      {
+        "week": "2025-W21",
+        "count": 1
+      },
+      {
+        "week": "2025-W22",
+        "count": 2
+      },
+      {
+        "week": "2025-W24",
+        "count": 2
+      },
+      {
+        "week": "2025-W26",
+        "count": 3
+      },
+      {
+        "week": "2025-W27",
+        "count": 2
+      },
+      {
+        "week": "2025-W28",
+        "count": 2
+      },
+      {
+        "week": "2025-W29",
+        "count": 4
+      },
+      {
+        "week": "2025-W30",
+        "count": 1
+      },
+      {
+        "week": "2025-W31",
+        "count": 4
+      },
+      {
+        "week": "2025-W32",
+        "count": 8
+      },
+      {
+        "week": "2025-W33",
+        "count": 1
+      },
+      {
+        "week": "2025-W34",
+        "count": 4
+      },
+      {
+        "week": "2025-W35",
+        "count": 2
+      },
+      {
+        "week": "2025-W36",
+        "count": 7
+      },
+      {
+        "week": "2025-W37",
+        "count": 3
+      },
+      {
+        "week": "2025-W38",
+        "count": 3
+      },
+      {
+        "week": "2025-W39",
+        "count": 3
+      },
+      {
+        "week": "2025-W40",
+        "count": 3
+      },
+      {
+        "week": "2025-W41",
+        "count": 6
+      },
+      {
+        "week": "2025-W42",
+        "count": 3
+      },
+      {
+        "week": "2025-W43",
+        "count": 5
+      },
+      {
+        "week": "2025-W44",
+        "count": 5
+      },
+      {
+        "week": "2025-W45",
+        "count": 6
+      },
+      {
+        "week": "2025-W46",
+        "count": 7
+      },
+      {
+        "week": "2025-W47",
+        "count": 3
+      },
+      {
+        "week": "2025-W48",
+        "count": 3
+      },
+      {
+        "week": "2025-W49",
+        "count": 3
+      },
+      {
+        "week": "2025-W50",
+        "count": 6
+      },
+      {
+        "week": "2025-W51",
+        "count": 2
+      },
+      {
+        "week": "2025-W52",
+        "count": 4
+      },
+      {
+        "week": "2026-W01",
+        "count": 3
+      },
+      {
+        "week": "2026-W02",
+        "count": 4
+      },
+      {
+        "week": "2026-W03",
+        "count": 6
+      },
+      {
+        "week": "2026-W04",
+        "count": 7
+      },
+      {
+        "week": "2026-W05",
+        "count": 9
+      },
+      {
+        "week": "2026-W06",
+        "count": 13
+      },
+      {
+        "week": "2026-W07",
+        "count": 23
+      },
+      {
+        "week": "2026-W08",
+        "count": 36
+      }
+    ],
+    "chatgpt": [
+      {
+        "week": "2025-W08",
+        "count": 1
+      },
+      {
+        "week": "2025-W09",
+        "count": 1
+      },
+      {
+        "week": "2025-W10",
+        "count": 1
+      },
+      {
+        "week": "2025-W13",
+        "count": 2
+      },
+      {
+        "week": "2025-W14",
+        "count": 2
+      },
+      {
+        "week": "2025-W15",
+        "count": 4
+      },
+      {
+        "week": "2025-W16",
+        "count": 4
+      },
+      {
+        "week": "2025-W17",
+        "count": 5
+      },
+      {
+        "week": "2025-W18",
+        "count": 6
+      },
+      {
+        "week": "2025-W19",
+        "count": 7
+      },
+      {
+        "week": "2025-W20",
+        "count": 4
+      },
+      {
+        "week": "2025-W21",
+        "count": 9
+      },
+      {
+        "week": "2025-W22",
+        "count": 6
+      },
+      {
+        "week": "2025-W23",
+        "count": 6
+      },
+      {
+        "week": "2025-W24",
+        "count": 8
+      },
+      {
+        "week": "2025-W25",
+        "count": 2
+      },
+      {
+        "week": "2025-W26",
+        "count": 7
+      },
+      {
+        "week": "2025-W27",
+        "count": 6
+      },
+      {
+        "week": "2025-W28",
+        "count": 5
+      },
+      {
+        "week": "2025-W29",
+        "count": 11
+      },
+      {
+        "week": "2025-W30",
+        "count": 9
+      },
+      {
+        "week": "2025-W31",
+        "count": 15
+      },
+      {
+        "week": "2025-W32",
+        "count": 11
+      },
+      {
+        "week": "2025-W33",
+        "count": 7
+      },
+      {
+        "week": "2025-W34",
+        "count": 6
+      },
+      {
+        "week": "2025-W35",
+        "count": 10
+      },
+      {
+        "week": "2025-W36",
+        "count": 12
+      },
+      {
+        "week": "2025-W37",
+        "count": 12
+      },
+      {
+        "week": "2025-W38",
+        "count": 9
+      },
+      {
+        "week": "2025-W39",
+        "count": 8
+      },
+      {
+        "week": "2025-W40",
+        "count": 8
+      },
+      {
+        "week": "2025-W41",
+        "count": 9
+      },
+      {
+        "week": "2025-W42",
+        "count": 16
+      },
+      {
+        "week": "2025-W43",
+        "count": 5
+      },
+      {
+        "week": "2025-W44",
+        "count": 11
+      },
+      {
+        "week": "2025-W45",
+        "count": 17
+      },
+      {
+        "week": "2025-W46",
+        "count": 19
+      },
+      {
+        "week": "2025-W47",
+        "count": 7
+      },
+      {
+        "week": "2025-W48",
+        "count": 13
+      },
+      {
+        "week": "2025-W49",
+        "count": 20
+      },
+      {
+        "week": "2025-W50",
+        "count": 12
+      },
+      {
+        "week": "2025-W51",
+        "count": 9
+      },
+      {
+        "week": "2025-W52",
+        "count": 9
+      },
+      {
+        "week": "2026-W01",
+        "count": 17
+      },
+      {
+        "week": "2026-W02",
+        "count": 14
+      },
+      {
+        "week": "2026-W03",
+        "count": 18
+      },
+      {
+        "week": "2026-W04",
+        "count": 16
+      },
+      {
+        "week": "2026-W05",
+        "count": 26
+      },
+      {
+        "week": "2026-W06",
+        "count": 33
+      },
+      {
+        "week": "2026-W07",
+        "count": 50
+      },
+      {
+        "week": "2026-W08",
+        "count": 75
+      }
+    ],
+    "copilot": [
+      {
+        "week": "2025-W08",
+        "count": 1
+      },
+      {
+        "week": "2025-W15",
+        "count": 1
+      },
+      {
+        "week": "2025-W17",
+        "count": 1
+      },
+      {
+        "week": "2025-W21",
+        "count": 4
+      },
+      {
+        "week": "2025-W26",
+        "count": 1
+      },
+      {
+        "week": "2025-W27",
+        "count": 2
+      },
+      {
+        "week": "2025-W29",
+        "count": 1
+      },
+      {
+        "week": "2025-W30",
+        "count": 2
+      },
+      {
+        "week": "2025-W31",
+        "count": 1
+      },
+      {
+        "week": "2025-W33",
+        "count": 3
+      },
+      {
+        "week": "2025-W36",
+        "count": 1
+      },
+      {
+        "week": "2025-W37",
+        "count": 1
+      },
+      {
+        "week": "2025-W39",
+        "count": 2
+      },
+      {
+        "week": "2025-W41",
+        "count": 1
+      },
+      {
+        "week": "2025-W42",
+        "count": 2
+      },
+      {
+        "week": "2025-W44",
+        "count": 2
+      },
+      {
+        "week": "2025-W45",
+        "count": 1
+      },
+      {
+        "week": "2025-W47",
+        "count": 2
+      },
+      {
+        "week": "2025-W49",
+        "count": 1
+      },
+      {
+        "week": "2025-W50",
+        "count": 2
+      },
+      {
+        "week": "2025-W51",
+        "count": 2
+      },
+      {
+        "week": "2026-W01",
+        "count": 1
+      },
+      {
+        "week": "2026-W03",
+        "count": 3
+      },
+      {
+        "week": "2026-W04",
+        "count": 1
+      },
+      {
+        "week": "2026-W05",
+        "count": 1
+      },
+      {
+        "week": "2026-W06",
+        "count": 3
+      },
+      {
+        "week": "2026-W07",
+        "count": 4
+      },
+      {
+        "week": "2026-W08",
+        "count": 4
+      }
+    ],
+    "gemini": [
+      {
+        "week": "2025-W08",
+        "count": 1
+      },
+      {
+        "week": "2025-W09",
+        "count": 1
+      },
+      {
+        "week": "2025-W11",
+        "count": 1
+      },
+      {
+        "week": "2025-W12",
+        "count": 1
+      },
+      {
+        "week": "2025-W13",
+        "count": 2
+      },
+      {
+        "week": "2025-W14",
+        "count": 1
+      },
+      {
+        "week": "2025-W16",
+        "count": 5
+      },
+      {
+        "week": "2025-W17",
+        "count": 2
+      },
+      {
+        "week": "2025-W18",
+        "count": 4
+      },
+      {
+        "week": "2025-W19",
+        "count": 6
+      },
+      {
+        "week": "2025-W20",
+        "count": 1
+      },
+      {
+        "week": "2025-W21",
+        "count": 4
+      },
+      {
+        "week": "2025-W22",
+        "count": 4
+      },
+      {
+        "week": "2025-W23",
+        "count": 1
+      },
+      {
+        "week": "2025-W24",
+        "count": 1
+      },
+      {
+        "week": "2025-W25",
+        "count": 3
+      },
+      {
+        "week": "2025-W26",
+        "count": 4
+      },
+      {
+        "week": "2025-W27",
+        "count": 1
+      },
+      {
+        "week": "2025-W28",
+        "count": 1
+      },
+      {
+        "week": "2025-W29",
+        "count": 1
+      },
+      {
+        "week": "2025-W30",
+        "count": 3
+      },
+      {
+        "week": "2025-W31",
+        "count": 2
+      },
+      {
+        "week": "2025-W32",
+        "count": 5
+      },
+      {
+        "week": "2025-W33",
+        "count": 7
+      },
+      {
+        "week": "2025-W34",
+        "count": 1
+      },
+      {
+        "week": "2025-W35",
+        "count": 4
+      },
+      {
+        "week": "2025-W36",
+        "count": 4
+      },
+      {
+        "week": "2025-W37",
+        "count": 3
+      },
+      {
+        "week": "2025-W38",
+        "count": 2
+      },
+      {
+        "week": "2025-W39",
+        "count": 10
+      },
+      {
+        "week": "2025-W40",
+        "count": 3
+      },
+      {
+        "week": "2025-W41",
+        "count": 3
+      },
+      {
+        "week": "2025-W42",
+        "count": 4
+      },
+      {
+        "week": "2025-W43",
+        "count": 5
+      },
+      {
+        "week": "2025-W44",
+        "count": 5
+      },
+      {
+        "week": "2025-W45",
+        "count": 9
+      },
+      {
+        "week": "2025-W46",
+        "count": 7
+      },
+      {
+        "week": "2025-W47",
+        "count": 12
+      },
+      {
+        "week": "2025-W48",
+        "count": 6
+      },
+      {
+        "week": "2025-W49",
+        "count": 7
+      },
+      {
+        "week": "2025-W50",
+        "count": 5
+      },
+      {
+        "week": "2025-W51",
+        "count": 4
+      },
+      {
+        "week": "2025-W52",
+        "count": 6
+      },
+      {
+        "week": "2026-W01",
+        "count": 6
+      },
+      {
+        "week": "2026-W02",
+        "count": 8
+      },
+      {
+        "week": "2026-W03",
+        "count": 11
+      },
+      {
+        "week": "2026-W04",
+        "count": 10
+      },
+      {
+        "week": "2026-W05",
+        "count": 11
+      },
+      {
+        "week": "2026-W06",
+        "count": 12
+      },
+      {
+        "week": "2026-W07",
+        "count": 27
+      },
+      {
+        "week": "2026-W08",
+        "count": 65
+      }
+    ],
+    "surfer seo": [
+      {
+        "week": "2025-W08",
+        "count": 1
+      },
+      {
+        "week": "2025-W11",
+        "count": 1
+      },
+      {
+        "week": "2025-W16",
+        "count": 1
+      },
+      {
+        "week": "2025-W26",
+        "count": 1
+      },
+      {
+        "week": "2025-W27",
+        "count": 1
+      },
+      {
+        "week": "2025-W29",
+        "count": 1
+      },
+      {
+        "week": "2025-W33",
+        "count": 1
+      },
+      {
+        "week": "2025-W34",
+        "count": 1
+      },
+      {
+        "week": "2025-W35",
+        "count": 2
+      },
+      {
+        "week": "2025-W38",
+        "count": 1
+      },
+      {
+        "week": "2025-W40",
+        "count": 1
+      },
+      {
+        "week": "2025-W42",
+        "count": 1
+      },
+      {
+        "week": "2025-W46",
+        "count": 1
+      },
+      {
+        "week": "2025-W47",
+        "count": 1
+      },
+      {
+        "week": "2025-W48",
+        "count": 1
+      },
+      {
+        "week": "2025-W49",
+        "count": 1
+      },
+      {
+        "week": "2025-W52",
+        "count": 1
+      },
+      {
+        "week": "2026-W01",
+        "count": 2
+      },
+      {
+        "week": "2026-W04",
+        "count": 2
+      },
+      {
+        "week": "2026-W05",
+        "count": 5
+      },
+      {
+        "week": "2026-W07",
+        "count": 2
+      },
+      {
+        "week": "2026-W08",
+        "count": 1
+      }
+    ],
+    "ahrefs": [
+      {
+        "week": "2025-W08",
+        "count": 1
+      },
+      {
+        "week": "2025-W10",
+        "count": 1
+      },
+      {
+        "week": "2025-W12",
+        "count": 1
+      },
+      {
+        "week": "2025-W17",
+        "count": 1
+      },
+      {
+        "week": "2025-W21",
+        "count": 1
+      },
+      {
+        "week": "2025-W23",
+        "count": 1
+      },
+      {
+        "week": "2025-W26",
+        "count": 1
+      },
+      {
+        "week": "2025-W27",
+        "count": 1
+      },
+      {
+        "week": "2025-W28",
+        "count": 3
+      },
+      {
+        "week": "2025-W30",
+        "count": 1
+      },
+      {
+        "week": "2025-W31",
+        "count": 1
+      },
+      {
+        "week": "2025-W32",
+        "count": 3
+      },
+      {
+        "week": "2025-W33",
+        "count": 2
+      },
+      {
+        "week": "2025-W35",
+        "count": 2
+      },
+      {
+        "week": "2025-W36",
+        "count": 2
+      },
+      {
+        "week": "2025-W37",
+        "count": 2
+      },
+      {
+        "week": "2025-W38",
+        "count": 3
+      },
+      {
+        "week": "2025-W40",
+        "count": 2
+      },
+      {
+        "week": "2025-W41",
+        "count": 1
+      },
+      {
+        "week": "2025-W43",
+        "count": 1
+      },
+      {
+        "week": "2025-W44",
+        "count": 1
+      },
+      {
+        "week": "2025-W45",
+        "count": 1
+      },
+      {
+        "week": "2025-W46",
+        "count": 3
+      },
+      {
+        "week": "2025-W47",
+        "count": 3
+      },
+      {
+        "week": "2025-W48",
+        "count": 2
+      },
+      {
+        "week": "2025-W49",
+        "count": 1
+      },
+      {
+        "week": "2025-W50",
+        "count": 1
+      },
+      {
+        "week": "2025-W51",
+        "count": 3
+      },
+      {
+        "week": "2026-W01",
+        "count": 1
+      },
+      {
+        "week": "2026-W02",
+        "count": 3
+      },
+      {
+        "week": "2026-W04",
+        "count": 1
+      },
+      {
+        "week": "2026-W05",
+        "count": 9
+      },
+      {
+        "week": "2026-W06",
+        "count": 1
+      },
+      {
+        "week": "2026-W07",
+        "count": 3
+      },
+      {
+        "week": "2026-W08",
+        "count": 6
+      }
+    ],
+    "semrush": [
+      {
+        "week": "2025-W08",
+        "count": 1
+      },
+      {
+        "week": "2025-W10",
+        "count": 1
+      },
+      {
+        "week": "2025-W14",
+        "count": 1
+      },
+      {
+        "week": "2025-W17",
+        "count": 1
+      },
+      {
+        "week": "2025-W18",
+        "count": 1
+      },
+      {
+        "week": "2025-W21",
+        "count": 1
+      },
+      {
+        "week": "2025-W26",
+        "count": 1
+      },
+      {
+        "week": "2025-W27",
+        "count": 1
+      },
+      {
+        "week": "2025-W31",
+        "count": 1
+      },
+      {
+        "week": "2025-W32",
+        "count": 3
+      },
+      {
+        "week": "2025-W35",
+        "count": 3
+      },
+      {
+        "week": "2025-W36",
+        "count": 1
+      },
+      {
+        "week": "2025-W37",
+        "count": 3
+      },
+      {
+        "week": "2025-W38",
+        "count": 2
+      },
+      {
+        "week": "2025-W40",
+        "count": 3
+      },
+      {
+        "week": "2025-W41",
+        "count": 3
+      },
+      {
+        "week": "2025-W43",
+        "count": 1
+      },
+      {
+        "week": "2025-W44",
+        "count": 1
+      },
+      {
+        "week": "2025-W46",
+        "count": 3
+      },
+      {
+        "week": "2025-W47",
+        "count": 4
+      },
+      {
+        "week": "2025-W48",
+        "count": 2
+      },
+      {
+        "week": "2025-W49",
+        "count": 1
+      },
+      {
+        "week": "2025-W50",
+        "count": 2
+      },
+      {
+        "week": "2025-W51",
+        "count": 1
+      },
+      {
+        "week": "2026-W01",
+        "count": 1
+      },
+      {
+        "week": "2026-W02",
+        "count": 2
+      },
+      {
+        "week": "2026-W03",
+        "count": 2
+      },
+      {
+        "week": "2026-W04",
+        "count": 2
+      },
+      {
+        "week": "2026-W05",
+        "count": 5
+      },
+      {
+        "week": "2026-W06",
+        "count": 4
+      },
+      {
+        "week": "2026-W07",
+        "count": 6
+      },
+      {
+        "week": "2026-W08",
+        "count": 8
+      }
+    ],
+    "gist": [
+      {
+        "week": "2025-W08",
+        "count": 1
+      },
+      {
+        "week": "2025-W11",
+        "count": 1
+      },
+      {
+        "week": "2025-W17",
+        "count": 1
+      },
+      {
+        "week": "2025-W19",
+        "count": 1
+      },
+      {
+        "week": "2025-W20",
+        "count": 1
+      },
+      {
+        "week": "2025-W22",
+        "count": 2
+      },
+      {
+        "week": "2025-W23",
+        "count": 1
+      },
+      {
+        "week": "2025-W25",
+        "count": 1
+      },
+      {
+        "week": "2025-W26",
+        "count": 1
+      },
+      {
+        "week": "2025-W35",
+        "count": 1
+      },
+      {
+        "week": "2025-W36",
+        "count": 1
+      },
+      {
+        "week": "2025-W41",
+        "count": 1
+      },
+      {
+        "week": "2025-W42",
+        "count": 1
+      },
+      {
+        "week": "2025-W43",
+        "count": 1
+      },
+      {
+        "week": "2025-W44",
+        "count": 2
+      },
+      {
+        "week": "2025-W45",
+        "count": 1
+      },
+      {
+        "week": "2025-W46",
+        "count": 1
+      },
+      {
+        "week": "2025-W49",
+        "count": 1
+      },
+      {
+        "week": "2025-W52",
+        "count": 1
+      },
+      {
+        "week": "2026-W01",
+        "count": 1
+      },
+      {
+        "week": "2026-W03",
+        "count": 2
+      },
+      {
+        "week": "2026-W05",
+        "count": 2
+      },
+      {
+        "week": "2026-W06",
+        "count": 1
+      },
+      {
+        "week": "2026-W07",
+        "count": 4
+      },
+      {
+        "week": "2026-W08",
+        "count": 10
+      }
+    ],
+    "perplexity": [
+      {
+        "week": "2025-W09",
+        "count": 2
+      },
+      {
+        "week": "2025-W12",
+        "count": 2
+      },
+      {
+        "week": "2025-W13",
+        "count": 2
+      },
+      {
+        "week": "2025-W14",
+        "count": 3
+      },
+      {
+        "week": "2025-W15",
+        "count": 4
+      },
+      {
+        "week": "2025-W16",
+        "count": 2
+      },
+      {
+        "week": "2025-W17",
+        "count": 5
+      },
+      {
+        "week": "2025-W18",
+        "count": 3
+      },
+      {
+        "week": "2025-W19",
+        "count": 3
+      },
+      {
+        "week": "2025-W20",
+        "count": 2
+      },
+      {
+        "week": "2025-W21",
+        "count": 4
+      },
+      {
+        "week": "2025-W22",
+        "count": 3
+      },
+      {
+        "week": "2025-W23",
+        "count": 3
+      },
+      {
+        "week": "2025-W24",
+        "count": 6
+      },
+      {
+        "week": "2025-W25",
+        "count": 3
+      },
+      {
+        "week": "2025-W26",
+        "count": 5
+      },
+      {
+        "week": "2025-W27",
+        "count": 4
+      },
+      {
+        "week": "2025-W28",
+        "count": 3
+      },
+      {
+        "week": "2025-W29",
+        "count": 5
+      },
+      {
+        "week": "2025-W30",
+        "count": 5
+      },
+      {
+        "week": "2025-W31",
+        "count": 8
+      },
+      {
+        "week": "2025-W32",
+        "count": 12
+      },
+      {
+        "week": "2025-W33",
+        "count": 13
+      },
+      {
+        "week": "2025-W34",
+        "count": 7
+      },
+      {
+        "week": "2025-W35",
+        "count": 3
+      },
+      {
+        "week": "2025-W36",
+        "count": 7
+      },
+      {
+        "week": "2025-W37",
+        "count": 7
+      },
+      {
+        "week": "2025-W38",
+        "count": 5
+      },
+      {
+        "week": "2025-W39",
+        "count": 10
+      },
+      {
+        "week": "2025-W40",
+        "count": 9
+      },
+      {
+        "week": "2025-W41",
+        "count": 8
+      },
+      {
+        "week": "2025-W42",
+        "count": 10
+      },
+      {
+        "week": "2025-W43",
+        "count": 15
+      },
+      {
+        "week": "2025-W44",
+        "count": 7
+      },
+      {
+        "week": "2025-W45",
+        "count": 14
+      },
+      {
+        "week": "2025-W46",
+        "count": 9
+      },
+      {
+        "week": "2025-W47",
+        "count": 7
+      },
+      {
+        "week": "2025-W48",
+        "count": 7
+      },
+      {
+        "week": "2025-W49",
+        "count": 9
+      },
+      {
+        "week": "2025-W50",
+        "count": 11
+      },
+      {
+        "week": "2025-W51",
+        "count": 9
+      },
+      {
+        "week": "2025-W52",
+        "count": 8
+      },
+      {
+        "week": "2026-W01",
+        "count": 11
+      },
+      {
+        "week": "2026-W02",
+        "count": 15
+      },
+      {
+        "week": "2026-W03",
+        "count": 14
+      },
+      {
+        "week": "2026-W04",
+        "count": 11
+      },
+      {
+        "week": "2026-W05",
+        "count": 24
+      },
+      {
+        "week": "2026-W06",
+        "count": 31
+      },
+      {
+        "week": "2026-W07",
+        "count": 40
+      },
+      {
+        "week": "2026-W08",
+        "count": 52
+      }
+    ],
+    "moz": [
+      {
+        "week": "2025-W10",
+        "count": 1
+      },
+      {
+        "week": "2025-W24",
+        "count": 1
+      },
+      {
+        "week": "2025-W37",
+        "count": 1
+      },
+      {
+        "week": "2025-W43",
+        "count": 1
+      },
+      {
+        "week": "2025-W46",
+        "count": 1
+      },
+      {
+        "week": "2025-W49",
+        "count": 1
+      },
+      {
+        "week": "2025-W51",
+        "count": 1
+      },
+      {
+        "week": "2026-W03",
+        "count": 1
+      },
+      {
+        "week": "2026-W05",
+        "count": 2
+      },
+      {
+        "week": "2026-W07",
+        "count": 2
+      }
+    ],
+    "frase": [
+      {
+        "week": "2025-W11",
+        "count": 1
+      },
+      {
+        "week": "2025-W26",
+        "count": 1
+      },
+      {
+        "week": "2025-W35",
+        "count": 1
+      },
+      {
+        "week": "2025-W38",
+        "count": 1
+      },
+      {
+        "week": "2025-W40",
+        "count": 1
+      },
+      {
+        "week": "2025-W45",
+        "count": 1
+      },
+      {
+        "week": "2025-W47",
+        "count": 1
+      },
+      {
+        "week": "2025-W49",
+        "count": 1
+      },
+      {
+        "week": "2025-W50",
+        "count": 1
+      },
+      {
+        "week": "2026-W05",
+        "count": 2
+      },
+      {
+        "week": "2026-W06",
+        "count": 2
+      },
+      {
+        "week": "2026-W07",
+        "count": 4
+      },
+      {
+        "week": "2026-W08",
+        "count": 1
+      }
+    ],
+    "neuronwriter": [
+      {
+        "week": "2025-W11",
+        "count": 1
+      },
+      {
+        "week": "2025-W19",
+        "count": 1
+      },
+      {
+        "week": "2025-W23",
+        "count": 1
+      },
+      {
+        "week": "2025-W29",
+        "count": 1
+      },
+      {
+        "week": "2025-W36",
+        "count": 1
+      },
+      {
+        "week": "2025-W37",
+        "count": 2
+      },
+      {
+        "week": "2025-W38",
+        "count": 1
+      },
+      {
+        "week": "2025-W42",
+        "count": 1
+      },
+      {
+        "week": "2025-W43",
+        "count": 1
+      },
+      {
+        "week": "2025-W45",
+        "count": 1
+      },
+      {
+        "week": "2025-W46",
+        "count": 2
+      },
+      {
+        "week": "2025-W48",
+        "count": 1
+      },
+      {
+        "week": "2025-W50",
+        "count": 2
+      },
+      {
+        "week": "2025-W52",
+        "count": 1
+      },
+      {
+        "week": "2026-W03",
+        "count": 1
+      },
+      {
+        "week": "2026-W07",
+        "count": 1
+      }
+    ],
+    "ai overview": [
+      {
+        "week": "2025-W11",
+        "count": 1
+      },
+      {
+        "week": "2025-W17",
+        "count": 1
+      },
+      {
+        "week": "2025-W19",
+        "count": 1
+      },
+      {
+        "week": "2025-W20",
+        "count": 2
+      },
+      {
+        "week": "2025-W21",
+        "count": 2
+      },
+      {
+        "week": "2025-W22",
+        "count": 1
+      },
+      {
+        "week": "2025-W23",
+        "count": 6
+      },
+      {
+        "week": "2025-W24",
+        "count": 5
+      },
+      {
+        "week": "2025-W25",
+        "count": 4
+      },
+      {
+        "week": "2025-W26",
+        "count": 6
+      },
+      {
+        "week": "2025-W27",
+        "count": 6
+      },
+      {
+        "week": "2025-W28",
+        "count": 5
+      },
+      {
+        "week": "2025-W29",
+        "count": 1
+      },
+      {
+        "week": "2025-W30",
+        "count": 8
+      },
+      {
+        "week": "2025-W31",
+        "count": 5
+      },
+      {
+        "week": "2025-W32",
+        "count": 10
+      },
+      {
+        "week": "2025-W33",
+        "count": 4
+      },
+      {
+        "week": "2025-W34",
+        "count": 4
+      },
+      {
+        "week": "2025-W35",
+        "count": 4
+      },
+      {
+        "week": "2025-W36",
+        "count": 10
+      },
+      {
+        "week": "2025-W37",
+        "count": 3
+      },
+      {
+        "week": "2025-W38",
+        "count": 2
+      },
+      {
+        "week": "2025-W39",
+        "count": 6
+      },
+      {
+        "week": "2025-W40",
+        "count": 3
+      },
+      {
+        "week": "2025-W41",
+        "count": 5
+      },
+      {
+        "week": "2025-W42",
+        "count": 6
+      },
+      {
+        "week": "2025-W43",
+        "count": 4
+      },
+      {
+        "week": "2025-W44",
+        "count": 4
+      },
+      {
+        "week": "2025-W45",
+        "count": 8
+      },
+      {
+        "week": "2025-W46",
+        "count": 4
+      },
+      {
+        "week": "2025-W48",
+        "count": 6
+      },
+      {
+        "week": "2025-W49",
+        "count": 4
+      },
+      {
+        "week": "2025-W50",
+        "count": 10
+      },
+      {
+        "week": "2025-W51",
+        "count": 3
+      },
+      {
+        "week": "2025-W52",
+        "count": 3
+      },
+      {
+        "week": "2026-W01",
+        "count": 9
+      },
+      {
+        "week": "2026-W02",
+        "count": 10
+      },
+      {
+        "week": "2026-W03",
+        "count": 7
+      },
+      {
+        "week": "2026-W04",
+        "count": 12
+      },
+      {
+        "week": "2026-W05",
+        "count": 14
+      },
+      {
+        "week": "2026-W06",
+        "count": 16
+      },
+      {
+        "week": "2026-W07",
+        "count": 17
+      },
+      {
+        "week": "2026-W08",
+        "count": 17
+      }
+    ],
+    "google ai": [
+      {
+        "week": "2025-W17",
+        "count": 1
+      },
+      {
+        "week": "2025-W19",
+        "count": 3
+      },
+      {
+        "week": "2025-W20",
+        "count": 1
+      },
+      {
+        "week": "2025-W22",
+        "count": 2
+      },
+      {
+        "week": "2025-W23",
+        "count": 2
+      },
+      {
+        "week": "2025-W24",
+        "count": 1
+      },
+      {
+        "week": "2025-W25",
+        "count": 1
+      },
+      {
+        "week": "2025-W26",
+        "count": 3
+      },
+      {
+        "week": "2025-W27",
+        "count": 1
+      },
+      {
+        "week": "2025-W30",
+        "count": 3
+      },
+      {
+        "week": "2025-W31",
+        "count": 1
+      },
+      {
+        "week": "2025-W32",
+        "count": 5
+      },
+      {
+        "week": "2025-W33",
+        "count": 1
+      },
+      {
+        "week": "2025-W34",
+        "count": 1
+      },
+      {
+        "week": "2025-W35",
+        "count": 1
+      },
+      {
+        "week": "2025-W36",
+        "count": 1
+      },
+      {
+        "week": "2025-W38",
+        "count": 1
+      },
+      {
+        "week": "2025-W39",
+        "count": 2
+      },
+      {
+        "week": "2025-W40",
+        "count": 1
+      },
+      {
+        "week": "2025-W41",
+        "count": 2
+      },
+      {
+        "week": "2025-W42",
+        "count": 3
+      },
+      {
+        "week": "2025-W45",
+        "count": 6
+      },
+      {
+        "week": "2025-W46",
+        "count": 1
+      },
+      {
+        "week": "2025-W48",
+        "count": 2
+      },
+      {
+        "week": "2025-W49",
+        "count": 1
+      },
+      {
+        "week": "2025-W50",
+        "count": 2
+      },
+      {
+        "week": "2025-W51",
+        "count": 4
+      },
+      {
+        "week": "2025-W52",
+        "count": 3
+      },
+      {
+        "week": "2026-W01",
+        "count": 3
+      },
+      {
+        "week": "2026-W02",
+        "count": 4
+      },
+      {
+        "week": "2026-W03",
+        "count": 1
+      },
+      {
+        "week": "2026-W04",
+        "count": 5
+      },
+      {
+        "week": "2026-W05",
+        "count": 5
+      },
+      {
+        "week": "2026-W06",
+        "count": 10
+      },
+      {
+        "week": "2026-W07",
+        "count": 8
+      },
+      {
+        "week": "2026-W08",
+        "count": 9
+      }
+    ],
+    "searchgpt": [
+      {
+        "week": "2025-W20",
+        "count": 1
+      },
+      {
+        "week": "2025-W49",
+        "count": 1
+      },
+      {
+        "week": "2026-W04",
+        "count": 1
+      },
+      {
+        "week": "2026-W05",
+        "count": 1
+      },
+      {
+        "week": "2026-W06",
+        "count": 1
+      },
+      {
+        "week": "2026-W08",
+        "count": 1
+      }
+    ],
+    "marketmuse": [
+      {
+        "week": "2025-W26",
+        "count": 1
+      },
+      {
+        "week": "2025-W34",
+        "count": 1
+      },
+      {
+        "week": "2025-W38",
+        "count": 1
+      },
+      {
+        "week": "2025-W47",
+        "count": 1
+      },
+      {
+        "week": "2026-W05",
+        "count": 2
+      },
+      {
+        "week": "2026-W06",
+        "count": 1
+      },
+      {
+        "week": "2026-W07",
+        "count": 1
+      },
+      {
+        "week": "2026-W08",
+        "count": 2
+      }
+    ],
+    "clearscope": [
+      {
+        "week": "2025-W28",
+        "count": 1
+      },
+      {
+        "week": "2025-W34",
+        "count": 1
+      },
+      {
+        "week": "2025-W35",
+        "count": 2
+      },
+      {
+        "week": "2025-W36",
+        "count": 1
+      },
+      {
+        "week": "2025-W37",
+        "count": 1
+      },
+      {
+        "week": "2025-W40",
+        "count": 2
+      },
+      {
+        "week": "2025-W44",
+        "count": 1
+      },
+      {
+        "week": "2025-W45",
+        "count": 1
+      },
+      {
+        "week": "2025-W47",
+        "count": 1
+      },
+      {
+        "week": "2025-W48",
+        "count": 1
+      },
+      {
+        "week": "2026-W02",
+        "count": 1
+      },
+      {
+        "week": "2026-W03",
+        "count": 1
+      },
+      {
+        "week": "2026-W05",
+        "count": 3
+      },
+      {
+        "week": "2026-W06",
+        "count": 1
+      }
+    ],
+    "conductor": [
+      {
+        "week": "2025-W31",
+        "count": 1
+      },
+      {
+        "week": "2026-W05",
+        "count": 1
+      },
+      {
+        "week": "2026-W06",
+        "count": 1
+      },
+      {
+        "week": "2026-W08",
+        "count": 1
+      }
+    ],
+    "bing ai": [
+      {
+        "week": "2026-W02",
+        "count": 1
+      },
+      {
+        "week": "2026-W07",
+        "count": 1
+      }
+    ],
+    "brightedge": [
+      {
+        "week": "2026-W04",
+        "count": 1
+      }
+    ]
+  },
+  "signal_series": {
+    "is_content_optimization": [
+      {
+        "week": "2025-W08",
+        "count": 1
+      },
+      {
+        "week": "2025-W11",
+        "count": 1
+      },
+      {
+        "week": "2025-W16",
+        "count": 2
+      },
+      {
+        "week": "2025-W19",
+        "count": 2
+      },
+      {
+        "week": "2025-W21",
+        "count": 4
+      },
+      {
+        "week": "2025-W22",
+        "count": 2
+      },
+      {
+        "week": "2025-W23",
+        "count": 2
+      },
+      {
+        "week": "2025-W24",
+        "count": 2
+      },
+      {
+        "week": "2025-W25",
+        "count": 4
+      },
+      {
+        "week": "2025-W26",
+        "count": 3
+      },
+      {
+        "week": "2025-W27",
+        "count": 2
+      },
+      {
+        "week": "2025-W29",
+        "count": 6
+      },
+      {
+        "week": "2025-W30",
+        "count": 2
+      },
+      {
+        "week": "2025-W31",
+        "count": 3
+      },
+      {
+        "week": "2025-W32",
+        "count": 4
+      },
+      {
+        "week": "2025-W33",
+        "count": 4
+      },
+      {
+        "week": "2025-W34",
+        "count": 3
+      },
+      {
+        "week": "2025-W35",
+        "count": 3
+      },
+      {
+        "week": "2025-W36",
+        "count": 4
+      },
+      {
+        "week": "2025-W37",
+        "count": 4
+      },
+      {
+        "week": "2025-W38",
+        "count": 5
+      },
+      {
+        "week": "2025-W39",
+        "count": 4
+      },
+      {
+        "week": "2025-W40",
+        "count": 8
+      },
+      {
+        "week": "2025-W41",
+        "count": 4
+      },
+      {
+        "week": "2025-W42",
+        "count": 8
+      },
+      {
+        "week": "2025-W43",
+        "count": 3
+      },
+      {
+        "week": "2025-W44",
+        "count": 4
+      },
+      {
+        "week": "2025-W45",
+        "count": 11
+      },
+      {
+        "week": "2025-W46",
+        "count": 10
+      },
+      {
+        "week": "2025-W47",
+        "count": 7
+      },
+      {
+        "week": "2025-W48",
+        "count": 2
+      },
+      {
+        "week": "2025-W49",
+        "count": 11
+      },
+      {
+        "week": "2025-W50",
+        "count": 7
+      },
+      {
+        "week": "2025-W51",
+        "count": 7
+      },
+      {
+        "week": "2025-W52",
+        "count": 4
+      },
+      {
+        "week": "2026-W01",
+        "count": 9
+      },
+      {
+        "week": "2026-W02",
+        "count": 10
+      },
+      {
+        "week": "2026-W03",
+        "count": 12
+      },
+      {
+        "week": "2026-W04",
+        "count": 6
+      },
+      {
+        "week": "2026-W05",
+        "count": 14
+      },
+      {
+        "week": "2026-W06",
+        "count": 16
+      },
+      {
+        "week": "2026-W07",
+        "count": 22
+      },
+      {
+        "week": "2026-W08",
+        "count": 24
+      }
+    ],
+    "is_traffic_impact": [
+      {
+        "week": "2025-W09",
+        "count": 1
+      },
+      {
+        "week": "2025-W14",
+        "count": 1
+      },
+      {
+        "week": "2025-W18",
+        "count": 1
+      },
+      {
+        "week": "2025-W19",
+        "count": 1
+      },
+      {
+        "week": "2025-W20",
+        "count": 4
+      },
+      {
+        "week": "2025-W21",
+        "count": 1
+      },
+      {
+        "week": "2025-W22",
+        "count": 1
+      },
+      {
+        "week": "2025-W23",
+        "count": 3
+      },
+      {
+        "week": "2025-W24",
+        "count": 1
+      },
+      {
+        "week": "2025-W25",
+        "count": 1
+      },
+      {
+        "week": "2025-W26",
+        "count": 1
+      },
+      {
+        "week": "2025-W27",
+        "count": 3
+      },
+      {
+        "week": "2025-W28",
+        "count": 2
+      },
+      {
+        "week": "2025-W29",
+        "count": 3
+      },
+      {
+        "week": "2025-W30",
+        "count": 3
+      },
+      {
+        "week": "2025-W31",
+        "count": 1
+      },
+      {
+        "week": "2025-W32",
+        "count": 2
+      },
+      {
+        "week": "2025-W33",
+        "count": 3
+      },
+      {
+        "week": "2025-W34",
+        "count": 3
+      },
+      {
+        "week": "2025-W35",
+        "count": 1
+      },
+      {
+        "week": "2025-W36",
+        "count": 6
+      },
+      {
+        "week": "2025-W37",
+        "count": 1
+      },
+      {
+        "week": "2025-W38",
+        "count": 1
+      },
+      {
+        "week": "2025-W39",
+        "count": 1
+      },
+      {
+        "week": "2025-W40",
+        "count": 2
+      },
+      {
+        "week": "2025-W41",
+        "count": 1
+      },
+      {
+        "week": "2025-W42",
+        "count": 1
+      },
+      {
+        "week": "2025-W43",
+        "count": 1
+      },
+      {
+        "week": "2025-W44",
+        "count": 3
+      },
+      {
+        "week": "2025-W45",
+        "count": 1
+      },
+      {
+        "week": "2025-W46",
+        "count": 6
+      },
+      {
+        "week": "2025-W47",
+        "count": 1
+      },
+      {
+        "week": "2025-W48",
+        "count": 2
+      },
+      {
+        "week": "2025-W49",
+        "count": 5
+      },
+      {
+        "week": "2025-W50",
+        "count": 5
+      },
+      {
+        "week": "2025-W51",
+        "count": 5
+      },
+      {
+        "week": "2025-W52",
+        "count": 1
+      },
+      {
+        "week": "2026-W01",
+        "count": 5
+      },
+      {
+        "week": "2026-W02",
+        "count": 4
+      },
+      {
+        "week": "2026-W03",
+        "count": 2
+      },
+      {
+        "week": "2026-W04",
+        "count": 5
+      },
+      {
+        "week": "2026-W05",
+        "count": 2
+      },
+      {
+        "week": "2026-W06",
+        "count": 6
+      },
+      {
+        "week": "2026-W07",
+        "count": 12
+      },
+      {
+        "week": "2026-W08",
+        "count": 15
+      }
+    ],
+    "is_structured_data": [
+      {
+        "week": "2025-W09",
+        "count": 1
+      },
+      {
+        "week": "2025-W10",
+        "count": 1
+      },
+      {
+        "week": "2025-W16",
+        "count": 1
+      },
+      {
+        "week": "2025-W18",
+        "count": 1
+      },
+      {
+        "week": "2025-W20",
+        "count": 1
+      },
+      {
+        "week": "2025-W22",
+        "count": 1
+      },
+      {
+        "week": "2025-W23",
+        "count": 3
+      },
+      {
+        "week": "2025-W24",
+        "count": 1
+      },
+      {
+        "week": "2025-W25",
+        "count": 4
+      },
+      {
+        "week": "2025-W26",
+        "count": 2
+      },
+      {
+        "week": "2025-W28",
+        "count": 2
+      },
+      {
+        "week": "2025-W29",
+        "count": 1
+      },
+      {
+        "week": "2025-W30",
+        "count": 4
+      },
+      {
+        "week": "2025-W31",
+        "count": 2
+      },
+      {
+        "week": "2025-W32",
+        "count": 1
+      },
+      {
+        "week": "2025-W34",
+        "count": 1
+      },
+      {
+        "week": "2025-W35",
+        "count": 2
+      },
+      {
+        "week": "2025-W36",
+        "count": 5
+      },
+      {
+        "week": "2025-W37",
+        "count": 1
+      },
+      {
+        "week": "2025-W38",
+        "count": 2
+      },
+      {
+        "week": "2025-W39",
+        "count": 3
+      },
+      {
+        "week": "2025-W40",
+        "count": 2
+      },
+      {
+        "week": "2025-W41",
+        "count": 4
+      },
+      {
+        "week": "2025-W42",
+        "count": 4
+      },
+      {
+        "week": "2025-W43",
+        "count": 4
+      },
+      {
+        "week": "2025-W44",
+        "count": 3
+      },
+      {
+        "week": "2025-W45",
+        "count": 5
+      },
+      {
+        "week": "2025-W46",
+        "count": 2
+      },
+      {
+        "week": "2025-W47",
+        "count": 2
+      },
+      {
+        "week": "2025-W48",
+        "count": 2
+      },
+      {
+        "week": "2025-W49",
+        "count": 6
+      },
+      {
+        "week": "2025-W50",
+        "count": 5
+      },
+      {
+        "week": "2025-W51",
+        "count": 4
+      },
+      {
+        "week": "2025-W52",
+        "count": 1
+      },
+      {
+        "week": "2026-W01",
+        "count": 5
+      },
+      {
+        "week": "2026-W02",
+        "count": 3
+      },
+      {
+        "week": "2026-W03",
+        "count": 6
+      },
+      {
+        "week": "2026-W04",
+        "count": 9
+      },
+      {
+        "week": "2026-W05",
+        "count": 9
+      },
+      {
+        "week": "2026-W06",
+        "count": 13
+      },
+      {
+        "week": "2026-W07",
+        "count": 21
+      },
+      {
+        "week": "2026-W08",
+        "count": 10
+      }
+    ],
+    "is_tool_comparison": [
+      {
+        "week": "2025-W10",
+        "count": 1
+      },
+      {
+        "week": "2025-W21",
+        "count": 1
+      },
+      {
+        "week": "2025-W23",
+        "count": 1
+      },
+      {
+        "week": "2025-W26",
+        "count": 1
+      },
+      {
+        "week": "2025-W30",
+        "count": 1
+      },
+      {
+        "week": "2025-W32",
+        "count": 1
+      },
+      {
+        "week": "2025-W37",
+        "count": 1
+      },
+      {
+        "week": "2025-W41",
+        "count": 1
+      },
+      {
+        "week": "2025-W43",
+        "count": 1
+      },
+      {
+        "week": "2025-W44",
+        "count": 1
+      },
+      {
+        "week": "2025-W48",
+        "count": 2
+      },
+      {
+        "week": "2025-W51",
+        "count": 1
+      },
+      {
+        "week": "2026-W04",
+        "count": 1
+      },
+      {
+        "week": "2026-W06",
+        "count": 1
+      },
+      {
+        "week": "2026-W08",
+        "count": 1
+      }
+    ],
+    "is_ai_overview": [
+      {
+        "week": "2025-W11",
+        "count": 1
+      },
+      {
+        "week": "2025-W17",
+        "count": 1
+      },
+      {
+        "week": "2025-W19",
+        "count": 3
+      },
+      {
+        "week": "2025-W20",
+        "count": 2
+      },
+      {
+        "week": "2025-W21",
+        "count": 3
+      },
+      {
+        "week": "2025-W22",
+        "count": 3
+      },
+      {
+        "week": "2025-W23",
+        "count": 6
+      },
+      {
+        "week": "2025-W24",
+        "count": 6
+      },
+      {
+        "week": "2025-W25",
+        "count": 4
+      },
+      {
+        "week": "2025-W26",
+        "count": 6
+      },
+      {
+        "week": "2025-W27",
+        "count": 8
+      },
+      {
+        "week": "2025-W28",
+        "count": 5
+      },
+      {
+        "week": "2025-W29",
+        "count": 6
+      },
+      {
+        "week": "2025-W30",
+        "count": 9
+      },
+      {
+        "week": "2025-W31",
+        "count": 6
+      },
+      {
+        "week": "2025-W32",
+        "count": 11
+      },
+      {
+        "week": "2025-W33",
+        "count": 4
+      },
+      {
+        "week": "2025-W34",
+        "count": 5
+      },
+      {
+        "week": "2025-W35",
+        "count": 5
+      },
+      {
+        "week": "2025-W36",
+        "count": 10
+      },
+      {
+        "week": "2025-W37",
+        "count": 3
+      },
+      {
+        "week": "2025-W38",
+        "count": 2
+      },
+      {
+        "week": "2025-W39",
+        "count": 7
+      },
+      {
+        "week": "2025-W40",
+        "count": 4
+      },
+      {
+        "week": "2025-W41",
+        "count": 7
+      },
+      {
+        "week": "2025-W42",
+        "count": 8
+      },
+      {
+        "week": "2025-W43",
+        "count": 4
+      },
+      {
+        "week": "2025-W44",
+        "count": 4
+      },
+      {
+        "week": "2025-W45",
+        "count": 10
+      },
+      {
+        "week": "2025-W46",
+        "count": 4
+      },
+      {
+        "week": "2025-W48",
+        "count": 6
+      },
+      {
+        "week": "2025-W49",
+        "count": 5
+      },
+      {
+        "week": "2025-W50",
+        "count": 13
+      },
+      {
+        "week": "2025-W51",
+        "count": 6
+      },
+      {
+        "week": "2025-W52",
+        "count": 6
+      },
+      {
+        "week": "2026-W01",
+        "count": 11
+      },
+      {
+        "week": "2026-W02",
+        "count": 11
+      },
+      {
+        "week": "2026-W03",
+        "count": 10
+      },
+      {
+        "week": "2026-W04",
+        "count": 12
+      },
+      {
+        "week": "2026-W05",
+        "count": 19
+      },
+      {
+        "week": "2026-W06",
+        "count": 20
+      },
+      {
+        "week": "2026-W07",
+        "count": 23
+      },
+      {
+        "week": "2026-W08",
+        "count": 28
+      }
+    ],
+    "is_zero_click": [
+      {
+        "week": "2025-W13",
+        "count": 2
+      },
+      {
+        "week": "2025-W16",
+        "count": 1
+      },
+      {
+        "week": "2025-W17",
+        "count": 1
+      },
+      {
+        "week": "2025-W21",
+        "count": 1
+      },
+      {
+        "week": "2025-W22",
+        "count": 1
+      },
+      {
+        "week": "2025-W23",
+        "count": 1
+      },
+      {
+        "week": "2025-W24",
+        "count": 3
+      },
+      {
+        "week": "2025-W26",
+        "count": 3
+      },
+      {
+        "week": "2025-W27",
+        "count": 1
+      },
+      {
+        "week": "2025-W29",
+        "count": 1
+      },
+      {
+        "week": "2025-W30",
+        "count": 1
+      },
+      {
+        "week": "2025-W31",
+        "count": 2
+      },
+      {
+        "week": "2025-W32",
+        "count": 2
+      },
+      {
+        "week": "2025-W36",
+        "count": 2
+      },
+      {
+        "week": "2025-W37",
+        "count": 6
+      },
+      {
+        "week": "2025-W38",
+        "count": 2
+      },
+      {
+        "week": "2025-W39",
+        "count": 3
+      },
+      {
+        "week": "2025-W40",
+        "count": 2
+      },
+      {
+        "week": "2025-W41",
+        "count": 1
+      },
+      {
+        "week": "2025-W42",
+        "count": 3
+      },
+      {
+        "week": "2025-W43",
+        "count": 1
+      },
+      {
+        "week": "2025-W44",
+        "count": 3
+      },
+      {
+        "week": "2025-W45",
+        "count": 2
+      },
+      {
+        "week": "2025-W47",
+        "count": 1
+      },
+      {
+        "week": "2025-W49",
+        "count": 1
+      },
+      {
+        "week": "2025-W50",
+        "count": 3
+      },
+      {
+        "week": "2025-W51",
+        "count": 7
+      },
+      {
+        "week": "2025-W52",
+        "count": 2
+      },
+      {
+        "week": "2026-W01",
+        "count": 3
+      },
+      {
+        "week": "2026-W02",
+        "count": 6
+      },
+      {
+        "week": "2026-W03",
+        "count": 8
+      },
+      {
+        "week": "2026-W04",
+        "count": 6
+      },
+      {
+        "week": "2026-W05",
+        "count": 8
+      },
+      {
+        "week": "2026-W06",
+        "count": 11
+      },
+      {
+        "week": "2026-W07",
+        "count": 11
+      },
+      {
+        "week": "2026-W08",
+        "count": 10
+      }
+    ],
+    "is_ai_citation": [
+      {
+        "week": "2025-W14",
+        "count": 2
+      },
+      {
+        "week": "2025-W15",
+        "count": 1
+      },
+      {
+        "week": "2025-W17",
+        "count": 4
+      },
+      {
+        "week": "2025-W19",
+        "count": 1
+      },
+      {
+        "week": "2025-W20",
+        "count": 1
+      },
+      {
+        "week": "2025-W22",
+        "count": 1
+      },
+      {
+        "week": "2025-W23",
+        "count": 3
+      },
+      {
+        "week": "2025-W25",
+        "count": 3
+      },
+      {
+        "week": "2025-W26",
+        "count": 2
+      },
+      {
+        "week": "2025-W28",
+        "count": 3
+      },
+      {
+        "week": "2025-W29",
+        "count": 2
+      },
+      {
+        "week": "2025-W30",
+        "count": 6
+      },
+      {
+        "week": "2025-W31",
+        "count": 3
+      },
+      {
+        "week": "2025-W32",
+        "count": 4
+      },
+      {
+        "week": "2025-W33",
+        "count": 6
+      },
+      {
+        "week": "2025-W34",
+        "count": 5
+      },
+      {
+        "week": "2025-W35",
+        "count": 2
+      },
+      {
+        "week": "2025-W36",
+        "count": 5
+      },
+      {
+        "week": "2025-W37",
+        "count": 2
+      },
+      {
+        "week": "2025-W38",
+        "count": 2
+      },
+      {
+        "week": "2025-W39",
+        "count": 8
+      },
+      {
+        "week": "2025-W40",
+        "count": 2
+      },
+      {
+        "week": "2025-W41",
+        "count": 4
+      },
+      {
+        "week": "2025-W42",
+        "count": 11
+      },
+      {
+        "week": "2025-W43",
+        "count": 8
+      },
+      {
+        "week": "2025-W44",
+        "count": 2
+      },
+      {
+        "week": "2025-W45",
+        "count": 8
+      },
+      {
+        "week": "2025-W46",
+        "count": 5
+      },
+      {
+        "week": "2025-W48",
+        "count": 6
+      },
+      {
+        "week": "2025-W49",
+        "count": 7
+      },
+      {
+        "week": "2025-W50",
+        "count": 7
+      },
+      {
+        "week": "2025-W51",
+        "count": 7
+      },
+      {
+        "week": "2025-W52",
+        "count": 5
+      },
+      {
+        "week": "2026-W01",
+        "count": 12
+      },
+      {
+        "week": "2026-W02",
+        "count": 7
+      },
+      {
+        "week": "2026-W03",
+        "count": 10
+      },
+      {
+        "week": "2026-W04",
+        "count": 7
+      },
+      {
+        "week": "2026-W05",
+        "count": 17
+      },
+      {
+        "week": "2026-W06",
+        "count": 14
+      },
+      {
+        "week": "2026-W07",
+        "count": 27
+      },
+      {
+        "week": "2026-W08",
+        "count": 29
+      }
+    ],
+    "is_measurement": [
+      {
+        "week": "2025-W14",
+        "count": 2
+      },
+      {
+        "week": "2025-W22",
+        "count": 1
+      },
+      {
+        "week": "2025-W26",
+        "count": 1
+      },
+      {
+        "week": "2025-W30",
+        "count": 2
+      },
+      {
+        "week": "2025-W32",
+        "count": 3
+      },
+      {
+        "week": "2025-W36",
+        "count": 1
+      },
+      {
+        "week": "2025-W37",
+        "count": 1
+      },
+      {
+        "week": "2025-W39",
+        "count": 3
+      },
+      {
+        "week": "2025-W41",
+        "count": 2
+      },
+      {
+        "week": "2025-W43",
+        "count": 2
+      },
+      {
+        "week": "2025-W45",
+        "count": 2
+      },
+      {
+        "week": "2025-W46",
+        "count": 2
+      },
+      {
+        "week": "2025-W48",
+        "count": 1
+      },
+      {
+        "week": "2025-W49",
+        "count": 2
+      },
+      {
+        "week": "2025-W50",
+        "count": 3
+      },
+      {
+        "week": "2025-W51",
+        "count": 4
+      },
+      {
+        "week": "2025-W52",
+        "count": 3
+      },
+      {
+        "week": "2026-W01",
+        "count": 2
+      },
+      {
+        "week": "2026-W02",
+        "count": 5
+      },
+      {
+        "week": "2026-W03",
+        "count": 3
+      },
+      {
+        "week": "2026-W04",
+        "count": 9
+      },
+      {
+        "week": "2026-W05",
+        "count": 5
+      },
+      {
+        "week": "2026-W06",
+        "count": 14
+      },
+      {
+        "week": "2026-W07",
+        "count": 10
+      },
+      {
+        "week": "2026-W08",
+        "count": 10
+      }
+    ],
+    "is_brand_visibility": [
+      {
+        "week": "2025-W16",
+        "count": 1
+      },
+      {
+        "week": "2025-W19",
+        "count": 1
+      },
+      {
+        "week": "2025-W22",
+        "count": 1
+      },
+      {
+        "week": "2025-W23",
+        "count": 2
+      },
+      {
+        "week": "2025-W25",
+        "count": 1
+      },
+      {
+        "week": "2025-W26",
+        "count": 2
+      },
+      {
+        "week": "2025-W27",
+        "count": 3
+      },
+      {
+        "week": "2025-W28",
+        "count": 1
+      },
+      {
+        "week": "2025-W29",
+        "count": 2
+      },
+      {
+        "week": "2025-W30",
+        "count": 6
+      },
+      {
+        "week": "2025-W31",
+        "count": 3
+      },
+      {
+        "week": "2025-W32",
+        "count": 2
+      },
+      {
+        "week": "2025-W33",
+        "count": 2
+      },
+      {
+        "week": "2025-W35",
+        "count": 1
+      },
+      {
+        "week": "2025-W36",
+        "count": 4
+      },
+      {
+        "week": "2025-W37",
+        "count": 4
+      },
+      {
+        "week": "2025-W38",
+        "count": 4
+      },
+      {
+        "week": "2025-W39",
+        "count": 4
+      },
+      {
+        "week": "2025-W40",
+        "count": 1
+      },
+      {
+        "week": "2025-W41",
+        "count": 4
+      },
+      {
+        "week": "2025-W42",
+        "count": 1
+      },
+      {
+        "week": "2025-W43",
+        "count": 4
+      },
+      {
+        "week": "2025-W44",
+        "count": 2
+      },
+      {
+        "week": "2025-W45",
+        "count": 5
+      },
+      {
+        "week": "2025-W46",
+        "count": 2
+      },
+      {
+        "week": "2025-W47",
+        "count": 4
+      },
+      {
+        "week": "2025-W48",
+        "count": 5
+      },
+      {
+        "week": "2025-W49",
+        "count": 3
+      },
+      {
+        "week": "2025-W50",
+        "count": 1
+      },
+      {
+        "week": "2025-W51",
+        "count": 2
+      },
+      {
+        "week": "2025-W52",
+        "count": 2
+      },
+      {
+        "week": "2026-W01",
+        "count": 6
+      },
+      {
+        "week": "2026-W02",
+        "count": 6
+      },
+      {
+        "week": "2026-W03",
+        "count": 9
+      },
+      {
+        "week": "2026-W04",
+        "count": 9
+      },
+      {
+        "week": "2026-W05",
+        "count": 9
+      },
+      {
+        "week": "2026-W06",
+        "count": 17
+      },
+      {
+        "week": "2026-W07",
+        "count": 14
+      },
+      {
+        "week": "2026-W08",
+        "count": 15
+      }
+    ],
+    "is_platform_shift": [
+      {
+        "week": "2025-W18",
+        "count": 1
+      },
+      {
+        "week": "2025-W23",
+        "count": 1
+      },
+      {
+        "week": "2025-W27",
+        "count": 1
+      },
+      {
+        "week": "2025-W28",
+        "count": 1
+      },
+      {
+        "week": "2025-W32",
+        "count": 1
+      },
+      {
+        "week": "2025-W33",
+        "count": 1
+      },
+      {
+        "week": "2025-W34",
+        "count": 2
+      },
+      {
+        "week": "2025-W35",
+        "count": 1
+      },
+      {
+        "week": "2025-W37",
+        "count": 1
+      },
+      {
+        "week": "2025-W40",
+        "count": 1
+      },
+      {
+        "week": "2025-W41",
+        "count": 1
+      },
+      {
+        "week": "2025-W45",
+        "count": 2
+      },
+      {
+        "week": "2025-W46",
+        "count": 1
+      },
+      {
+        "week": "2025-W49",
+        "count": 2
+      },
+      {
+        "week": "2025-W51",
+        "count": 2
+      },
+      {
+        "week": "2025-W52",
+        "count": 3
+      },
+      {
+        "week": "2026-W05",
+        "count": 2
+      },
+      {
+        "week": "2026-W06",
+        "count": 7
+      },
+      {
+        "week": "2026-W07",
+        "count": 4
+      },
+      {
+        "week": "2026-W08",
+        "count": 5
+      }
+    ],
+    "is_competitive_intel": [
+      {
+        "week": "2025-W26",
+        "count": 1
+      },
+      {
+        "week": "2025-W30",
+        "count": 5
+      },
+      {
+        "week": "2025-W34",
+        "count": 1
+      },
+      {
+        "week": "2025-W44",
+        "count": 1
+      },
+      {
+        "week": "2025-W45",
+        "count": 1
+      },
+      {
+        "week": "2025-W46",
+        "count": 1
+      },
+      {
+        "week": "2025-W52",
+        "count": 1
+      },
+      {
+        "week": "2026-W01",
+        "count": 3
+      },
+      {
+        "week": "2026-W02",
+        "count": 2
+      },
+      {
+        "week": "2026-W05",
+        "count": 3
+      },
+      {
+        "week": "2026-W06",
+        "count": 1
+      },
+      {
+        "week": "2026-W07",
+        "count": 9
+      },
+      {
+        "week": "2026-W08",
+        "count": 2
+      }
+    ]
+  },
+  "wow_deltas": {
+    "subtags": {
+      "Brand Visibility in AI": {
+        "current": 3,
+        "previous": 5,
+        "delta": -2,
+        "delta_pct": -40.0
+      },
+      "Tool Comparisons": {
+        "current": 1,
+        "previous": 0,
+        "delta": 1,
+        "delta_pct": 100.0
+      },
+      "Content Optimization": {
+        "current": 14,
+        "previous": 8,
+        "delta": 6,
+        "delta_pct": 75.0
+      },
+      "Competitive Intelligence": {
+        "current": 2,
+        "previous": 6,
+        "delta": -4,
+        "delta_pct": -66.7
+      },
+      "General": {
+        "current": 694,
+        "previous": 138,
+        "delta": 556,
+        "delta_pct": 402.9
+      },
+      "Industry Trends": {
+        "current": 0,
+        "previous": 0,
+        "delta": 0,
+        "delta_pct": 0.0
+      },
+      "Structured Data & Schema": {
+        "current": 4,
+        "previous": 8,
+        "delta": -4,
+        "delta_pct": -50.0
+      },
+      "Measurement & ROI": {
+        "current": 2,
+        "previous": 0,
+        "delta": 2,
+        "delta_pct": 100.0
+      },
+      "Link Building & Authority": {
+        "current": 17,
+        "previous": 3,
+        "delta": 14,
+        "delta_pct": 466.7
+      },
+      "E-commerce SEO": {
+        "current": 4,
+        "previous": 0,
+        "delta": 4,
+        "delta_pct": 100.0
+      },
+      "Platform Dynamics": {
+        "current": 37,
+        "previous": 12,
+        "delta": 25,
+        "delta_pct": 208.3
+      },
+      "Traffic & Visibility Impact": {
+        "current": 10,
+        "previous": 9,
+        "delta": 1,
+        "delta_pct": 11.1
+      },
+      "Algorithm Updates": {
+        "current": 5,
+        "previous": 3,
+        "delta": 2,
+        "delta_pct": 66.7
+      },
+      "Local SEO": {
+        "current": 3,
+        "previous": 1,
+        "delta": 2,
+        "delta_pct": 200.0
+      },
+      "Zero-Click & Answer Engines": {
+        "current": 1,
+        "previous": 5,
+        "delta": -4,
+        "delta_pct": -80.0
+      },
+      "Technical SEO": {
+        "current": 31,
+        "previous": 6,
+        "delta": 25,
+        "delta_pct": 416.7
+      },
+      "AI Citations & Mentions": {
+        "current": 29,
+        "previous": 27,
+        "delta": 2,
+        "delta_pct": 7.4
+      },
+      "AI Overviews & SGE": {
+        "current": 15,
+        "previous": 12,
+        "delta": 3,
+        "delta_pct": 25.0
+      }
+    },
+    "companies": {
+      "neuronwriter": {
+        "current": 0,
+        "previous": 1,
+        "delta": -1,
+        "delta_pct": -100.0
+      },
+      "moz": {
+        "current": 0,
+        "previous": 2,
+        "delta": -2,
+        "delta_pct": -100.0
+      },
+      "searchgpt": {
+        "current": 1,
+        "previous": 0,
+        "delta": 1,
+        "delta_pct": 100.0
+      },
+      "bing ai": {
+        "current": 0,
+        "previous": 1,
+        "delta": -1,
+        "delta_pct": -100.0
+      },
+      "ai overview": {
+        "current": 17,
+        "previous": 17,
+        "delta": 0,
+        "delta_pct": 0.0
+      },
+      "clearscope": {
+        "current": 0,
+        "previous": 0,
+        "delta": 0,
+        "delta_pct": 0.0
+      },
+      "conductor": {
+        "current": 1,
+        "previous": 0,
+        "delta": 1,
+        "delta_pct": 100.0
+      },
+      "copilot": {
+        "current": 4,
+        "previous": 4,
+        "delta": 0,
+        "delta_pct": 0.0
+      },
+      "gemini": {
+        "current": 65,
+        "previous": 27,
+        "delta": 38,
+        "delta_pct": 140.7
+      },
+      "gist": {
+        "current": 10,
+        "previous": 4,
+        "delta": 6,
+        "delta_pct": 150.0
+      },
+      "ahrefs": {
+        "current": 6,
+        "previous": 3,
+        "delta": 3,
+        "delta_pct": 100.0
+      },
+      "frase": {
+        "current": 1,
+        "previous": 4,
+        "delta": -3,
+        "delta_pct": -75.0
+      },
+      "perplexity": {
+        "current": 52,
+        "previous": 40,
+        "delta": 12,
+        "delta_pct": 30.0
+      },
+      "surfer seo": {
+        "current": 1,
+        "previous": 2,
+        "delta": -1,
+        "delta_pct": -50.0
+      },
+      "semrush": {
+        "current": 8,
+        "previous": 6,
+        "delta": 2,
+        "delta_pct": 33.3
+      },
+      "google ai": {
+        "current": 9,
+        "previous": 8,
+        "delta": 1,
+        "delta_pct": 12.5
+      },
+      "chatgpt": {
+        "current": 75,
+        "previous": 50,
+        "delta": 25,
+        "delta_pct": 50.0
+      },
+      "brightedge": {
+        "current": 0,
+        "previous": 0,
+        "delta": 0,
+        "delta_pct": 0.0
+      },
+      "claude": {
+        "current": 36,
+        "previous": 23,
+        "delta": 13,
+        "delta_pct": 56.5
+      },
+      "marketmuse": {
+        "current": 2,
+        "previous": 1,
+        "delta": 1,
+        "delta_pct": 100.0
+      }
+    },
+    "signals": {
+      "is_ai_citation": {
+        "current": 29,
+        "previous": 27,
+        "delta": 2,
+        "delta_pct": 7.4
+      },
+      "is_competitive_intel": {
+        "current": 2,
+        "previous": 9,
+        "delta": -7,
+        "delta_pct": -77.8
+      },
+      "is_tool_comparison": {
+        "current": 1,
+        "previous": 0,
+        "delta": 1,
+        "delta_pct": 100.0
+      },
+      "is_structured_data": {
+        "current": 10,
+        "previous": 21,
+        "delta": -11,
+        "delta_pct": -52.4
+      },
+      "is_content_optimization": {
+        "current": 24,
+        "previous": 22,
+        "delta": 2,
+        "delta_pct": 9.1
+      },
+      "is_traffic_impact": {
+        "current": 15,
+        "previous": 12,
+        "delta": 3,
+        "delta_pct": 25.0
+      },
+      "is_brand_visibility": {
+        "current": 15,
+        "previous": 14,
+        "delta": 1,
+        "delta_pct": 7.1
+      },
+      "is_measurement": {
+        "current": 10,
+        "previous": 10,
+        "delta": 0,
+        "delta_pct": 0.0
+      },
+      "is_ai_overview": {
+        "current": 28,
+        "previous": 23,
+        "delta": 5,
+        "delta_pct": 21.7
+      },
+      "is_platform_shift": {
+        "current": 5,
+        "previous": 4,
+        "delta": 1,
+        "delta_pct": 25.0
+      },
+      "is_zero_click": {
+        "current": 10,
+        "previous": 11,
+        "delta": -1,
+        "delta_pct": -9.1
+      }
+    }
+  },
+  "rising_signals": [
+    {
+      "name": "General",
+      "current": 694,
+      "previous": 138,
+      "delta": 556,
+      "delta_pct": 402.9
+    },
+    {
+      "name": "Platform Dynamics",
+      "current": 37,
+      "previous": 12,
+      "delta": 25,
+      "delta_pct": 208.3
+    },
+    {
+      "name": "Technical SEO",
+      "current": 31,
+      "previous": 6,
+      "delta": 25,
+      "delta_pct": 416.7
+    },
+    {
+      "name": "Link Building & Authority",
+      "current": 17,
+      "previous": 3,
+      "delta": 14,
+      "delta_pct": 466.7
+    },
+    {
+      "name": "Content Optimization",
+      "current": 14,
+      "previous": 8,
+      "delta": 6,
+      "delta_pct": 75.0
+    },
+    {
+      "name": "E-commerce SEO",
+      "current": 4,
+      "previous": 0,
+      "delta": 4,
+      "delta_pct": 100.0
+    },
+    {
+      "name": "AI Overviews & SGE",
+      "current": 15,
+      "previous": 12,
+      "delta": 3,
+      "delta_pct": 25.0
+    },
+    {
+      "name": "Measurement & ROI",
+      "current": 2,
+      "previous": 0,
+      "delta": 2,
+      "delta_pct": 100.0
+    },
+    {
+      "name": "Algorithm Updates",
+      "current": 5,
+      "previous": 3,
+      "delta": 2,
+      "delta_pct": 66.7
+    },
+    {
+      "name": "Local SEO",
+      "current": 3,
+      "previous": 1,
+      "delta": 2,
+      "delta_pct": 200.0
+    }
+  ],
+  "fading_signals": [
+    {
+      "name": "Competitive Intelligence",
+      "current": 2,
+      "previous": 6,
+      "delta": -4,
+      "delta_pct": -66.7
+    },
+    {
+      "name": "Structured Data & Schema",
+      "current": 4,
+      "previous": 8,
+      "delta": -4,
+      "delta_pct": -50.0
+    },
+    {
+      "name": "Zero-Click & Answer Engines",
+      "current": 1,
+      "previous": 5,
+      "delta": -4,
+      "delta_pct": -80.0
+    },
+    {
+      "name": "Brand Visibility in AI",
+      "current": 3,
+      "previous": 5,
+      "delta": -2,
+      "delta_pct": -40.0
+    }
+  ],
+  "top_subtags": [
+    {
+      "name": "General",
+      "total": 1878
+    },
+    {
+      "name": "AI Citations & Mentions",
+      "total": 261
+    },
+    {
+      "name": "Platform Dynamics",
+      "total": 214
+    },
+    {
+      "name": "Content Optimization",
+      "total": 157
+    },
+    {
+      "name": "AI Overviews & SGE",
+      "total": 140
+    },
+    {
+      "name": "Technical SEO",
+      "total": 135
+    },
+    {
+      "name": "Traffic & Visibility Impact",
+      "total": 97
+    },
+    {
+      "name": "Link Building & Authority",
+      "total": 77
+    },
+    {
+      "name": "Brand Visibility in AI",
+      "total": 70
+    },
+    {
+      "name": "Zero-Click & Answer Engines",
+      "total": 56
+    }
+  ],
+  "company_velocity": [
+    {
+      "name": "gemini",
+      "current": 65,
+      "previous": 27,
+      "delta": 38,
+      "delta_pct": 140.7
+    },
+    {
+      "name": "chatgpt",
+      "current": 75,
+      "previous": 50,
+      "delta": 25,
+      "delta_pct": 50.0
+    },
+    {
+      "name": "claude",
+      "current": 36,
+      "previous": 23,
+      "delta": 13,
+      "delta_pct": 56.5
+    },
+    {
+      "name": "perplexity",
+      "current": 52,
+      "previous": 40,
+      "delta": 12,
+      "delta_pct": 30.0
+    },
+    {
+      "name": "gist",
+      "current": 10,
+      "previous": 4,
+      "delta": 6,
+      "delta_pct": 150.0
+    },
+    {
+      "name": "ahrefs",
+      "current": 6,
+      "previous": 3,
+      "delta": 3,
+      "delta_pct": 100.0
+    },
+    {
+      "name": "frase",
+      "current": 1,
+      "previous": 4,
+      "delta": -3,
+      "delta_pct": -75.0
+    },
+    {
+      "name": "moz",
+      "current": 0,
+      "previous": 2,
+      "delta": -2,
+      "delta_pct": -100.0
+    },
+    {
+      "name": "semrush",
+      "current": 8,
+      "previous": 6,
+      "delta": 2,
+      "delta_pct": 33.3
+    },
+    {
+      "name": "neuronwriter",
+      "current": 0,
+      "previous": 1,
+      "delta": -1,
+      "delta_pct": -100.0
+    },
+    {
+      "name": "searchgpt",
+      "current": 1,
+      "previous": 0,
+      "delta": 1,
+      "delta_pct": 100.0
+    },
+    {
+      "name": "bing ai",
+      "current": 0,
+      "previous": 1,
+      "delta": -1,
+      "delta_pct": -100.0
+    },
+    {
+      "name": "conductor",
+      "current": 1,
+      "previous": 0,
+      "delta": 1,
+      "delta_pct": 100.0
+    },
+    {
+      "name": "surfer seo",
+      "current": 1,
+      "previous": 2,
+      "delta": -1,
+      "delta_pct": -50.0
+    },
+    {
+      "name": "google ai",
+      "current": 9,
+      "previous": 8,
+      "delta": 1,
+      "delta_pct": 12.5
+    }
+  ]
+}
