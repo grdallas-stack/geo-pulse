@@ -416,42 +416,6 @@ def _share_button(section_id, label="Share", key_suffix="", extra_params=None):
 # Citation card helper
 # ---------------------------------------------------------------------------
 
-def _cite_button(insight, key_id):
-    """Render a Cite button that expands a formatted citation block with copy."""
-    cite_key = f"cite_{key_id}"
-    with st.popover("📋 Cite", use_container_width=False):
-        source = insight.get("source", "Unknown")
-        url = insight.get("url", "")
-        date = insight.get("post_date", "Unknown")
-        companies = ", ".join(insight.get("companies_mentioned", [])) or "N/A"
-        tags = insight.get("entity_tags", [])
-        signal_type = ", ".join(tags[:3]) if tags else "General"
-        sentiment = insight.get("sentiment", "neutral").capitalize()
-        title = insight.get("title", "")[:120] or insight.get("text", "")[:120]
-
-        citation_text = (
-            f"SOURCE: {source}\n"
-            f"TITLE: {title}\n"
-            f"URL: {url}\n"
-            f"PUBLISHED: {date}\n"
-            f"COMPANY: {companies}\n"
-            f"SIGNAL TYPE: {signal_type}\n"
-            f"SENTIMENT: {sentiment}\n"
-            f"COLLECTED BY: GEO Pulse Market Intelligence\n"
-            f"METHODOLOGY: Automated ingestion from {SOURCE_LIST}, "
-            f"enriched via Claude with entity extraction, sentiment analysis, "
-            f"and relevance scoring."
-        )
-        st.code(citation_text, language=None)
-        if st.button("Copy citation", key=f"copy_{cite_key}"):
-            import streamlit.components.v1 as components
-            escaped = citation_text.replace("\\", "\\\\").replace("`", "\\`").replace("\n", "\\n")
-            components.html(
-                f"""<script>navigator.clipboard.writeText(`{escaped}`);</script>
-                <div style="background:#0A0A0A;color:#F8F4EB;padding:4px 10px;
-                font-size:0.75rem;text-align:center;">Copied</div>""",
-                height=30,
-            )
 
 
 # ---------------------------------------------------------------------------
@@ -2570,7 +2534,6 @@ with tabs[0]:
         "entity_tags": ["product_launch"],
         "sentiment": "positive",
     }
-    _cite_button(_sotw_insight, "sotw")
 
     fc1, fc2, fc3, fc4 = st.columns(4)
     all_companies_in_data = sorted(set(
@@ -2642,45 +2605,34 @@ with tabs[0]:
         rel_sentence = _relevance_sentence(insight)
         kws = _keywords_for_card(insight)
 
-        company_badges = ""
+        # Compact newspaper-style card
+        headline = f"[{title}]({url})" if url else title
+        st.markdown(
+            f'<div style="padding:8px 0; border-bottom:1px solid #E8E4D9;">'
+            f'<span style="font-family:DM Mono,monospace; font-size:10px; '
+            f'color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em;">'
+            f'{source_label}</span>'
+            f'<span style="color:#D1CFBA; margin:0 6px;">·</span>'
+            f'<span style="font-size:14px; color:#0A0A0A;"><b>{headline}</b></span>'
+            f'<span style="float:right; font-family:DM Mono,monospace; '
+            f'font-size:10px; color:#94a3b8;">{time_label}</span>'
+            f'<br><span style="font-size:12px; color:#6b7280;">{rel_sentence}</span>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+        entity_tags = []
         for comp in companies[:4]:
             is_own = comp in own_brands
             new = comp in new_companies
-            label = f"**{comp}**" if is_own else comp
-            new_badge = " 🆕" if new else ""
-            company_badges += f" `{label}{new_badge}`"
-        kw_str = " ".join(f"`{k}`" for k in kws)
-
-        # Category + sentiment badges
-        _card_cat = insight.get("category", "") or "general"
-        _card_cat_label = CATEGORY_LABELS.get(_card_cat, _card_cat.replace("_", " ").title())
-        _card_sent = insight.get("sentiment", "neutral")
-        _card_sent_color = "#BDDEC3" if _card_sent == "positive" else "#F44C63" if _card_sent == "negative" else "#D1CFBA"
-
-        with st.container(border=True):
-            st.markdown(
-                f'<span style="background:#BDDEC3; color:#0A0A0A; '
-                f'font-family:DM Mono,monospace; font-size:10px; '
-                f'padding:2px 6px; letter-spacing:0.05em;">'
-                f'{_card_cat_label.upper()}</span> '
-                f'<span style="background:{_card_sent_color}; color:#0A0A0A; '
-                f'font-family:DM Mono,monospace; font-size:10px; '
-                f'padding:2px 6px; letter-spacing:0.05em;">'
-                f'{_card_sent.upper()}</span>',
-                unsafe_allow_html=True,
-            )
-            st.markdown(f"`{source_label}` **{title}**")
-            st.caption(f"_{rel_sentence}_")
-            meta_parts = [time_label]
-            if url:
-                meta_parts.append(f"[Source]({url})")
-            meta = " · ".join(p for p in meta_parts if p)
-            if company_badges:
-                meta += f" ·{company_badges}"
-            st.caption(meta)
-            if kw_str:
-                st.markdown(kw_str)
-            _cite_button(insight, f"feed_{idx}")
+            tag = f"**{comp}**" if is_own else comp
+            if new:
+                tag += " 🆕"
+            entity_tags.append(tag)
+        for k in kws:
+            entity_tags.append(k)
+        if entity_tags:
+            tag_str = " ".join(f"`{t}`" for t in entity_tags)
+            st.markdown(tag_str)
 
     if len(filtered) > page_size:
         st.caption(f"+ {len(filtered) - page_size} more signals")
@@ -3400,7 +3352,6 @@ Return ONLY valid Markdown with this exact structure:
                     hl = f"[{sig_title}]({sig_url})" if sig_url else sig_title
                     st.markdown(f"  `{sig_src}` {hl}")
                     st.caption(f"  _{sig_why}_")
-                    _cite_button(sig, f"bn_{opp}_{si}")
                 rest = displayable[3:15]
                 if rest:
                     with st.expander(f"Show {len(rest)} more evidence"):
@@ -3412,7 +3363,6 @@ Return ONLY valid Markdown with this exact structure:
                             hl = f"[{sig_title}]({sig_url})" if sig_url else sig_title
                             st.markdown(f"`{sig_src}` {hl}")
                             st.caption(f"_{sig_why}_")
-                            _cite_button(sig, f"bn_{opp}_r{si2}")
     else:
         st.caption(
             "No features currently meet the Build Now criteria "
