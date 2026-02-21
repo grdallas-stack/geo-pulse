@@ -48,24 +48,26 @@ h2, h3 { font-family: 'DM Sans', sans-serif; font-weight: 500; color: #0A0A0A; }
   font-family: 'DM Sans', sans-serif; font-weight: 700; color: #0A0A0A;
 }
 
-.stButton > button[kind="primary"], .stButton > button {
-  background-color: #0A0A0A; color: #F8F4EB;
-  font-family: 'DM Sans', sans-serif; font-weight: 500;
-  border: none; border-radius: 0px;
-}
-.stButton > button:hover { background-color: #FF9D1C; color: #0A0A0A; }
-
+.stButton > button,
 .stDownloadButton > button {
-  background-color: #0A0A0A; color: #F8F4EB;
-  font-family: 'DM Sans', sans-serif; border-radius: 0px; border: none;
+  background-color: #0E3B7E !important;
+  color: #F8F4EB !important;
+  font-family: 'DM Sans', sans-serif !important;
+  font-weight: 500;
+  border: none !important;
+  border-radius: 0px !important;
 }
-.stDownloadButton > button:hover { background-color: #FF9D1C; color: #0A0A0A; }
+.stButton > button:hover,
+.stDownloadButton > button:hover {
+  background-color: #FF9D1C !important;
+  color: #0A0A0A !important;
+}
 
 .stTabs [data-baseweb="tab"] {
   font-family: 'DM Mono', monospace; font-size: 12px;
   text-transform: uppercase; letter-spacing: 0.06em; color: #0A0A0A;
 }
-.stTabs [aria-selected="true"] { border-bottom: 2px solid #0A0A0A; color: #0A0A0A; }
+.stTabs [aria-selected="true"] { border-bottom: 2px solid #0E3B7E; color: #0A0A0A; }
 
 .streamlit-expander {
   border: 1px solid #D1CFBA; border-radius: 0px; background-color: #F8F4EB;
@@ -91,10 +93,29 @@ code {
 }
 
 .stMultiSelect span[data-baseweb="tag"] {
-  background-color: #0A0A0A; color: #F8F4EB;
+  background-color: #0E3B7E; color: #F8F4EB;
   border-radius: 0px; font-family: 'DM Mono', monospace; font-size: 11px;
 }
 </style>""", unsafe_allow_html=True)
+
+# ---------------------------------------------------------------------------
+# Sidebar branding
+# ---------------------------------------------------------------------------
+
+with st.sidebar:
+    st.markdown(
+        '<div style="padding:16px 0 8px 0;">'
+        '<span style="font-family:DM Sans,sans-serif; '
+        'font-size:20px; font-weight:700; color:#0A0A0A;">'
+        '&#9612; GEO Pulse</span>'
+        '</div>'
+        '<p style="font-family:DM Mono,monospace; '
+        'font-size:11px; color:#D1CFBA; '
+        'letter-spacing:0.05em;">GEO/AEO MARKET INTELLIGENCE'
+        '</p>',
+        unsafe_allow_html=True,
+    )
+    st.markdown("---")
 
 # ---------------------------------------------------------------------------
 # Background scheduler — re-runs pipeline every 6 hours
@@ -1861,8 +1882,8 @@ _ASK_AI_RENDERED_ABOVE_TABS = True  # Ask GEO Pulse lives above the tab bar
 # Header
 # ---------------------------------------------------------------------------
 
-st.markdown("# 📡 GEO Pulse — Market Intelligence for the GEO/AEO Category")
-st.markdown("Everything happening in the GEO/AEO market, so your team always knows before the competition does.")
+st.title("GEO Pulse")
+st.caption("Market intelligence for the GEO/AEO category, so your team always knows before the competition.")
 
 # Persistent header bar
 runs = load_run_log()
@@ -1877,12 +1898,18 @@ try:
         freshness = f"{hours_ago:.0f}h ago"
     else:
         freshness = f"{hours_ago / 24:.1f}d ago"
-    fresh_icon = "🟢" if hours_ago < 6 else "🟡"
+    if hours_ago < 6:
+        fresh_icon = "🟢"
+    elif hours_ago < 12:
+        fresh_icon = "🟡"
+    else:
+        fresh_icon = "🔴"
 except (ValueError, TypeError):
     freshness = "unknown"
+    hours_ago = 999
     fresh_icon = "⚪"
 
-h1, h2, h3, h4, h5 = st.columns([1, 1, 1, 1, 0.5])
+h1, h2, h3, h4, h5 = st.columns([2, 2, 2, 3, 1])
 h1.metric("Sources Monitored", f"{len(approved_sources) + 11}",
           help=f"Active scrapers: {SOURCE_LIST}. Plus {len(approved_sources)} auto-approved community sources.")
 h2.metric("Signals Ingested", f"{len(insights):,}",
@@ -1891,8 +1918,8 @@ h3.metric("Companies Tracked", f"{len(company_meta)}")
 h4.metric(f"{fresh_icon} Last Updated", freshness)
 with h5:
     st.markdown("<div style='height: 24px'></div>", unsafe_allow_html=True)
-    if st.button("Refresh now", key="manual_refresh", type="secondary"):
-        with st.spinner("Running pipeline..."):
+    if st.button("↻", help="Refresh data now", key="manual_refresh", use_container_width=False):
+        with st.spinner("Refreshing..."):
             try:
                 run_enrichment()
                 st.cache_data.clear()
@@ -1900,16 +1927,45 @@ with h5:
                 st.error(f"Refresh failed: {_refresh_err}")
         st.rerun()
 
-with st.expander("How to use this dashboard"):
+_sources_count = len(approved_sources) + 11
+_provenance_ts = last_ts[:16].replace("T", " ") if last_ts else "unknown"
+st.markdown(
+    f'<p style="font-family:DM Mono,monospace; font-size:11px; '
+    f'color:#D1CFBA; letter-spacing:0.05em;">'
+    f'{len(insights):,} signals &middot; {len(company_meta)} companies &middot; '
+    f'{_sources_count} sources monitored &middot; '
+    f'Pipeline: {_provenance_ts}</p>',
+    unsafe_allow_html=True,
+)
+
+with st.expander("New here? How to use GEO Pulse", expanded=False):
     st.markdown("""
-**Live Feed** — Real-time stream of every signal from the GEO/AEO market. Filter by company, source, sentiment, or signal type.
+**GEO Pulse** is a live market intelligence dashboard for the Generative Engine Optimization (GEO) and Answer Engine Optimization (AEO) category. It continuously ingests signals from practitioner forums, review sites, trade press, and Hacker News, so you can track competitor moves, buyer sentiment, and emerging feature gaps without reading hundreds of posts.
 
-**Competitors** — One card per competitor with momentum, sentiment, and top signals this week. Expand for more.
+**Start with Ask AI.** Type any question and get a data-grounded intelligence brief. Examples:
+- *"What are practitioners saying about Profound vs Semrush for GEO measurement?"*
+- *"Which company launched something new this week?"*
+- *"What features are buyers asking for most?"*
 
-**Roadmap** — Plotly charts showing competitor momentum and feature heat, plus Build Now product opportunities.
-
-Data refreshes every 6 hours from Reddit, Hacker News, G2 reviews, Product Hunt, Google News, and trade press.
+**Where the data comes from:**
 """)
+    _sources_df = pd.DataFrame({
+        "Source": ["Hacker News", "Reddit", "G2 Reviews",
+                   "Product Hunt", "Google News",
+                   "Search Engine Journal / Land",
+                   "Trade Press RSS"],
+        "What it captures": [
+            "Builder and dev discussion on GEO tools and AI search",
+            "r/SEO, r/marketing, r/webdev practitioner forums",
+            "Verified buyer reviews of GEO/AEO tools",
+            "New tool launches in the GEO/AEO category",
+            "Broad news coverage and press mentions",
+            "Industry analysis and expert commentary",
+            "Announcements, product updates, partnerships",
+        ],
+    })
+    st.dataframe(_sources_df, hide_index=True, use_container_width=True)
+    st.caption("Every signal is enriched with sentiment, category, and relevance scoring.")
 
 def _data_missing():
     """Check if core data files are missing or empty."""
@@ -1963,6 +2019,94 @@ if _data_missing():
 elif not insights:
     st.info("New signals ingesting. Check back in minutes.")
     st.stop()
+
+
+# ---------------------------------------------------------------------------
+# Executive Pulse
+# ---------------------------------------------------------------------------
+
+st.markdown("---")
+st.markdown("### Executive Pulse")
+st.caption(f"Signal health snapshot · {freshness}")
+
+# Row 1: Four key metrics
+_ep_week_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+_ep_24h_ago = (datetime.now() - timedelta(hours=24)).strftime("%Y-%m-%d")
+
+# Rising companies this week
+_ep_comp_counts = Counter()
+_ep_comp_week = Counter()
+_ep_comp_prev_week = Counter()
+_ep_2week_ago = (datetime.now() - timedelta(days=14)).strftime("%Y-%m-%d")
+_ep_cat_counts = Counter()
+_ep_sent_counts = Counter()
+
+for _ep_i in insights:
+    _ep_date = _ep_i.get("post_date", "")
+    for _ep_c in _ep_i.get("companies_mentioned", []):
+        _ep_comp_counts[_ep_c] += 1
+        if _ep_date >= _ep_week_ago:
+            _ep_comp_week[_ep_c] += 1
+        if _ep_2week_ago <= _ep_date < _ep_week_ago:
+            _ep_comp_prev_week[_ep_c] += 1
+    # Category
+    _ep_cat = _ep_i.get("category", "") or "general"
+    if _ep_date >= _ep_week_ago:
+        _ep_cat_counts[_ep_cat] += 1
+    # Sentiment
+    _ep_sent = _ep_i.get("sentiment", "neutral")
+    _ep_sent_counts[_ep_sent] += 1
+
+_ep_rising = []
+for _ep_c in _ep_comp_counts:
+    _tw = _ep_comp_week.get(_ep_c, 0)
+    _pw = _ep_comp_prev_week.get(_ep_c, 0)
+    if _pw > 0 and _tw > _pw:
+        _ep_rising.append(_ep_c)
+    elif _pw == 0 and _tw > 0:
+        _ep_rising.append(_ep_c)
+
+_ep_recent_24h = sum(1 for i in insights if i.get("post_date", "") >= _ep_24h_ago)
+_ep_top_cat = _ep_cat_counts.most_common(1)[0][0] if _ep_cat_counts else "N/A"
+_ep_top_cat_label = CATEGORY_LABELS.get(_ep_top_cat, _ep_top_cat.replace("_", " ").title())
+_ep_total = max(len(insights), 1)
+_ep_neg_pct = round(_ep_sent_counts.get("negative", 0) * 100 / _ep_total)
+
+_ep1, _ep2, _ep3, _ep4 = st.columns(4)
+with _ep1:
+    st.metric("Rising This Week", len(_ep_rising), help="Companies with increasing signal volume WoW")
+with _ep2:
+    st.metric("New Signals (24h)", _ep_recent_24h)
+with _ep3:
+    st.metric("Top Category", _ep_top_cat_label)
+with _ep4:
+    st.metric("Sentiment", f"{_ep_neg_pct}% negative")
+
+# Row 2: Signal Health by Category
+st.markdown("**Signal Health by Category**")
+for _cat_name, _cat_count in _ep_cat_counts.most_common(6):
+    _cat_label = CATEGORY_LABELS.get(_cat_name, _cat_name.replace("_", " ").title())
+    # Determine trend by comparing this week to prior week
+    _cat_this_week = sum(1 for i in insights
+                         if (i.get("category", "") or "general") == _cat_name
+                         and i.get("post_date", "") >= _ep_week_ago)
+    _cat_prev_week = sum(1 for i in insights
+                         if (i.get("category", "") or "general") == _cat_name
+                         and _ep_2week_ago <= i.get("post_date", "") < _ep_week_ago)
+    if _cat_prev_week > 0 and _cat_this_week > _cat_prev_week:
+        _cat_dot = "🟢"
+    elif _cat_prev_week > 0 and _cat_this_week < _cat_prev_week:
+        _cat_dot = "🔴"
+    else:
+        _cat_dot = "⚪"
+    st.markdown(f"{_cat_dot} **{_cat_label}** — {_cat_count} signals this week")
+
+# Row 3: Compact competitor snapshot
+st.markdown("**Competitor Snapshot**")
+_ep_sorted_comps = _ep_comp_counts.most_common(6)
+_ep_snapshot_parts = [f"{c} ({n})" for c, n in _ep_sorted_comps]
+st.caption(" · ".join(_ep_snapshot_parts) + " — see Competitors tab for full analysis")
+st.markdown("---")
 
 
 # ---------------------------------------------------------------------------
@@ -2036,24 +2180,67 @@ else:
         """Set the question to be processed on next rerun."""
         st.session_state["qa_submit"] = question
 
+    if "ask_ai_input" not in st.session_state:
+        st.session_state["ask_ai_input"] = ""
+    if "last_selected_prompt" not in st.session_state:
+        st.session_state["last_selected_prompt"] = ""
+    if "auto_submit" not in st.session_state:
+        st.session_state["auto_submit"] = False
+
     # --- Input form (Enter key submits via form) ---
     with st.form("qa_form", clear_on_submit=True):
         user_question = st.text_input(
             "Ask a question",
-            placeholder="e.g., What are buyers complaining about most this week?",
+            value=st.session_state.get("ask_ai_input", ""),
+            key="ask_ai_text",
+            placeholder="e.g., Which company is gaining momentum right now?",
         )
         submitted = st.form_submit_button("Ask AI", type="primary")
     if submitted and user_question.strip():
         st.session_state["qa_submit"] = user_question.strip()
+        st.session_state["ask_ai_input"] = ""
 
-    # --- Starter question pills (below input, only when no chat history) ---
-    if not st.session_state["qa_messages"] and not st.session_state["qa_submit"]:
-        starters = _get_starter_questions()
-        st.caption("Try asking:")
-        cols = st.columns(len(starters))
-        for idx, q in enumerate(starters):
-            with cols[idx]:
-                st.button(q, key=f"starter_{idx}", on_click=_do_submit, args=(q,), use_container_width=True)
+    # --- Example prompt dropdown (replaces old starter buttons) ---
+    _example_prompts = {
+        "": "Try an example prompt...",
+        "What's the most important signal from the last 48 hours?":
+            "Market Overview — Most important signal (48h)",
+        "Which company is gaining the most momentum right now?":
+            "Market Overview — Most momentum right now",
+        "Why is Future gaining momentum?":
+            "Competitor Intel — Why is Future rising?",
+        "What are practitioners saying about Profound vs Semrush?":
+            "Competitor Intel — Profound vs Semrush",
+        "What features are buyers asking for most?":
+            "Buyer Signals — Top feature requests",
+        "What are the biggest gaps in current GEO tools?":
+            "Buyer Signals — Tool gaps",
+        "What should we prioritize building next?":
+            "Strategy — Product priorities",
+        "Where is competitor coverage weakest?":
+            "Strategy — Competitor coverage gaps",
+    }
+
+    _selected_prompt = st.selectbox(
+        "Or try an example prompt",
+        options=list(_example_prompts.keys()),
+        format_func=lambda x: _example_prompts[x],
+        key="prompt_select",
+    )
+
+    if _selected_prompt and _selected_prompt != st.session_state.get("last_selected_prompt"):
+        st.session_state["ask_ai_input"] = _selected_prompt
+        st.session_state["last_selected_prompt"] = _selected_prompt
+        st.session_state["auto_submit"] = True
+        st.rerun()
+
+    # Auto-submit if flagged by dropdown selection
+    if st.session_state.get("auto_submit"):
+        st.session_state["auto_submit"] = False
+        _auto_q = st.session_state.get("ask_ai_input", "").strip()
+        if _auto_q:
+            st.session_state["qa_submit"] = _auto_q
+            st.session_state["ask_ai_input"] = ""
 
     # --- Process pending question ---
     question_to_ask = st.session_state.get("qa_submit", "")
@@ -2390,105 +2577,33 @@ with st.expander("Export"):
     # Verify dependencies at import time
     try:
         from docx import Document as _DocxCheck  # noqa: F811
-        from pptx import Presentation as _PptxCheck  # noqa: F811
     except ImportError as _imp_err:
-        st.error(f"Missing dependency: {_imp_err}. Add python-docx and python-pptx to requirements.txt")
+        st.error(f"Missing dependency: {_imp_err}. Add python-docx to requirements.txt")
         st.stop()
 
-    _exp_type = st.selectbox(
-        "Export format",
-        ["Research Report (.docx)", "Briefing Deck (.pptx)", "PRD (.docx)", "BRD (.docx)"],
-        key="export_type",
-    )
-
     _date_tag = datetime.now().strftime("%Y-%m-%d")
-    _is_prd_brd = _exp_type in ("PRD (.docx)", "BRD (.docx)")
-
-    # Feature selector for PRD/BRD only
-    if _is_prd_brd:
-        _exp_features = st.multiselect(
-            "Features to include",
-            options=_EXPORT_FEATURE_NAMES,
-            default=_EXPORT_FEATURE_NAMES,
-            key="export_features",
-        )
-    else:
-        _exp_features = _EXPORT_FEATURE_NAMES
-
-    # All companies always included
     _exp_comps = _all_comp_names_export
 
-    if _exp_type == "Research Report (.docx)":
-        try:
-            _buf = _export_research_report(
-                insights, company_meta, _export_opp_data, _exp_comps, _export_all_comp_stats
-            )
-            _doc_bytes = _buf.getvalue()
-            st.caption(f"Export ready: {len(_doc_bytes):,} bytes")
-            st.download_button(
-                label="Download Research Report",
-                data=_doc_bytes,
-                file_name=f"GEOPulse_ResearchReport_{_date_tag}.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                key="export_dl_rr",
-                type="primary",
-            )
-        except Exception as _ex:
-            st.error(f"Research Report export failed: {_ex}")
+    st.markdown("**Research Report (.docx)**")
+    try:
+        _buf = _export_research_report(
+            insights, company_meta, _export_opp_data, _exp_comps, _export_all_comp_stats
+        )
+        _doc_bytes = _buf.getvalue()
+        st.caption(f"Export ready: {len(_doc_bytes):,} bytes")
+        st.download_button(
+            label="Download Research Report",
+            data=_doc_bytes,
+            file_name=f"GEOPulse_ResearchReport_{_date_tag}.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            key="export_dl_rr",
+            type="primary",
+        )
+    except Exception as _ex:
+        st.error(f"Research Report export failed: {_ex}")
 
-    elif _exp_type == "Briefing Deck (.pptx)":
-        try:
-            _fig1_img, _fig2_img = _build_export_chart_images(
-                _all_comp_names_export, _export_all_comp_stats, _export_opp_data
-            )
-            _buf = _export_briefing_deck(
-                insights, company_meta, _export_opp_data, _exp_comps,
-                _export_all_comp_stats, _fig1_img, _fig2_img
-            )
-            _doc_bytes = _buf.getvalue()
-            st.caption(f"Export ready: {len(_doc_bytes):,} bytes")
-            st.download_button(
-                label="Download Briefing Deck",
-                data=_doc_bytes,
-                file_name=f"GEOPulse_BriefingDeck_{_date_tag}.pptx",
-                mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
-                key="export_dl_bd",
-                type="primary",
-            )
-        except Exception as _ex:
-            st.error(f"Briefing Deck export failed: {_ex}")
-
-    elif _exp_type == "PRD (.docx)":
-        try:
-            _buf = _export_prd(_export_opp_data, insights, _exp_features, _exp_comps)
-            _doc_bytes = _buf.getvalue()
-            st.caption(f"Export ready: {len(_doc_bytes):,} bytes")
-            st.download_button(
-                label="Download PRD",
-                data=_doc_bytes,
-                file_name=f"GEOPulse_PRD_{_date_tag}.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                key="export_dl_prd",
-                type="primary",
-            )
-        except Exception as _ex:
-            st.error(f"PRD export failed: {_ex}")
-
-    elif _exp_type == "BRD (.docx)":
-        try:
-            _buf = _export_brd(_export_opp_data, insights, _exp_features, _exp_comps)
-            _doc_bytes = _buf.getvalue()
-            st.caption(f"Export ready: {len(_doc_bytes):,} bytes")
-            st.download_button(
-                label="Download BRD",
-                data=_doc_bytes,
-                file_name=f"GEOPulse_BRD_{_date_tag}.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                key="export_dl_brd",
-                type="primary",
-            )
-        except Exception as _ex:
-            st.error(f"BRD export failed: {_ex}")
+    st.markdown("---")
+    st.caption("Briefing Deck — coming soon")
 
 
 # ---------------------------------------------------------------------------
@@ -2645,7 +2760,24 @@ with tabs[0]:
             company_badges += f" `{label}{new_badge}`"
         kw_str = " ".join(f"`{k}`" for k in kws)
 
+        # Category + sentiment badges
+        _card_cat = insight.get("category", "") or "general"
+        _card_cat_label = CATEGORY_LABELS.get(_card_cat, _card_cat.replace("_", " ").title())
+        _card_sent = insight.get("sentiment", "neutral")
+        _card_sent_color = "#BDDEC3" if _card_sent == "positive" else "#F44C63" if _card_sent == "negative" else "#D1CFBA"
+
         with st.container(border=True):
+            st.markdown(
+                f'<span style="background:#BDDEC3; color:#0A0A0A; '
+                f'font-family:DM Mono,monospace; font-size:10px; '
+                f'padding:2px 6px; letter-spacing:0.05em;">'
+                f'{_card_cat_label.upper()}</span> '
+                f'<span style="background:{_card_sent_color}; color:#0A0A0A; '
+                f'font-family:DM Mono,monospace; font-size:10px; '
+                f'padding:2px 6px; letter-spacing:0.05em;">'
+                f'{_card_sent.upper()}</span>',
+                unsafe_allow_html=True,
+            )
             st.markdown(f"`{source_label}` **{title}**")
             st.caption(f"_{rel_sentence}_")
             meta_parts = [time_label]
@@ -2803,6 +2935,123 @@ with tabs[2]:
         "Product opportunities ranked by market evidence, trending features, "
         "and competitive coverage."
     )
+
+    # ── INLINE PRD GENERATION ─────────────────────────────────────────────────
+    st.markdown("#### Generate PRD")
+    st.caption("Select a roadmap item to generate a full Product Requirements Document inline.")
+
+    _prd_opp_names = list(_EXPORT_OPPORTUNITY_THEMES.keys())
+    _prd_selected = st.selectbox(
+        "Select opportunity",
+        options=_prd_opp_names,
+        key="prd_opp_select",
+    )
+
+    if st.button("Generate PRD", type="primary", key="gen_prd_btn"):
+        if _anthropic_key:
+            # Gather relevant signals for this opportunity
+            _prd_keywords = _EXPORT_OPPORTUNITY_THEMES.get(_prd_selected, [])
+            _prd_signals = []
+            for _pi in insights:
+                _pt = (_pi.get("text", "") + " " + _pi.get("title", "")).lower()
+                if any(kw in _pt for kw in _prd_keywords):
+                    _prd_signals.append(_pi)
+            _prd_signals.sort(key=lambda x: _relevance_score(x), reverse=True)
+
+            _prd_context = ""
+            for _ps in _prd_signals[:12]:
+                _ps_title = (_ps.get("title", "") or _ps.get("text", ""))[:100]
+                _ps_src = _ps.get("source", "")
+                _ps_text = _ps.get("text", "")[:200]
+                _ps_sent = _ps.get("sentiment", "neutral")
+                _prd_context += f'- "{_ps_title}" ({_ps_src}, sentiment: {_ps_sent})\n  "{_ps_text}"\n'
+
+            _prd_prompt = f"""Generate a Product Requirements Document for this GEO/AEO product opportunity based on real market signals.
+
+Opportunity: {_prd_selected}
+
+Signal data context:
+{_prd_context}
+
+Return ONLY valid Markdown with this exact structure:
+
+# Product Requirements Document
+**Theme:** [theme name]
+**Opportunity Area:** [category]
+---
+## 1. Problem Statement
+[2-3 sentence narrative]
+
+**Verbatim market signals:**
+- "[quote]" ([source])
+- "[quote]" ([source])
+
+---
+## 2. Goals & Success Metrics
+**Goals:**
+- [goal]
+
+**Success Metrics:**
+- [metric with % target]
+
+---
+## 3. User Stories
+1. As a [persona], I want [need] so that [outcome]
+
+---
+## 4. Requirements
+### P0 (Must Have)
+- **[feature]** description
+### P1 (Should Have)
+- **[feature]** description
+### P2 (Nice to Have)
+- **[feature]** description
+
+---
+## 5. Out of Scope
+- item
+
+---
+## 6. Open Questions
+- question
+
+---
+*Requirements grounded in GEO/AEO market signal data.*
+"""
+
+            with st.spinner("Generating PRD..."):
+                try:
+                    import anthropic as _anth_prd
+                    _prd_client = _anth_prd.Anthropic(api_key=_anthropic_key)
+                    _prd_resp = _prd_client.messages.create(
+                        model="claude-haiku-4-5-20251001",
+                        system="You are a product manager generating a PRD from market intelligence data. Be specific and ground every claim in the provided signals.",
+                        messages=[{"role": "user", "content": _prd_prompt}],
+                        max_tokens=2000,
+                        temperature=0.3,
+                    )
+                    _prd_content = _prd_resp.content[0].text
+                    st.session_state["prd_result"] = _prd_content
+                    st.session_state["prd_topic"] = _prd_selected
+                except Exception as _prd_err:
+                    st.error(f"PRD generation failed: {_prd_err}")
+        else:
+            st.warning("Anthropic API key not configured.")
+
+    # Render PRD result if available
+    if st.session_state.get("prd_result"):
+        with st.container(border=True):
+            st.markdown(st.session_state["prd_result"])
+            _prd_topic_slug = st.session_state.get("prd_topic", "opportunity").lower().replace(" ", "_")
+            st.download_button(
+                "Download as Markdown",
+                data=st.session_state["prd_result"],
+                file_name=f"prd_{_prd_topic_slug}.md",
+                mime="text/markdown",
+                key="prd_dl_md",
+            )
+
+    st.markdown("---")
 
     FEATURE_TOOLTIPS = {
         "Integrations": "Connects to third-party tools like CMS, analytics, and marketing platforms.",
