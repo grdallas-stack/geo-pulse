@@ -475,7 +475,7 @@ def _pptx_callout_box(slide, bullets, top_inches=5.6):
 
 
 def _export_research_report(insights, company_meta, opportunity_data, selected_comps, comp_stats):
-    """Generate a Research Report .docx and return bytes."""
+    """Generate a Research Report .docx styled as an analyst newsletter."""
     doc = DocxDocument()
     style = doc.styles["Normal"]
     style.font.name = "Calibri"
@@ -484,30 +484,128 @@ def _export_research_report(insights, company_meta, opportunity_data, selected_c
     total_signals = len(insights)
     date_str = datetime.now().strftime("%Y-%m-%d")
     date_display = datetime.now().strftime("%B %d, %Y")
+    _now = datetime.now()
+    _7d_ago = (_now - timedelta(days=7)).strftime("%Y-%m-%d")
+    _14d_ago = (_now - timedelta(days=14)).strftime("%Y-%m-%d")
+    _30d_ago = (_now - timedelta(days=30)).strftime("%Y-%m-%d")
+    _90d_ago = (_now - timedelta(days=90)).strftime("%Y-%m-%d")
 
-    # Title
-    title = doc.add_heading("GEO Pulse Research Report", level=0)
-    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    doc.add_paragraph(f"Generated {date_display}")
+    # ── Cover Page ──────────────────────────────────────────────────────────
+    title_h = doc.add_heading("GEO Pulse Weekly Intelligence", level=0)
+    title_h.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    sub = doc.add_paragraph()
+    sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = sub.add_run(date_display)
+    run.font.size = Pt(14)
+    run.font.color.rgb = RGBColor(0x64, 0x64, 0x64)
+    tag = doc.add_paragraph()
+    tag.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = tag.add_run(
+        "What the market is saying about GEO/AEO this week, "
+        "drawn from practitioner forums, buyer reviews, and trade press."
+    )
+    run.font.size = Pt(10)
+    run.font.color.rgb = RGBColor(0x88, 0x88, 0x88)
+    run.font.italic = True
     doc.add_paragraph("")
 
-    # Section 1: Market Overview
-    doc.add_heading("1. Market Overview", level=1)
-    sources = set(i.get("source", "") for i in insights)
-    companies_tracked = len(company_meta)
-    doc.add_paragraph(
-        f"This report covers {total_signals:,} signals from {len(sources)} source types, "
-        f"tracking {companies_tracked} companies in the GEO/AEO market."
+    # ── Helpers ──────────────────────────────────────────────────────────────
+    recent_signals = sorted(
+        [s for s in insights if s.get("post_date", "") >= _7d_ago],
+        key=lambda s: _relevance_score(s), reverse=True,
     )
+    if not recent_signals:
+        recent_signals = sorted(
+            insights, key=lambda s: _relevance_score(s), reverse=True,
+        )[:20]
 
-    # Section 2: Competitor Momentum
-    doc.add_heading("2. Competitor Momentum", level=1)
+    def _sig_headline(s):
+        return (s.get("title", "") or s.get("text", ""))[:120]
+
+    def _sig_url(s):
+        return s.get("url", "")
+
+    # ── Section 1: Top Story ────────────────────────────────────────────────
+    doc.add_heading("Top Story", level=1)
+
+    # Pick the highest-relevance signal from the last 7 days
+    top = recent_signals[0] if recent_signals else None
+    if top:
+        hl = _sig_headline(top)
+        url = _sig_url(top)
+        comps = top.get("companies_mentioned", [])
+        sent = top.get("sentiment", "neutral")
+        why = _relevance_sentence(top)
+
+        p = doc.add_paragraph()
+        r = p.add_run(hl)
+        r.bold = True
+        r.font.size = Pt(13)
+        if url:
+            p = doc.add_paragraph()
+            r = p.add_run(url)
+            r.font.size = Pt(9)
+            r.font.color.rgb = RGBColor(0x33, 0x66, 0x99)
+
+        # Narrative paragraph
+        comp_str = ", ".join(comps[:3]) if comps else "multiple players"
+        source = top.get("source", "community forums")
+        narrative = (
+            f"This week's most significant signal comes from {source}. "
+            f"It involves {comp_str} and carries {sent} sentiment. "
+        )
+        if why:
+            narrative += why + " "
+        narrative += (
+            f"This signal scored highest among {len(recent_signals)} "
+            f"posts from the past seven days based on source quality, "
+            f"social engagement, and enrichment depth."
+        )
+        doc.add_paragraph(narrative)
+    else:
+        doc.add_paragraph("No high-confidence signals surfaced this week.")
+
+    # ── Section 2: Who's Moving ─────────────────────────────────────────────
+    doc.add_heading("Who's Moving", level=1)
+
+    rising = [c for c in selected_comps if comp_stats.get(c, {}).get("momentum") == "Rising"]
+    falling = [c for c in selected_comps if comp_stats.get(c, {}).get("momentum") == "Falling"]
+    stable = [c for c in selected_comps if comp_stats.get(c, {}).get("momentum") == "Stable"]
+
+    # Narrative paragraph
+    parts = []
+    if rising:
+        parts.append(
+            f"{', '.join(rising[:4])} {'is' if len(rising) == 1 else 'are'} "
+            f"gaining momentum with increased mention volume week over week"
+        )
+    if falling:
+        parts.append(
+            f"{', '.join(falling[:4])} {'is' if len(falling) == 1 else 'are'} "
+            f"seeing declining conversation"
+        )
+    if stable:
+        parts.append(
+            f"{', '.join(stable[:4])} {'is' if len(stable) == 1 else 'are'} "
+            f"holding steady"
+        )
+    if parts:
+        doc.add_paragraph(". ".join(parts) + ".")
+    else:
+        doc.add_paragraph("Insufficient data to determine momentum trends this period.")
+
+    # Momentum table
+    sorted_comps = sorted(
+        selected_comps,
+        key=lambda c: comp_stats.get(c, {}).get("total", 0),
+        reverse=True,
+    )
     table = doc.add_table(rows=1, cols=5)
     table.style = "Table Grid"
     hdr = table.rows[0].cells
     for i, h in enumerate(["Company", "Signals", "Positive %", "Momentum", "Last Signal"]):
         hdr[i].text = h
-    for comp in selected_comps:
+    for comp in sorted_comps:
         cs = comp_stats.get(comp, {})
         row = table.add_row().cells
         row[0].text = comp
@@ -517,63 +615,232 @@ def _export_research_report(insights, company_meta, opportunity_data, selected_c
         row[4].text = cs.get("latest", "N/A")
     _docx_source_caption(doc, total_signals, date_str)
 
-    # Section 3: Feature Gap Analysis
-    doc.add_heading("3. Feature Gap Analysis", level=1)
-    for opp, od in sorted(opportunity_data.items(), key=lambda x: x[1]["evidence"], reverse=True):
-        if od["evidence"] < 2:
-            continue
-        doc.add_heading(opp, level=2)
-        doc.add_paragraph(
-            f"Evidence: {od['evidence']} signals | Confidence: {od['confidence']}%*"
-        )
-        praised = ", ".join(od["companies_praised"]) or "None"
-        complained = ", ".join(od["companies_complained"]) or "None"
-        doc.add_paragraph(f"Praised: {praised}")
-        doc.add_paragraph(f"Complaints: {complained}")
-    _docx_confidence_footnote(doc)
+    # ── Section 3: Voice of the Market ──────────────────────────────────────
+    doc.add_heading("Voice of the Market", level=1)
+    doc.add_paragraph(
+        "The most notable signals from the past week, grouped by type. "
+        "Buyer and feature-request signals are weighted highest."
+    )
 
-    # Section 4: Build Now Recommendations
-    doc.add_heading("4. Build Now Recommendations", level=1)
-    has_build_now = False
-    for opp, od in opportunity_data.items():
-        if od["evidence"] < 3:
-            continue
-        red_count = sum(
-            1 for c in selected_comps
-            if c not in od["companies_praised"]
-            and c not in od["companies_complained"]
-            and c not in od["companies_tried"]
-        )
-        if red_count > len(selected_comps) / 2:
-            has_build_now = True
-            doc.add_heading(opp, level=2)
-            doc.add_paragraph(
-                f"Confidence: {od['confidence']}%* | Evidence: {od['evidence']} signals"
+    # Buyer / feature request signals
+    buyer_sigs = [
+        s for s in recent_signals
+        if s.get("is_buyer_voice") or s.get("is_feature_request")
+    ]
+    market_sigs = [
+        s for s in recent_signals
+        if s not in buyer_sigs and _is_displayable_post(s)
+    ]
+
+    if buyer_sigs:
+        doc.add_heading("Buyer Signals", level=2)
+        for s in buyer_sigs[:5]:
+            hl = _sig_headline(s)
+            url = _sig_url(s)
+            src = _source_badge(s.get("source", ""))
+            why = _relevance_sentence(s)
+            p = doc.add_paragraph(style="List Bullet")
+            r = p.add_run(f"[{src}] {hl}")
+            r.bold = True
+            if url:
+                p2 = doc.add_paragraph()
+                r2 = p2.add_run(f"  {url}")
+                r2.font.size = Pt(8)
+                r2.font.color.rgb = RGBColor(0x33, 0x66, 0x99)
+            if why:
+                p3 = doc.add_paragraph()
+                r3 = p3.add_run(f"  {why}")
+                r3.font.size = Pt(9)
+                r3.font.italic = True
+                r3.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
+
+    if market_sigs:
+        doc.add_heading("Market Signals", level=2)
+        for s in market_sigs[:5]:
+            hl = _sig_headline(s)
+            url = _sig_url(s)
+            src = _source_badge(s.get("source", ""))
+            why = _relevance_sentence(s)
+            p = doc.add_paragraph(style="List Bullet")
+            r = p.add_run(f"[{src}] {hl}")
+            r.bold = True
+            if url:
+                p2 = doc.add_paragraph()
+                r2 = p2.add_run(f"  {url}")
+                r2.font.size = Pt(8)
+                r2.font.color.rgb = RGBColor(0x33, 0x66, 0x99)
+            if why:
+                p3 = doc.add_paragraph()
+                r3 = p3.add_run(f"  {why}")
+                r3.font.size = Pt(9)
+                r3.font.italic = True
+                r3.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
+
+    if not buyer_sigs and not market_sigs:
+        doc.add_paragraph("No notable signals this period.")
+
+    # ── Section 4: What Buyers Are Asking For ───────────────────────────────
+    doc.add_heading("What Buyers Are Asking For", level=1)
+    doc.add_paragraph(
+        "The feature themes generating the most conversation, "
+        "ranked by evidence volume and recency."
+    )
+
+    sorted_feats = sorted(
+        opportunity_data.items(),
+        key=lambda x: x[1]["evidence"],
+        reverse=True,
+    )
+    top_feats = [(f, od) for f, od in sorted_feats if od["evidence"] >= 2][:3]
+
+    for feat, od in top_feats:
+        doc.add_heading(feat, level=2)
+
+        # Analyst-style narrative
+        recent_ct = sum(1 for s in od["signals"] if s.get("post_date", "") >= _90d_ago)
+        praised = list(od["companies_praised"])[:3]
+        complained = list(od["companies_complained"])[:3]
+        requests_ct = od["requests"]
+
+        narrative_parts = [
+            f"{feat} has {od['evidence']} total evidence signals "
+            f"({od['confidence']}% confidence*)."
+        ]
+        if recent_ct:
+            narrative_parts.append(
+                f"{recent_ct} of those appeared in the last 90 days."
             )
-            doc.add_paragraph("No competitor has a clear solution in this area.")
-    if not has_build_now:
-        doc.add_paragraph("No features currently meet Build Now criteria.")
-    _docx_confidence_footnote(doc)
+        if requests_ct:
+            narrative_parts.append(
+                f"{requests_ct} are explicit feature requests from users."
+            )
+        if praised:
+            narrative_parts.append(
+                f"Companies receiving praise here: {', '.join(praised)}."
+            )
+        if complained:
+            narrative_parts.append(
+                f"Companies drawing complaints: {', '.join(complained)}."
+            )
+        doc.add_paragraph(" ".join(narrative_parts))
 
-    # Section 5: Methodology (expanded)
-    doc.add_heading("5. Methodology", level=1)
-    doc.add_paragraph(_METHODOLOGY_NOTE)
+        # Top evidence signals with links
+        top_ev = sorted(od["signals"], key=lambda s: _relevance_score(s), reverse=True)[:3]
+        for s in top_ev:
+            hl = _sig_headline(s)
+            url = _sig_url(s)
+            src = _source_badge(s.get("source", ""))
+            p = doc.add_paragraph(style="List Bullet")
+            p.add_run(f"[{src}] {hl}")
+            if url:
+                p2 = doc.add_paragraph()
+                r2 = p2.add_run(f"  {url}")
+                r2.font.size = Pt(8)
+                r2.font.color.rgb = RGBColor(0x33, 0x66, 0x99)
 
-    doc.add_heading("Sources Monitored", level=2)
-    for name, desc in _SOURCE_DESCRIPTIONS:
-        p = doc.add_paragraph(style="List Bullet")
-        run_name = p.add_run(f"{name}")
-        run_name.bold = True
-        p.add_run(f" \u2014 {desc}")
+    if not top_feats:
+        doc.add_paragraph("No features have enough evidence to highlight this period.")
+    else:
+        _docx_confidence_footnote(doc)
 
+    # ── Section 5: Ones to Watch ────────────────────────────────────────────
+    doc.add_heading("Ones to Watch", level=1)
+    doc.add_paragraph(
+        "Companies that are new to the dataset or showing unusual "
+        "activity patterns worth monitoring."
+    )
+
+    # Find companies with momentum = Rising and relatively low total signals
+    # (emerging players, not established leaders)
+    watch_candidates = []
+    median_total = sorted(
+        [comp_stats.get(c, {}).get("total", 0) for c in selected_comps]
+    )[len(selected_comps) // 2] if selected_comps else 5
+
+    for comp in selected_comps:
+        cs = comp_stats.get(comp, {})
+        total = cs.get("total", 0)
+        mom = cs.get("momentum", "")
+        if mom == "Rising" and total <= median_total and total >= 2:
+            watch_candidates.append((comp, cs))
+        elif mom == "Rising" and total > median_total:
+            # Still interesting if rising, just lower priority
+            watch_candidates.append((comp, cs))
+
+    # Also check for companies first seen recently
+    try:
+        new_cos = _get_new_companies(json.dumps(insights))
+    except Exception:
+        new_cos = set()
+    for comp in selected_comps:
+        if comp in new_cos and comp not in [w[0] for w in watch_candidates]:
+            cs = comp_stats.get(comp, {})
+            watch_candidates.append((comp, cs))
+
+    watch_candidates = watch_candidates[:3]
+
+    if watch_candidates:
+        for comp, cs in watch_candidates:
+            meta = company_meta.get(comp, {})
+            positioning = _company_positioning(meta) if meta else ""
+            p = doc.add_paragraph()
+            r = p.add_run(comp)
+            r.bold = True
+            r.font.size = Pt(12)
+
+            desc_parts = []
+            if positioning:
+                desc_parts.append(positioning)
+            desc_parts.append(
+                f"{cs.get('total', 0)} signals, "
+                f"{cs.get('pos_pct', 0)}% positive, "
+                f"momentum: {cs.get('momentum', 'N/A')}"
+            )
+            if comp in new_cos:
+                desc_parts.append("First appeared in data within the last 7 days.")
+            latest = cs.get("latest", "")
+            if latest:
+                desc_parts.append(f"Most recent signal: {latest}.")
+
+            doc.add_paragraph(" ".join(desc_parts))
+
+            # Best recent signal for this company
+            comp_recent = [
+                s for s in insights
+                if comp in s.get("companies_mentioned", [])
+                and _is_displayable_post(s)
+            ]
+            comp_recent.sort(key=lambda s: _relevance_score(s), reverse=True)
+            if comp_recent:
+                best = comp_recent[0]
+                hl = _sig_headline(best)
+                url = _sig_url(best)
+                src = _source_badge(best.get("source", ""))
+                p = doc.add_paragraph(style="List Bullet")
+                p.add_run(f"[{src}] {hl}")
+                if url:
+                    p2 = doc.add_paragraph()
+                    r2 = p2.add_run(f"  {url}")
+                    r2.font.size = Pt(8)
+                    r2.font.color.rgb = RGBColor(0x33, 0x66, 0x99)
+    else:
+        doc.add_paragraph("No emerging players flagged this period.")
+
+    # ── Methodology footnote ────────────────────────────────────────────────
     doc.add_paragraph("")
     p = doc.add_paragraph()
+    run = p.add_run(_METHODOLOGY_NOTE)
+    run.font.size = Pt(8)
+    run.font.color.rgb = RGBColor(0x99, 0x99, 0x99)
+
+    p = doc.add_paragraph()
     run = p.add_run(
-        f"Pipeline refreshes every 6 hours. Total signals in database: {total_signals:,}. "
+        f"Sources: {SOURCE_LIST}. "
+        f"Pipeline refreshes every 6 hours. {total_signals:,} signals in database. "
         f"Report generated {date_display}."
     )
-    run.font.size = Pt(9)
-    run.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
+    run.font.size = Pt(8)
+    run.font.color.rgb = RGBColor(0x99, 0x99, 0x99)
 
     buf = io.BytesIO()
     doc.save(buf)
@@ -1708,14 +1975,217 @@ SOURCE REFERENCE (for [S1] etc. citations):
 
 
 # ---------------------------------------------------------------------------
-# Export UI (above tabs, visible on all tabs)
+# Pre-compute export data at module level (no Roadmap tab dependency)
 # ---------------------------------------------------------------------------
 
-_EXPORT_FEATURE_NAMES = [
-    "Integrations", "ROI Measurement", "Brand Safety", "Real-time Tracking",
-    "Historical Trends", "Comp. Benchmarking", "Actionable Recs",
-    "Multi-LLM Coverage", "Content Guidance",
-]
+_EXPORT_OPPORTUNITY_THEMES = {
+    "Real-time Tracking": ["real-time", "real time", "live tracking", "live monitoring",
+                           "instant", "continuous", "live data", "monitor"],
+    "Multi-LLM Coverage": ["multiple llm", "all llm", "perplexity and chatgpt", "cross-platform",
+                           "every ai", "all ai", "multi-model", "chatgpt and gemini",
+                           "claude and", "different ai", "llm coverage"],
+    "Actionable Recs": ["actionable", "what to do", "next steps", "recommendations",
+                        "how to improve", "specific advice", "optimization tip",
+                        "action item"],
+    "ROI Measurement": ["roi", "return on investment", "revenue impact", "attribution",
+                        "prove value", "business impact", "conversion", "kpi",
+                        "measure results", "performance metric"],
+    "Historical Trends": ["historical", "trend", "over time", "change over", "compare week",
+                          "month over month", "trajectory", "time series",
+                          "tracking progress", "weekly report"],
+    "Comp. Benchmarking": ["benchmark", "compare to competitor", "competitive",
+                           "industry average", "how do we compare", "vs competitor",
+                           "competitor analysis", "comparison", "ranking"],
+    "Content Guidance": ["what to write", "content recommendations", "topic suggestion",
+                         "content gap", "optimization guide", "content strategy",
+                         "content plan"],
+    "Brand Safety": ["brand safety", "misinformation", "hallucination about",
+                     "wrong information", "incorrect", "ai says wrong",
+                     "inaccurate", "false information", "reputation"],
+    "Integrations": ["integrate", "integration", "connect to", "plugin",
+                     "works with", "api", "google analytics", "hubspot",
+                     "webhook", "zapier", "export data", "third-party"],
+}
+
+_EXPORT_FEATURE_NAMES = list(_EXPORT_OPPORTUNITY_THEMES.keys())
+
+# Build opportunity data for exports
+_export_opp_data = defaultdict(lambda: {
+    "complaints": 0, "requests": 0, "praise": 0,
+    "evidence": 0, "companies_tried": set(),
+    "companies_praised": set(), "companies_complained": set(),
+    "signals": [], "confidence": 0,
+    "company_detail": defaultdict(lambda: {"count": 0, "latest": ""}),
+})
+
+for _ei in insights:
+    _etxt = (_ei.get("text", "") + " " + _ei.get("title", "")).lower()
+    _etags = _ei.get("entity_tags", [])
+    _esent = _ei.get("sentiment", "")
+    _ecomps_i = _ei.get("companies_mentioned", [])
+    for _eopp, _ekws in _EXPORT_OPPORTUNITY_THEMES.items():
+        if any(kw in _etxt for kw in _ekws):
+            _eod = _export_opp_data[_eopp]
+            _eod["evidence"] += 1
+            if "complaint" in _etags:
+                _eod["complaints"] += 1
+                for _ec in _ecomps_i:
+                    _eod["companies_complained"].add(_ec)
+            if _ei.get("is_feature_request"):
+                _eod["requests"] += 1
+            if "praise" in _etags and _esent == "positive":
+                _eod["praise"] += 1
+                for _ec in _ecomps_i:
+                    _eod["companies_praised"].add(_ec)
+            for _ec in _ecomps_i:
+                _eod["companies_tried"].add(_ec)
+                _edetail = _eod["company_detail"][_ec]
+                _edetail["count"] += 1
+                _epd = _ei.get("post_date", "")
+                if _epd > _edetail["latest"]:
+                    _edetail["latest"] = _epd
+            _eod["signals"].append(_ei)
+
+for _eopp, _eod in _export_opp_data.items():
+    _econf = 30
+    _esrc_seen = set(s.get("source", "") for s in _eod["signals"] if s.get("source"))
+    _econf += len(_esrc_seen) * 6
+    _econf += min(max(_eod["evidence"] - 1, 0) * 5, 15)
+    if any("G2" in s.get("source", "") for s in _eod["signals"]):
+        _econf += 10
+    _eod["confidence"] = min(_econf, 95)
+
+# Build comp_stats for ALL companies at module level
+_all_comp_names_export = sorted(set(
+    c for i in insights for c in i.get("companies_mentioned", [])
+))
+_export_week_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+_export_2week_ago = (datetime.now() - timedelta(days=14)).strftime("%Y-%m-%d")
+
+_export_all_comp_stats = {}
+for _ecomp in _all_comp_names_export:
+    _esigs = [s for s in insights if _ecomp in s.get("companies_mentioned", [])]
+    _etotal = len(_esigs)
+    _epos = sum(1 for s in _esigs if s.get("sentiment") == "positive")
+    _eneg = sum(1 for s in _esigs if s.get("sentiment") == "negative")
+    _etw = sum(1 for s in _esigs if s.get("post_date", "") >= _export_week_ago)
+    _epw = sum(1 for s in _esigs
+               if _export_2week_ago <= s.get("post_date", "") < _export_week_ago)
+    _elatest = max((s.get("post_date", "") for s in _esigs), default="")
+
+    if _etotal < 3:
+        _emom = "Insufficient data"
+    elif _epw == 0 and _etw == 0:
+        _emom = "No recent activity"
+    elif _epw == 0:
+        _emom = "Rising"
+    else:
+        _ewow = round((_etw - _epw) / _epw * 100)
+        if _ewow >= 20:
+            _emom = "Rising"
+        elif _ewow <= -20:
+            _emom = "Falling"
+        else:
+            _emom = "Stable"
+
+    _export_all_comp_stats[_ecomp] = {
+        "total": _etotal, "pos": _epos, "neg": _eneg,
+        "pos_pct": round(_epos * 100 / max(_etotal, 1)),
+        "momentum": _emom, "latest": _elatest,
+    }
+
+
+def _build_export_chart_images(all_comps, comp_stats, opp_data):
+    """Build Plotly chart images for the briefing deck export."""
+    momentum_colors = {
+        "Rising": "#22c55e", "Falling": "#ef4444", "Stable": "#94a3b8",
+        "No recent activity": "#cbd5e1", "Insufficient data": "#e2e8f0",
+    }
+
+    # Filter to companies with signals
+    chart_comps = [c for c in all_comps if comp_stats.get(c, {}).get("total", 0) > 0]
+    sorted_comps = sorted(chart_comps, key=lambda c: comp_stats[c]["total"])
+
+    # Fig 1: Momentum scatter
+    fig1 = go.Figure()
+    for m_label, m_color in momentum_colors.items():
+        group = [c for c in sorted_comps if comp_stats[c]["momentum"] == m_label]
+        if group:
+            fig1.add_trace(go.Scatter(
+                x=[comp_stats[c]["total"] for c in group],
+                y=group, mode="markers",
+                marker=dict(size=14, color=m_color), name=m_label,
+            ))
+        else:
+            fig1.add_trace(go.Scatter(
+                x=[None], y=[None], mode="markers",
+                marker=dict(size=14, color=m_color), name=m_label, showlegend=True,
+            ))
+    mean_sig = sum(comp_stats[c]["total"] for c in chart_comps) / max(len(chart_comps), 1)
+    fig1.add_vline(x=mean_sig, line_dash="dash", line_color="#94a3b8", line_width=1)
+    fig1.update_layout(
+        plot_bgcolor="white", paper_bgcolor="white",
+        xaxis=dict(title="Total signals", gridcolor="#f0f0f0", zeroline=False),
+        yaxis=dict(title="", gridcolor="#f0f0f0"),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0),
+        margin=dict(l=10, r=20, t=40, b=20),
+        height=max(300, len(chart_comps) * 32 + 80),
+    )
+
+    # Fig 2: Feature heatmap
+    feature_names = list(_EXPORT_OPPORTUNITY_THEMES.keys())
+    _30d = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+    _180d = (datetime.now() - timedelta(days=180)).strftime("%Y-%m-%d")
+    top_comps = chart_comps[:15] if len(chart_comps) > 15 else chart_comps
+
+    heat_z = []
+    for feat in feature_names:
+        row = []
+        od = opp_data.get(feat)
+        for comp in top_comps:
+            if od is None:
+                row.append(0)
+                continue
+            detail = od["company_detail"].get(comp, {"count": 0, "latest": ""})
+            count, latest = detail["count"], detail["latest"]
+            if count == 0:
+                score = 0
+            elif latest and latest >= _30d:
+                score = 7 + min(count - 1, 2)
+            elif latest and latest >= _180d:
+                score = 4 + min(count - 1, 2)
+            else:
+                score = 1 + min(count - 1, 2)
+            row.append(min(score, 10))
+        heat_z.append(row)
+
+    fig2 = go.Figure(data=go.Heatmap(
+        z=heat_z, x=top_comps, y=feature_names,
+        colorscale=[[0, "#ffffff"], [1, "#00695c"]],
+        xgap=2, ygap=2, zmin=0, zmax=10,
+    ))
+    fig2.update_layout(
+        plot_bgcolor="white", paper_bgcolor="white",
+        xaxis=dict(tickangle=-35, tickfont=dict(size=11), side="bottom"),
+        yaxis=dict(autorange="reversed", tickfont=dict(size=11)),
+        margin=dict(l=10, r=20, t=30, b=100),
+        height=max(350, len(feature_names) * 38 + 140),
+    )
+
+    try:
+        img1 = fig1.to_image(format="png", width=1200, height=600, scale=2)
+    except Exception:
+        img1 = None
+    try:
+        img2 = fig2.to_image(format="png", width=1200, height=600, scale=2)
+    except Exception:
+        img2 = None
+    return img1, img2
+
+
+# ---------------------------------------------------------------------------
+# Export UI (above tabs, visible on all tabs)
+# ---------------------------------------------------------------------------
 
 with st.expander("Export"):
     _exp_type = st.selectbox(
@@ -1724,18 +2194,11 @@ with st.expander("Export"):
         key="export_type",
     )
 
-    _all_comp_names = sorted(set(
-        c for i in insights for c in i.get("companies_mentioned", [])
-    ))
-    _exp_comps = st.multiselect(
-        "Competitors to include",
-        options=_all_comp_names,
-        default=_all_comp_names[:8],
-        key="export_comps",
-    )
+    _date_tag = datetime.now().strftime("%Y-%m-%d")
+    _is_prd_brd = _exp_type in ("PRD (.docx)", "BRD (.docx)")
 
-    _needs_features = _exp_type in ("PRD (.docx)", "BRD (.docx)")
-    if _needs_features:
+    # Feature selector for PRD/BRD only
+    if _is_prd_brd:
         _exp_features = st.multiselect(
             "Features to include",
             options=_EXPORT_FEATURE_NAMES,
@@ -1745,69 +2208,60 @@ with st.expander("Export"):
     else:
         _exp_features = _EXPORT_FEATURE_NAMES
 
-    _date_tag = datetime.now().strftime("%Y-%m-%d")
-    _has_rd_data = "_rd_opportunity_data" in st.session_state
+    # All companies for Research Report / Briefing Deck; all for PRD/BRD too
+    _exp_comps = _all_comp_names_export
 
-    if not _has_rd_data:
-        st.caption("Open the Roadmap tab once to load chart data, then return here to export.")
-    else:
-        _rd_opp = st.session_state["_rd_opportunity_data"]
-        _rd_cs = st.session_state["_rd_comp_stats"]
-        _rd_sc = st.session_state["_rd_selected_comps"]
-
-        # Build comp_stats for export-selected comps
-        _e_comp_stats = {}
-        for c in _exp_comps:
-            if c in _rd_cs:
-                _e_comp_stats[c] = _rd_cs[c]
-            else:
-                _e_comp_stats[c] = {"total": 0, "pos": 0, "neg": 0, "pos_pct": 0, "momentum": "N/A", "latest": ""}
-
-        try:
-            if _exp_type == "Research Report (.docx)":
-                _buf = _export_research_report(insights, company_meta, _rd_opp, _exp_comps, _e_comp_stats)
-                st.download_button(
-                    label="Download Research Report",
-                    data=_buf.getvalue(),
-                    file_name=f"GEOPulse_ResearchReport_{_date_tag}.docx",
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    key="export_dl",
-                    type="primary",
-                )
-            elif _exp_type == "Briefing Deck (.pptx)":
-                _fig1_img = st.session_state.get("_rd_fig1_img")
-                _fig2_img = st.session_state.get("_rd_fig2_img")
-                _buf = _export_briefing_deck(insights, company_meta, _rd_opp, _exp_comps, _e_comp_stats, _fig1_img, _fig2_img)
-                st.download_button(
-                    label="Download Briefing Deck",
-                    data=_buf.getvalue(),
-                    file_name=f"GEOPulse_BriefingDeck_{_date_tag}.pptx",
-                    mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
-                    key="export_dl",
-                    type="primary",
-                )
-            elif _exp_type == "PRD (.docx)":
-                _buf = _export_prd(_rd_opp, insights, _exp_features, _exp_comps)
-                st.download_button(
-                    label="Download PRD",
-                    data=_buf.getvalue(),
-                    file_name=f"GEOPulse_PRD_{_date_tag}.docx",
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    key="export_dl",
-                    type="primary",
-                )
-            elif _exp_type == "BRD (.docx)":
-                _buf = _export_brd(_rd_opp, insights, _exp_features, _exp_comps)
-                st.download_button(
-                    label="Download BRD",
-                    data=_buf.getvalue(),
-                    file_name=f"GEOPulse_BRD_{_date_tag}.docx",
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    key="export_dl",
-                    type="primary",
-                )
-        except Exception as _ex:
-            st.error(f"Export generation failed: {_ex}")
+    try:
+        if _exp_type == "Research Report (.docx)":
+            _buf = _export_research_report(
+                insights, company_meta, _export_opp_data, _exp_comps, _export_all_comp_stats
+            )
+            st.download_button(
+                label="Download Research Report",
+                data=_buf.getvalue(),
+                file_name=f"GEOPulse_ResearchReport_{_date_tag}.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                key="export_dl",
+                type="primary",
+            )
+        elif _exp_type == "Briefing Deck (.pptx)":
+            _fig1_img, _fig2_img = _build_export_chart_images(
+                _all_comp_names_export, _export_all_comp_stats, _export_opp_data
+            )
+            _buf = _export_briefing_deck(
+                insights, company_meta, _export_opp_data, _exp_comps,
+                _export_all_comp_stats, _fig1_img, _fig2_img
+            )
+            st.download_button(
+                label="Download Briefing Deck",
+                data=_buf.getvalue(),
+                file_name=f"GEOPulse_BriefingDeck_{_date_tag}.pptx",
+                mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                key="export_dl",
+                type="primary",
+            )
+        elif _exp_type == "PRD (.docx)":
+            _buf = _export_prd(_export_opp_data, insights, _exp_features, _exp_comps)
+            st.download_button(
+                label="Download PRD",
+                data=_buf.getvalue(),
+                file_name=f"GEOPulse_PRD_{_date_tag}.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                key="export_dl",
+                type="primary",
+            )
+        elif _exp_type == "BRD (.docx)":
+            _buf = _export_brd(_export_opp_data, insights, _exp_features, _exp_comps)
+            st.download_button(
+                label="Download BRD",
+                data=_buf.getvalue(),
+                file_name=f"GEOPulse_BRD_{_date_tag}.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                key="export_dl",
+                type="primary",
+            )
+    except Exception as _ex:
+        st.error(f"Export generation failed: {_ex}")
 
 
 # ---------------------------------------------------------------------------
@@ -2596,18 +3050,6 @@ with tabs[2]:
             "(3+ signals, majority competitor gap)."
         )
 
-    # ── Cache Roadmap data for export ────────────────────────────────────────
-    st.session_state["_rd_opportunity_data"] = dict(opportunity_data)
-    st.session_state["_rd_comp_stats"] = dict(_comp_stats)
-    st.session_state["_rd_selected_comps"] = list(selected_comps)
-    try:
-        st.session_state["_rd_fig1_img"] = fig1.to_image(format="png", width=1200, height=600, scale=2)
-    except Exception:
-        st.session_state["_rd_fig1_img"] = None
-    try:
-        st.session_state["_rd_fig2_img"] = fig2.to_image(format="png", width=1200, height=600, scale=2)
-    except Exception:
-        st.session_state["_rd_fig2_img"] = None
 
 
 
