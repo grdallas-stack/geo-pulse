@@ -2081,21 +2081,17 @@ else:
         """Set the question to be processed on next rerun."""
         st.session_state["qa_submit"] = question
 
-    _DEFAULT_Q = "Which competitor is gaining the most momentum right now?"
-    if "ask_ai_input" not in st.session_state:
-        st.session_state["ask_ai_input"] = _DEFAULT_Q
-
     # --- Input form (Enter key submits via form) ---
     with st.form("qa_form", clear_on_submit=True):
         user_question = st.text_input(
             "Ask a question",
-            value=st.session_state.get("ask_ai_input", _DEFAULT_Q),
+            value="Which competitor is gaining the most momentum right now?",
+            placeholder="e.g., Which competitor is gaining the most momentum right now?",
             key="ask_ai_text",
         )
         submitted = st.form_submit_button("Ask AI", type="primary")
     if submitted and user_question.strip():
         st.session_state["qa_submit"] = user_question.strip()
-        st.session_state["ask_ai_input"] = _DEFAULT_Q
 
     # --- Pill buttons ---
     _pill_questions = [
@@ -2125,7 +2121,7 @@ else:
     )
 
     def _pill_click(q):
-        st.session_state["ask_ai_input"] = q
+        st.session_state["qa_submit"] = q
 
     _pill_container = st.container()
     with _pill_container:
@@ -2136,12 +2132,6 @@ else:
                 st.button(_pq, key=f"pill_{_pi}", on_click=_pill_click, args=(_pq,),
                           use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
-
-    # Auto-submit if pill was clicked (ask_ai_input changed from default)
-    if st.session_state.get("ask_ai_input", _DEFAULT_Q) != _DEFAULT_Q and not st.session_state.get("qa_submit"):
-        st.session_state["qa_submit"] = st.session_state["ask_ai_input"]
-        st.session_state["ask_ai_input"] = _DEFAULT_Q
-        st.rerun()
 
     # --- Process pending question ---
     question_to_ask = st.session_state.get("qa_submit", "")
