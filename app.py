@@ -1680,6 +1680,40 @@ def _within_age_limit(insight):
 # Load data
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Startup staleness check — refresh pipeline if data is old
+# ---------------------------------------------------------------------------
+
+def _data_is_stale(threshold_hours=6):
+    """Check if last pipeline run was more than threshold_hours ago.
+    Uses run_log.json on disk (survives hibernation) and falls back to
+    file mtime of enriched_insights.json."""
+    try:
+        if os.path.exists(RUN_LOG_PATH):
+            with open(RUN_LOG_PATH, "r") as f:
+                log = json.load(f)
+            if log:
+                last_ts = log[-1].get("completed_at", "")
+                if last_ts:
+                    last_dt = datetime.fromisoformat(last_ts)
+                    return (datetime.now() - last_dt).total_seconds() > threshold_hours * 3600
+        # Fallback: check file modification time
+        if os.path.exists(INSIGHTS_PATH):
+            mtime = os.path.getmtime(INSIGHTS_PATH)
+            age_hours = (datetime.now().timestamp() - mtime) / 3600
+            return age_hours > threshold_hours
+    except Exception:
+        pass
+    return True  # No data at all, definitely stale
+
+
+if _data_is_stale():
+    try:
+        run_enrichment()
+        st.cache_data.clear()
+    except Exception:
+        pass  # Pipeline failure is non-fatal; app still loads existing data
+
 _raw_insights = load_insights()
 insights = _dedup_insights([i for i in _raw_insights
                             if _within_age_limit(i) and _is_displayable_post(i)])
@@ -1848,13 +1882,23 @@ except (ValueError, TypeError):
     freshness = "unknown"
     fresh_icon = "⚪"
 
-h1, h2, h3, h4 = st.columns(4)
+h1, h2, h3, h4, h5 = st.columns([1, 1, 1, 1, 0.5])
 h1.metric("Sources Monitored", f"{len(approved_sources) + 11}",
           help=f"Active scrapers: {SOURCE_LIST}. Plus {len(approved_sources)} auto-approved community sources.")
 h2.metric("Signals Ingested", f"{len(insights):,}",
           help=f"{len(insights):,} quality signals from {len(_raw_insights):,} total scraped (filtered by age, relevance, and dedup).")
 h3.metric("Companies Tracked", f"{len(company_meta)}")
 h4.metric(f"{fresh_icon} Last Updated", freshness)
+with h5:
+    st.markdown("<div style='height: 24px'></div>", unsafe_allow_html=True)
+    if st.button("Refresh now", key="manual_refresh", type="secondary"):
+        with st.spinner("Running pipeline..."):
+            try:
+                run_enrichment()
+                st.cache_data.clear()
+            except Exception as _refresh_err:
+                st.error(f"Refresh failed: {_refresh_err}")
+        st.rerun()
 
 with st.expander("How to use this dashboard"):
     st.markdown("""
