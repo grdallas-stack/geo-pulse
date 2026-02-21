@@ -1,4 +1,5 @@
 # app.py — GEO Pulse: Bloomberg terminal for the GEO/AEO category
+import io
 import json
 import math
 import os
@@ -11,6 +12,12 @@ import pandas as pd
 import altair as alt
 import plotly.graph_objects as go
 from apscheduler.schedulers.background import BackgroundScheduler
+from docx import Document as DocxDocument
+from docx.shared import Inches, Pt, RGBColor
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from pptx import Presentation
+from pptx.util import Inches as PptxInches, Pt as PptxPt
+from pptx.dml.color import RGBColor as PptxRGBColor
 from pipeline.enrich import run_enrichment
 
 st.set_page_config(page_title="GEO Pulse", page_icon="📡", layout="wide")
@@ -22,8 +29,16 @@ st.set_page_config(page_title="GEO Pulse", page_icon="📡", layout="wide")
 def scheduled_refresh():
     run_enrichment()
 
+def _digest_job():
+    """Wrapper for daily digest sends (defined later in file)."""
+    try:
+        _send_daily_digests()
+    except NameError:
+        pass  # Function not yet defined on first scheduler tick
+
 scheduler = BackgroundScheduler()
 scheduler.add_job(scheduled_refresh, 'interval', hours=6)
+scheduler.add_job(_digest_job, 'interval', hours=1, id='email_digest')
 if not scheduler.running:
     scheduler.start()
 
@@ -287,6 +302,663 @@ def _company_positioning(comp_data):
     if notes:
         return notes
     return CATEGORY_LABELS.get(cat, cat.replace("_", " ").title())
+
+
+# ---------------------------------------------------------------------------
+# Share link helper
+# ---------------------------------------------------------------------------
+
+def _share_button(section_id, label="Share", key_suffix="", extra_params=None):
+    """Render a share button that copies a deep link to clipboard."""
+    btn_key = f"share_{section_id}_{key_suffix}" if key_suffix else f"share_{section_id}"
+    if st.button(f"🔗 {label}", key=btn_key, type="secondary"):
+        params = {"section": section_id}
+        if extra_params:
+            params.update(extra_params)
+        qs = "&".join(f"{k}={v}" for k, v in params.items())
+        import streamlit.components.v1 as components
+        full_url = f"?{qs}"
+        components.html(
+            f"""<script>
+            navigator.clipboard.writeText(window.location.origin + window.location.pathname + '{full_url}');
+            </script>
+            <div style="background:#22c55e;color:white;padding:6px 12px;border-radius:4px;
+            font-size:0.8rem;text-align:center;">Link copied to clipboard</div>""",
+            height=36,
+        )
+
+
+# ---------------------------------------------------------------------------
+# Citation card helper
+# ---------------------------------------------------------------------------
+
+def _cite_button(insight, key_id):
+    """Render a Cite button that expands a formatted citation block with copy."""
+    cite_key = f"cite_{key_id}"
+    with st.popover("📋 Cite", use_container_width=False):
+        source = insight.get("source", "Unknown")
+        url = insight.get("url", "")
+        date = insight.get("post_date", "Unknown")
+        companies = ", ".join(insight.get("companies_mentioned", [])) or "N/A"
+        tags = insight.get("entity_tags", [])
+        signal_type = ", ".join(tags[:3]) if tags else "General"
+        sentiment = insight.get("sentiment", "neutral").capitalize()
+        title = insight.get("title", "")[:120] or insight.get("text", "")[:120]
+
+        citation_text = (
+            f"SOURCE: {source}\n"
+            f"TITLE: {title}\n"
+            f"URL: {url}\n"
+            f"PUBLISHED: {date}\n"
+            f"COMPANY: {companies}\n"
+            f"SIGNAL TYPE: {signal_type}\n"
+            f"SENTIMENT: {sentiment}\n"
+            f"COLLECTED BY: GEO Pulse Market Intelligence\n"
+            f"METHODOLOGY: Automated ingestion from {SOURCE_LIST}, "
+            f"enriched via Claude with entity extraction, sentiment analysis, "
+            f"and relevance scoring."
+        )
+        st.code(citation_text, language=None)
+        if st.button("Copy citation", key=f"copy_{cite_key}"):
+            import streamlit.components.v1 as components
+            escaped = citation_text.replace("\\", "\\\\").replace("`", "\\`").replace("\n", "\\n")
+            components.html(
+                f"""<script>navigator.clipboard.writeText(`{escaped}`);</script>
+                <div style="background:#22c55e;color:white;padding:4px 10px;border-radius:4px;
+                font-size:0.75rem;text-align:center;">Copied</div>""",
+                height=30,
+            )
+
+
+# ---------------------------------------------------------------------------
+# Export generators
+# ---------------------------------------------------------------------------
+
+def _export_research_report(insights, company_meta, opportunity_data, selected_comps, comp_stats):
+    """Generate a Research Report .docx and return bytes."""
+    doc = DocxDocument()
+    style = doc.styles["Normal"]
+    style.font.name = "Calibri"
+    style.font.size = Pt(11)
+
+    # Title
+    title = doc.add_heading("GEO Pulse Research Report", level=0)
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    doc.add_paragraph(f"Generated {datetime.now().strftime('%B %d, %Y')}")
+    doc.add_paragraph("")
+
+    # Section 1: Market Overview
+    doc.add_heading("1. Market Overview", level=1)
+    total_signals = len(insights)
+    sources = set(i.get("source", "") for i in insights)
+    companies_tracked = len(company_meta)
+    doc.add_paragraph(
+        f"This report covers {total_signals:,} signals from {len(sources)} source types, "
+        f"tracking {companies_tracked} companies in the GEO/AEO market."
+    )
+
+    # Section 2: Competitor Momentum
+    doc.add_heading("2. Competitor Momentum", level=1)
+    table = doc.add_table(rows=1, cols=5)
+    table.style = "Table Grid"
+    hdr = table.rows[0].cells
+    for i, h in enumerate(["Company", "Signals", "Positive %", "Momentum", "Last Signal"]):
+        hdr[i].text = h
+    for comp in selected_comps:
+        cs = comp_stats.get(comp, {})
+        row = table.add_row().cells
+        row[0].text = comp
+        row[1].text = str(cs.get("total", 0))
+        row[2].text = f"{cs.get('pos_pct', 0)}%"
+        row[3].text = cs.get("momentum", "N/A")
+        row[4].text = cs.get("latest", "N/A")
+
+    # Section 3: Feature Gap Analysis
+    doc.add_heading("3. Feature Gap Analysis", level=1)
+    for opp, od in sorted(opportunity_data.items(), key=lambda x: x[1]["evidence"], reverse=True):
+        if od["evidence"] < 2:
+            continue
+        doc.add_heading(opp, level=2)
+        doc.add_paragraph(f"Evidence: {od['evidence']} signals | Confidence: {od['confidence']}%")
+        praised = ", ".join(od["companies_praised"]) or "None"
+        complained = ", ".join(od["companies_complained"]) or "None"
+        doc.add_paragraph(f"Praised: {praised}")
+        doc.add_paragraph(f"Complaints: {complained}")
+
+    # Section 4: Build Now Recommendations
+    doc.add_heading("4. Build Now Recommendations", level=1)
+    has_build_now = False
+    for opp, od in opportunity_data.items():
+        if od["evidence"] < 3:
+            continue
+        red_count = sum(
+            1 for c in selected_comps
+            if c not in od["companies_praised"]
+            and c not in od["companies_complained"]
+            and c not in od["companies_tried"]
+        )
+        if red_count > len(selected_comps) / 2:
+            has_build_now = True
+            doc.add_heading(opp, level=2)
+            doc.add_paragraph(f"Confidence: {od['confidence']}% | Evidence: {od['evidence']} signals")
+            doc.add_paragraph("No competitor has a clear solution in this area.")
+    if not has_build_now:
+        doc.add_paragraph("No features currently meet Build Now criteria.")
+
+    # Section 5: Methodology
+    doc.add_heading("5. Methodology", level=1)
+    doc.add_paragraph(
+        f"Data collected from {SOURCE_LIST}. Signals enriched via Claude with entity extraction, "
+        f"sentiment analysis, feature tagging, and relevance scoring. "
+        f"Pipeline refreshes every 6 hours."
+    )
+
+    buf = io.BytesIO()
+    doc.save(buf)
+    buf.seek(0)
+    return buf
+
+
+def _export_briefing_deck(insights, company_meta, opportunity_data, selected_comps, comp_stats, fig1_bytes, fig2_bytes):
+    """Generate a Briefing Deck .pptx and return bytes."""
+    prs = Presentation()
+    prs.slide_width = PptxInches(13.333)
+    prs.slide_height = PptxInches(7.5)
+
+    # Slide 1: Title
+    slide = prs.slides.add_slide(prs.slide_layouts[6])  # Blank
+    txBox = slide.shapes.add_textbox(PptxInches(1), PptxInches(2.5), PptxInches(11), PptxInches(2))
+    tf = txBox.text_frame
+    p = tf.paragraphs[0]
+    p.text = "GEO Pulse Briefing"
+    p.font.size = PptxPt(44)
+    p.font.bold = True
+    p2 = tf.add_paragraph()
+    p2.text = f"Market Intelligence Report | {datetime.now().strftime('%B %d, %Y')}"
+    p2.font.size = PptxPt(20)
+    p2.font.color.rgb = PptxRGBColor(0x64, 0x64, 0x64)
+
+    # Slide 2: Snapshot
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    txBox = slide.shapes.add_textbox(PptxInches(0.5), PptxInches(0.3), PptxInches(12), PptxInches(1))
+    tf = txBox.text_frame
+    tf.paragraphs[0].text = "Market Snapshot"
+    tf.paragraphs[0].font.size = PptxPt(32)
+    tf.paragraphs[0].font.bold = True
+
+    stats_box = slide.shapes.add_textbox(PptxInches(0.5), PptxInches(1.5), PptxInches(12), PptxInches(5))
+    tf2 = stats_box.text_frame
+    tf2.word_wrap = True
+    lines = [
+        f"Total Signals: {len(insights):,}",
+        f"Companies Tracked: {len(company_meta)}",
+        f"Competitors in View: {len(selected_comps)}",
+        "",
+    ]
+    rising = [c for c in selected_comps if comp_stats.get(c, {}).get("momentum") == "Rising"]
+    falling = [c for c in selected_comps if comp_stats.get(c, {}).get("momentum") == "Falling"]
+    if rising:
+        lines.append(f"Rising: {', '.join(rising)}")
+    if falling:
+        lines.append(f"Falling: {', '.join(falling)}")
+    tf2.paragraphs[0].text = lines[0]
+    tf2.paragraphs[0].font.size = PptxPt(18)
+    for line in lines[1:]:
+        p = tf2.add_paragraph()
+        p.text = line
+        p.font.size = PptxPt(18)
+
+    # Slide 3: Momentum Chart
+    if fig1_bytes:
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        txBox = slide.shapes.add_textbox(PptxInches(0.5), PptxInches(0.3), PptxInches(12), PptxInches(1))
+        tf = txBox.text_frame
+        tf.paragraphs[0].text = "Competitor Presence & Momentum"
+        tf.paragraphs[0].font.size = PptxPt(28)
+        tf.paragraphs[0].font.bold = True
+        img_stream = io.BytesIO(fig1_bytes)
+        slide.shapes.add_picture(img_stream, PptxInches(0.5), PptxInches(1.2), PptxInches(12), PptxInches(5.8))
+
+    # Slide 4: Heat Map
+    if fig2_bytes:
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        txBox = slide.shapes.add_textbox(PptxInches(0.5), PptxInches(0.3), PptxInches(12), PptxInches(1))
+        tf = txBox.text_frame
+        tf.paragraphs[0].text = "Feature Heat Map"
+        tf.paragraphs[0].font.size = PptxPt(28)
+        tf.paragraphs[0].font.bold = True
+        img_stream = io.BytesIO(fig2_bytes)
+        slide.shapes.add_picture(img_stream, PptxInches(0.5), PptxInches(1.2), PptxInches(12), PptxInches(5.8))
+
+    # Slide 5: Build Now
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    txBox = slide.shapes.add_textbox(PptxInches(0.5), PptxInches(0.3), PptxInches(12), PptxInches(1))
+    tf = txBox.text_frame
+    tf.paragraphs[0].text = "Build Now Opportunities"
+    tf.paragraphs[0].font.size = PptxPt(28)
+    tf.paragraphs[0].font.bold = True
+    bn_box = slide.shapes.add_textbox(PptxInches(0.5), PptxInches(1.5), PptxInches(12), PptxInches(5))
+    tf2 = bn_box.text_frame
+    tf2.word_wrap = True
+    bn_count = 0
+    for opp, od in sorted(opportunity_data.items(), key=lambda x: x[1]["evidence"], reverse=True):
+        if od["evidence"] < 3:
+            continue
+        red_count = sum(
+            1 for c in selected_comps
+            if c not in od["companies_praised"]
+            and c not in od["companies_complained"]
+            and c not in od["companies_tried"]
+        )
+        if red_count > len(selected_comps) / 2:
+            p = tf2.add_paragraph() if bn_count > 0 else tf2.paragraphs[0]
+            p.text = f"{opp} ({od['confidence']}% confidence, {od['evidence']} signals)"
+            p.font.size = PptxPt(16)
+            bn_count += 1
+    if bn_count == 0:
+        tf2.paragraphs[0].text = "No features currently meet Build Now criteria."
+        tf2.paragraphs[0].font.size = PptxPt(16)
+
+    # Slide 6: Methodology
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    txBox = slide.shapes.add_textbox(PptxInches(0.5), PptxInches(0.3), PptxInches(12), PptxInches(1))
+    tf = txBox.text_frame
+    tf.paragraphs[0].text = "Methodology"
+    tf.paragraphs[0].font.size = PptxPt(28)
+    tf.paragraphs[0].font.bold = True
+    meth_box = slide.shapes.add_textbox(PptxInches(0.5), PptxInches(1.5), PptxInches(12), PptxInches(5))
+    tf2 = meth_box.text_frame
+    tf2.word_wrap = True
+    tf2.paragraphs[0].text = (
+        f"Data collected from {SOURCE_LIST}. "
+        f"Signals enriched via Claude with entity extraction, sentiment analysis, "
+        f"feature tagging, and relevance scoring. Pipeline refreshes every 6 hours."
+    )
+    tf2.paragraphs[0].font.size = PptxPt(14)
+
+    buf = io.BytesIO()
+    prs.save(buf)
+    buf.seek(0)
+    return buf
+
+
+def _export_prd(opportunity_data, insights, selected_features, selected_comps):
+    """Generate a PRD .docx for selected features and return bytes."""
+    doc = DocxDocument()
+    style = doc.styles["Normal"]
+    style.font.name = "Calibri"
+    style.font.size = Pt(11)
+
+    doc.add_heading("Product Requirements Document", level=0)
+    doc.add_paragraph(f"Generated {datetime.now().strftime('%B %d, %Y')} by GEO Pulse")
+    doc.add_paragraph("")
+
+    _90d = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
+
+    for feat in selected_features:
+        od = opportunity_data.get(feat)
+        if not od:
+            continue
+
+        doc.add_heading(feat, level=1)
+
+        # Overview
+        doc.add_heading("Overview", level=2)
+        doc.add_paragraph(
+            f"This feature has {od['evidence']} evidence signals with "
+            f"{od['confidence']}% confidence score."
+        )
+
+        # Problem Statement
+        doc.add_heading("Problem Statement", level=2)
+        complaints = [s for s in od["signals"] if "complaint" in s.get("entity_tags", [])]
+        if complaints:
+            doc.add_paragraph(
+                f"{len(complaints)} complaint signals identified. Key themes:"
+            )
+            for s in complaints[:5]:
+                title = s.get("title", "")[:100] or s.get("text", "")[:100]
+                doc.add_paragraph(f"- {title}", style="List Bullet")
+        else:
+            doc.add_paragraph("No direct complaints found. Demand driven by feature requests and market gaps.")
+
+        # Proposed Solution
+        doc.add_heading("Proposed Solution", level=2)
+        doc.add_paragraph("[To be completed by product team]")
+
+        # Success Metrics
+        doc.add_heading("Success Metrics", level=2)
+        doc.add_paragraph("[To be completed by product team]")
+
+        # Competitive Landscape
+        doc.add_heading("Competitive Landscape", level=2)
+        praised = od["companies_praised"] & set(selected_comps) if selected_comps else od["companies_praised"]
+        complained = od["companies_complained"] & set(selected_comps) if selected_comps else od["companies_complained"]
+        no_data = [c for c in selected_comps if c not in od["companies_praised"]
+                   and c not in od["companies_complained"] and c not in od["companies_tried"]]
+
+        if praised:
+            doc.add_paragraph(f"Praised: {', '.join(praised)}")
+        if complained:
+            doc.add_paragraph(f"Complaints: {', '.join(complained)}")
+        if no_data:
+            doc.add_paragraph(f"No data: {', '.join(no_data)}")
+
+        # Open Questions
+        doc.add_heading("Open Questions", level=2)
+        doc.add_paragraph("[To be completed by product team]")
+
+        # Signal Appendix
+        doc.add_heading("Signal Appendix", level=2)
+        recent = [s for s in od["signals"] if s.get("post_date", "") >= _90d]
+        display_sigs = recent[:20] if recent else od["signals"][:20]
+        table = doc.add_table(rows=1, cols=4)
+        table.style = "Table Grid"
+        hdr = table.rows[0].cells
+        for i, h in enumerate(["Date", "Source", "Title", "Sentiment"]):
+            hdr[i].text = h
+        for s in display_sigs:
+            row = table.add_row().cells
+            row[0].text = s.get("post_date", "")
+            row[1].text = s.get("source", "")
+            row[2].text = (s.get("title", "") or s.get("text", ""))[:80]
+            row[3].text = s.get("sentiment", "")
+
+        doc.add_page_break()
+
+    buf = io.BytesIO()
+    doc.save(buf)
+    buf.seek(0)
+    return buf
+
+
+def _export_brd(opportunity_data, insights, selected_features, selected_comps):
+    """Generate a BRD .docx for selected features and return bytes."""
+    doc = DocxDocument()
+    style = doc.styles["Normal"]
+    style.font.name = "Calibri"
+    style.font.size = Pt(11)
+
+    doc.add_heading("Business Requirements Document", level=0)
+    doc.add_paragraph(f"Generated {datetime.now().strftime('%B %d, %Y')} by GEO Pulse")
+    doc.add_paragraph("")
+
+    _90d = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
+
+    for feat in selected_features:
+        od = opportunity_data.get(feat)
+        if not od:
+            continue
+
+        doc.add_heading(feat, level=1)
+
+        # Executive Summary
+        doc.add_heading("Executive Summary", level=2)
+        doc.add_paragraph(
+            f"Market evidence supports investment in {feat}. "
+            f"{od['evidence']} signals identified with {od['confidence']}% confidence."
+        )
+
+        # Business Objective
+        doc.add_heading("Business Objective", level=2)
+        doc.add_paragraph("[To be completed by business stakeholders]")
+
+        # Market Evidence
+        doc.add_heading("Market Evidence", level=2)
+        doc.add_paragraph(f"Total signals: {od['evidence']}")
+        doc.add_paragraph(f"Complaints: {od['complaints']}")
+        doc.add_paragraph(f"Feature requests: {od['requests']}")
+        doc.add_paragraph(f"Praise: {od['praise']}")
+        recent_ct = sum(1 for s in od["signals"] if s.get("post_date", "") >= _90d)
+        doc.add_paragraph(f"Signals in last 90 days: {recent_ct}")
+
+        # Stakeholders
+        doc.add_heading("Stakeholders", level=2)
+        doc.add_paragraph("[To be completed by business stakeholders]")
+
+        # Scope
+        doc.add_heading("Scope", level=2)
+        doc.add_paragraph("[To be completed by business stakeholders]")
+
+        # Constraints and Assumptions
+        doc.add_heading("Constraints and Assumptions", level=2)
+        doc.add_paragraph("[To be completed by business stakeholders]")
+
+        # Approval
+        doc.add_heading("Approval", level=2)
+        doc.add_paragraph("[Pending approval]")
+
+        # Signal Appendix
+        doc.add_heading("Signal Appendix", level=2)
+        recent = [s for s in od["signals"] if s.get("post_date", "") >= _90d]
+        display_sigs = recent[:20] if recent else od["signals"][:20]
+        table = doc.add_table(rows=1, cols=4)
+        table.style = "Table Grid"
+        hdr = table.rows[0].cells
+        for i, h in enumerate(["Date", "Source", "Title", "Sentiment"]):
+            hdr[i].text = h
+        for s in display_sigs:
+            row = table.add_row().cells
+            row[0].text = s.get("post_date", "")
+            row[1].text = s.get("source", "")
+            row[2].text = (s.get("title", "") or s.get("text", ""))[:80]
+            row[3].text = s.get("sentiment", "")
+
+        doc.add_page_break()
+
+    buf = io.BytesIO()
+    doc.save(buf)
+    buf.seek(0)
+    return buf
+
+
+# ---------------------------------------------------------------------------
+# Email digest (SendGrid)
+# ---------------------------------------------------------------------------
+
+SUBSCRIBERS_PATH = os.path.join(DATA_DIR, "subscribers.json")
+EMAIL_LOG_PATH = os.path.join(DATA_DIR, "email_log.json")
+
+
+def _load_subscribers():
+    if os.path.exists(SUBSCRIBERS_PATH):
+        with open(SUBSCRIBERS_PATH, "r") as f:
+            return json.load(f)
+    return []
+
+
+def _save_subscribers(subs):
+    with open(SUBSCRIBERS_PATH, "w") as f:
+        json.dump(subs, f, ensure_ascii=False, indent=2)
+
+
+def _log_email(entry):
+    log = []
+    if os.path.exists(EMAIL_LOG_PATH):
+        with open(EMAIL_LOG_PATH, "r") as f:
+            log = json.load(f)
+    log.append(entry)
+    # Keep last 500 entries
+    with open(EMAIL_LOG_PATH, "w") as f:
+        json.dump(log[-500:], f, ensure_ascii=False, indent=2)
+
+
+def _send_email(to_email, subject, html_content):
+    """Send an email via SendGrid. Returns True on success."""
+    try:
+        import sendgrid
+        from sendgrid.helpers.mail import Mail, Email, To, Content
+    except ImportError:
+        return False
+
+    api_key = os.environ.get("SENDGRID_API_KEY") or st.secrets.get("SENDGRID_API_KEY", "")
+    from_email = os.environ.get("SENDGRID_FROM_EMAIL") or st.secrets.get("SENDGRID_FROM_EMAIL", "noreply@geopulse.io")
+
+    if not api_key:
+        return False
+
+    sg = sendgrid.SendGridAPIClient(api_key=api_key)
+    message = Mail(
+        from_email=Email(from_email),
+        to_emails=To(to_email),
+        subject=subject,
+        html_content=Content("text/html", html_content),
+    )
+    try:
+        response = sg.send(message)
+        return response.status_code in (200, 201, 202)
+    except Exception:
+        return False
+
+
+def _send_confirmation_email(email, name):
+    """Send a subscription confirmation email."""
+    html = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #1a1a1a;">Welcome to GEO Pulse Daily Digest</h2>
+        <p>Hi {name or 'there'},</p>
+        <p>You're now subscribed to the GEO Pulse daily digest.
+        You'll receive market intelligence updates at your preferred time.</p>
+        <p style="color: #666; font-size: 0.85rem;">
+            To unsubscribe, visit the GEO Pulse dashboard and remove your subscription
+            in the Email Digest section.</p>
+        <hr style="border: none; border-top: 1px solid #eee;">
+        <p style="color: #999; font-size: 0.75rem;">GEO Pulse Market Intelligence</p>
+    </div>
+    """
+    return _send_email(email, "Welcome to GEO Pulse Daily Digest", html)
+
+
+def _build_digest_html(insights_list, company_meta_dict, comp_filter=None):
+    """Build the daily digest HTML email content."""
+    now = datetime.now()
+    week_ago = (now - timedelta(days=7)).strftime("%Y-%m-%d")
+    yesterday = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+
+    # Filter by company if specified
+    if comp_filter:
+        relevant = [i for i in insights_list
+                    if any(c in i.get("companies_mentioned", []) for c in comp_filter)]
+    else:
+        relevant = insights_list
+
+    recent = [i for i in relevant if i.get("post_date", "") >= yesterday]
+    if not recent:
+        recent = [i for i in relevant if i.get("post_date", "") >= week_ago]
+
+    # Sort by relevance
+    recent.sort(key=lambda x: _relevance_score(x), reverse=True)
+    top5 = recent[:5]
+
+    # Momentum snapshot
+    comp_counts = Counter()
+    for i in relevant:
+        for c in i.get("companies_mentioned", []):
+            comp_counts[c] += 1
+    top_comps = comp_counts.most_common(5)
+
+    # Build HTML
+    signal_rows = ""
+    for s in top5:
+        title = s.get("title", "")[:100] or s.get("text", "")[:100]
+        url = s.get("url", "")
+        source = s.get("source", "")
+        date = s.get("post_date", "")
+        link = f'<a href="{url}" style="color: #1a73e8; text-decoration: none;">{title}</a>' if url else title
+        signal_rows += f"""
+        <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #f0f0f0;">
+                <span style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;
+                font-size: 0.75rem;">{source}</span>
+                {link}
+                <br><span style="color: #888; font-size: 0.8rem;">{date}</span>
+            </td>
+        </tr>
+        """
+
+    momentum_rows = ""
+    for comp, count in top_comps:
+        momentum_rows += f"""
+        <tr>
+            <td style="padding: 4px 8px; border-bottom: 1px solid #f0f0f0;">{comp}</td>
+            <td style="padding: 4px 8px; border-bottom: 1px solid #f0f0f0;">{count} signals</td>
+        </tr>
+        """
+
+    html = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 650px; margin: 0 auto;
+    background: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;">
+        <div style="background: #1a1a1a; color: white; padding: 16px 24px; border-radius: 8px 8px 0 0;">
+            <h1 style="margin: 0; font-size: 1.3rem;">GEO Pulse Daily Digest</h1>
+            <p style="margin: 4px 0 0 0; color: #aaa; font-size: 0.85rem;">
+                {now.strftime('%B %d, %Y')}</p>
+        </div>
+
+        <div style="padding: 20px 24px;">
+            <h2 style="font-size: 1.1rem; color: #333; margin-top: 0;">Momentum Snapshot</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+                {momentum_rows}
+            </table>
+
+            <h2 style="font-size: 1.1rem; color: #333; margin-top: 24px;">Top Signals</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+                {signal_rows}
+            </table>
+
+            <div style="margin-top: 24px; padding: 12px; background: #f9f9f9;
+            border-radius: 4px; font-size: 0.85rem; color: #666;">
+                Open the <a href="#" style="color: #1a73e8;">GEO Pulse dashboard</a>
+                for full details, charts, and export options.
+            </div>
+        </div>
+
+        <div style="padding: 12px 24px; background: #f5f5f5; border-radius: 0 0 8px 8px;
+        font-size: 0.75rem; color: #999;">
+            GEO Pulse Market Intelligence | To unsubscribe, visit the dashboard settings.
+        </div>
+    </div>
+    """
+    return html
+
+
+def _send_daily_digests():
+    """Scheduled job: send daily digest emails to all subscribers."""
+    subs = _load_subscribers()
+    if not subs:
+        return
+
+    # Load fresh data
+    if os.path.exists(INSIGHTS_PATH):
+        with open(INSIGHTS_PATH, "r") as f:
+            all_insights = json.load(f)
+    else:
+        return
+
+    now = datetime.now()
+    current_hour = now.hour
+
+    for sub in subs:
+        if not sub.get("confirmed", False):
+            continue
+
+        # Check delivery time preference
+        pref_hour = sub.get("delivery_hour", 8)
+        tz_offset = sub.get("tz_offset", 0)
+        adjusted_hour = (current_hour + tz_offset) % 24
+
+        if adjusted_hour != pref_hour:
+            continue
+
+        comp_filter = sub.get("competitor_filter", [])
+        html = _build_digest_html(all_insights, {}, comp_filter or None)
+
+        ok = _send_email(sub["email"], "GEO Pulse Daily Digest", html)
+        _log_email({
+            "email": sub["email"],
+            "sent_at": now.isoformat(),
+            "success": ok,
+            "type": "daily_digest",
+        })
 
 
 # ---------------------------------------------------------------------------
@@ -781,14 +1453,86 @@ SOURCE REFERENCE (for [S1] etc. citations):
 
 
 # ---------------------------------------------------------------------------
-# Tabs (3 tabs)
+# Export UI (above tabs, visible on all tabs)
 # ---------------------------------------------------------------------------
 
-tabs = st.tabs([
-    "Live Feed",
-    "Competitors",
-    "Roadmap",
-])
+_EXPORT_FEATURE_NAMES = [
+    "Integrations", "ROI Measurement", "Brand Safety", "Real-time Tracking",
+    "Historical Trends", "Comp. Benchmarking", "Actionable Recs",
+    "Multi-LLM Coverage", "Content Guidance",
+]
+
+with st.expander("Export"):
+    _exp_type = st.selectbox(
+        "Export format",
+        ["Research Report (.docx)", "Briefing Deck (.pptx)", "PRD (.docx)", "BRD (.docx)"],
+        key="export_type",
+    )
+
+    _all_comp_names = sorted(set(
+        c for i in insights for c in i.get("companies_mentioned", [])
+    ))
+    _exp_comps = st.multiselect(
+        "Competitors to include",
+        options=_all_comp_names,
+        default=_all_comp_names[:8],
+        key="export_comps",
+    )
+
+    _needs_features = _exp_type in ("PRD (.docx)", "BRD (.docx)")
+    if _needs_features:
+        _exp_features = st.multiselect(
+            "Features to include",
+            options=_EXPORT_FEATURE_NAMES,
+            default=_EXPORT_FEATURE_NAMES,
+            key="export_features",
+        )
+    else:
+        _exp_features = _EXPORT_FEATURE_NAMES
+
+    if st.button("Generate Export", key="export_btn", type="primary"):
+        st.session_state["_run_export"] = _exp_type
+        st.session_state["_export_comps"] = _exp_comps
+        st.session_state["_export_features"] = _exp_features
+
+    # Show download button if export was generated
+    if "_export_bytes" in st.session_state and st.session_state.get("_export_bytes"):
+        _eb = st.session_state["_export_bytes"]
+        st.download_button(
+            label=f"Download {_eb['name']}",
+            data=_eb["data"],
+            file_name=_eb["name"],
+            mime=_eb["mime"],
+            key="export_download",
+        )
+
+
+# ---------------------------------------------------------------------------
+# URL state restoration from query params
+# ---------------------------------------------------------------------------
+_qp = st.query_params
+_shared_section = _qp.get("section", "")
+_shared_tab_map = {
+    "live_feed": 0, "signal_of_week": 0,
+    "competitors": 1,
+    "momentum_chart": 2, "heat_map": 2, "build_now": 2,
+}
+_shared_tab_idx = _shared_tab_map.get(_shared_section, None)
+
+# Restore competitor filter from URL if present
+if "comps" in _qp:
+    _url_comps = _qp.get("comps", "").split(",")
+    if _url_comps and _url_comps[0]:
+        st.session_state["rm_comp_sel"] = _url_comps
+
+# ---------------------------------------------------------------------------
+# Tabs (3 tabs)
+# ---------------------------------------------------------------------------
+_tab_names = ["Live Feed", "Competitors", "Roadmap"]
+if _shared_tab_idx is not None:
+    tabs = st.tabs(_tab_names)
+else:
+    tabs = st.tabs(_tab_names)
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -826,6 +1570,17 @@ with tabs[0]:
         """</div>""",
         unsafe_allow_html=True,
     )
+    _share_button("signal_of_week", "Share Signal of the Week")
+    _sotw_insight = {
+        "source": "Press Gazette",
+        "title": "Future PLC launches GEO-as-a-Service division",
+        "url": "https://pressgazette.co.uk/marketing/future-leveragess-high-visibility-on-chatgpt-by-offering-geo-as-a-service/",
+        "post_date": "2026-02-20",
+        "companies_mentioned": ["Future"],
+        "entity_tags": ["product_launch"],
+        "sentiment": "positive",
+    }
+    _cite_button(_sotw_insight, "sotw")
 
     fc1, fc2, fc3, fc4 = st.columns(4)
     all_companies_in_data = sorted(set(
@@ -918,6 +1673,7 @@ with tabs[0]:
             st.caption(meta)
             if kw_str:
                 st.markdown(kw_str)
+            _cite_button(insight, f"feed_{idx}")
 
     if len(filtered) > page_size:
         st.caption(f"+ {len(filtered) - page_size} more signals")
@@ -928,6 +1684,7 @@ with tabs[0]:
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 with tabs[1]:
     st.markdown("### Competitors")
+    _share_button("competitors", "Share Competitors")
     st.markdown(
         "One card per competitor. Momentum, sentiment, and the most relevant signals this week."
     )
@@ -1073,7 +1830,6 @@ with tabs[2]:
         "Actionable Recs": "Provides specific content changes to improve AI citation rates.",
         "Multi-LLM Coverage": "Tracks visibility across ChatGPT, Gemini, Claude, and Perplexity simultaneously.",
         "Content Guidance": "Recommends what content to create to improve inclusion in AI answers.",
-        "Prompt Influence": "Techniques and tools for shaping how AI models reference your brand.",
     }
 
     OPPORTUNITY_THEMES = {
@@ -1103,9 +1859,6 @@ with tabs[2]:
         "Integrations": ["integrate", "integration", "connect to", "plugin",
                          "works with", "api", "google analytics", "hubspot",
                          "webhook", "zapier", "export data", "third-party"],
-        "Prompt Influence": ["influence prompt", "shape answer", "control what ai says",
-                             "optimize prompt", "prompt engineering", "answer shaping",
-                             "prompt optimization"],
     }
 
     # Build opportunity data with per-company tracking and full signal refs
@@ -1268,11 +2021,34 @@ with tabs[2]:
             "momentum": momentum, "latest": latest,
         }
 
+    # ── AUTO-CALLOUT: Top Rising Competitor ────────────────────────────────────
+    _rising_selected = [
+        c for c in selected_comps if _comp_stats[c]["momentum"] == "Rising"
+    ]
+    if _rising_selected:
+        _top_rising = max(_rising_selected, key=lambda c: _comp_stats[c]["total"])
+        _tr_total = _comp_stats[_top_rising]["total"]
+        st.markdown(
+            f'<div style="background: #fff7ed; border-left: 4px solid #f59e0b; '
+            f'padding: 0.6rem 1rem; border-radius: 4px; margin-bottom: 0.5rem;">'
+            f'<span style="color: #b45309; font-weight: 600;">'
+            f'{_top_rising}</span> is the most active rising competitor '
+            f'with {_tr_total} total signals and growing week-over-week mentions.'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
     # ── CHART 1: COMPETITOR MOMENTUM MAP ──────────────────────────────────────
+    _comps_qs = ",".join(selected_comps) if selected_comps else ""
+    _share_button("momentum_chart", "Share Momentum Chart", extra_params={"comps": _comps_qs})
     st.markdown("#### Competitor Presence & Momentum")
     st.caption(
-        "Position = total signal volume. "
-        "Color = momentum vs. prior 30 days."
+        "Each dot is a competitor. Further right = more "
+        "market conversations happening about them."
+    )
+    st.caption(
+        "Green = gaining mentions week over week. "
+        "Gray = flat or declining."
     )
 
     MOMENTUM_COLORS = {
@@ -1292,27 +2068,35 @@ with tabs[2]:
     for m_label, m_color in MOMENTUM_COLORS.items():
         comps_in_group = [c for c in sorted_for_chart
                           if _comp_stats[c]["momentum"] == m_label]
-        if not comps_in_group:
-            continue
-        fig1.add_trace(go.Scatter(
-            x=[_comp_stats[c]["total"] for c in comps_in_group],
-            y=comps_in_group,
-            mode="markers",
-            marker=dict(size=14, color=m_color),
-            name=m_label,
-            hovertemplate=(
-                "<b>%{y}</b><br>"
-                "Signals: %{x}<br>"
-                "Momentum: " + m_label + "<br>"
-                "Sentiment: %{customdata[0]}% positive<br>"
-                "Last signal: %{customdata[1]}"
-                "<extra></extra>"
-            ),
-            customdata=[
-                [_comp_stats[c]["pos_pct"], _comp_stats[c]["latest"]]
-                for c in comps_in_group
-            ],
-        ))
+        if comps_in_group:
+            fig1.add_trace(go.Scatter(
+                x=[_comp_stats[c]["total"] for c in comps_in_group],
+                y=comps_in_group,
+                mode="markers",
+                marker=dict(size=14, color=m_color),
+                name=m_label,
+                hovertemplate=(
+                    "<b>%{y}</b><br>"
+                    "Signals: %{x}<br>"
+                    "Momentum: " + m_label + "<br>"
+                    "Sentiment: %{customdata[0]}% positive<br>"
+                    "Last signal: %{customdata[1]}"
+                    "<extra></extra>"
+                ),
+                customdata=[
+                    [_comp_stats[c]["pos_pct"], _comp_stats[c]["latest"]]
+                    for c in comps_in_group
+                ],
+            ))
+        else:
+            # Empty trace so the legend always shows all 5 states
+            fig1.add_trace(go.Scatter(
+                x=[None], y=[None],
+                mode="markers",
+                marker=dict(size=14, color=m_color),
+                name=m_label,
+                showlegend=True,
+            ))
 
     # Category average vertical line
     mean_signals = sum(_comp_stats[c]["total"] for c in selected_comps) / max(len(selected_comps), 1)
@@ -1342,8 +2126,13 @@ with tabs[2]:
         for feat, defn in FEATURE_TOOLTIPS.items():
             st.markdown(f"**{feat}**: {defn}")
 
+    _share_button("heat_map", "Share Heat Map", extra_params={"comps": _comps_qs})
     st.markdown("#### Feature Heat Map")
-    st.caption("Darker = more recent market attention.")
+    st.caption(
+        "Each cell = how much recent market conversation exists about a "
+        "competitor in that feature area. Dark teal = active recent signals. "
+        "White = no data."
+    )
 
     # Build the heat matrix: rows = features, columns = selected_comps
     feature_names = list(OPPORTUNITY_THEMES.keys())
@@ -1432,6 +2221,7 @@ with tabs[2]:
     st.plotly_chart(fig2, use_container_width=True)
 
     # ── BUILD NOW ─────────────────────────────────────────────────────────────
+    _share_button("build_now", "Share Build Now", extra_params={"comps": _comps_qs})
     st.markdown("#### Build Now")
     st.caption("High buyer demand. No competitor has solved it.")
 
@@ -1476,7 +2266,7 @@ with tabs[2]:
                     s for s in scored_sigs
                     if _is_display_relevant(s) and _relevance_sentence(s)
                 ]
-                for sig in displayable[:3]:
+                for si, sig in enumerate(displayable[:3]):
                     sig_title = sig.get("title", "")[:100] or sig.get("text", "")[:100]
                     sig_url = sig.get("url", "")
                     sig_src = _source_badge(sig.get("source", ""))
@@ -1484,10 +2274,11 @@ with tabs[2]:
                     hl = f"[{sig_title}]({sig_url})" if sig_url else sig_title
                     st.markdown(f"  `{sig_src}` {hl}")
                     st.caption(f"  _{sig_why}_")
+                    _cite_button(sig, f"bn_{opp}_{si}")
                 rest = displayable[3:15]
                 if rest:
                     with st.expander(f"Show {len(rest)} more evidence"):
-                        for sig in rest:
+                        for si2, sig in enumerate(rest):
                             sig_title = sig.get("title", "")[:100] or sig.get("text", "")[:100]
                             sig_url = sig.get("url", "")
                             sig_src = _source_badge(sig.get("source", ""))
@@ -1495,14 +2286,135 @@ with tabs[2]:
                             hl = f"[{sig_title}]({sig_url})" if sig_url else sig_title
                             st.markdown(f"`{sig_src}` {hl}")
                             st.caption(f"_{sig_why}_")
+                            _cite_button(sig, f"bn_{opp}_r{si2}")
     else:
         st.caption(
             "No features currently meet the Build Now criteria "
             "(3+ signals, majority competitor gap)."
         )
 
+    # ── EXPORT GENERATION (triggered by Export button above tabs) ─────────────
+    if st.session_state.get("_run_export"):
+        _etype = st.session_state.pop("_run_export")
+        _ecomps = st.session_state.pop("_export_comps", selected_comps)
+        _efeats = st.session_state.pop("_export_features", list(opportunity_data.keys()))
+
+        # Build comp_stats for export comps (reuse existing if overlap)
+        _export_comp_stats = {}
+        for c in _ecomps:
+            if c in _comp_stats:
+                _export_comp_stats[c] = _comp_stats[c]
+            else:
+                _export_comp_stats[c] = {"total": 0, "pos": 0, "neg": 0, "pos_pct": 0, "momentum": "N/A", "latest": ""}
+
+        try:
+            if _etype == "Research Report (.docx)":
+                buf = _export_research_report(insights, company_meta, opportunity_data, _ecomps, _export_comp_stats)
+                st.session_state["_export_bytes"] = {
+                    "data": buf.getvalue(), "name": "geo_pulse_research_report.docx",
+                    "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                }
+            elif _etype == "Briefing Deck (.pptx)":
+                fig1_img = fig1.to_image(format="png", width=1200, height=600, scale=2) if fig1 else None
+                fig2_img = fig2.to_image(format="png", width=1200, height=600, scale=2) if fig2 else None
+                buf = _export_briefing_deck(insights, company_meta, opportunity_data, _ecomps, _export_comp_stats, fig1_img, fig2_img)
+                st.session_state["_export_bytes"] = {
+                    "data": buf.getvalue(), "name": "geo_pulse_briefing_deck.pptx",
+                    "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                }
+            elif _etype == "PRD (.docx)":
+                buf = _export_prd(opportunity_data, insights, _efeats, _ecomps)
+                st.session_state["_export_bytes"] = {
+                    "data": buf.getvalue(), "name": "geo_pulse_prd.docx",
+                    "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                }
+            elif _etype == "BRD (.docx)":
+                buf = _export_brd(opportunity_data, insights, _efeats, _ecomps)
+                st.session_state["_export_bytes"] = {
+                    "data": buf.getvalue(), "name": "geo_pulse_brd.docx",
+                    "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                }
+            st.success(f"{_etype} generated. Use the Download button in the Export section above.")
+            st.rerun()
+        except Exception as e:
+            st.error(f"Export failed: {e}")
 
 
+
+# ---------------------------------------------------------------------------
+# Email Digest Subscription
+# ---------------------------------------------------------------------------
+
+with st.expander("Daily Email Digest"):
+    st.markdown("Get GEO Pulse insights delivered to your inbox daily.")
+
+    _subs = _load_subscribers()
+    _sub_emails = {s["email"] for s in _subs}
+
+    _d_col1, _d_col2 = st.columns(2)
+    with _d_col1:
+        _sub_email = st.text_input("Email address", key="sub_email")
+        _sub_name = st.text_input("Name (optional)", key="sub_name")
+    with _d_col2:
+        _sub_hour = st.selectbox(
+            "Delivery time",
+            options=list(range(5, 22)),
+            index=3,  # 8 AM default
+            format_func=lambda h: f"{h}:00",
+            key="sub_hour",
+        )
+        _tz_options = {
+            "US/Eastern (UTC-5)": -5, "US/Central (UTC-6)": -6,
+            "US/Mountain (UTC-7)": -7, "US/Pacific (UTC-8)": -8,
+            "UTC": 0, "Europe/London (UTC+0)": 0,
+            "Europe/Berlin (UTC+1)": 1, "Asia/Tokyo (UTC+9)": 9,
+        }
+        _sub_tz_label = st.selectbox("Timezone", options=list(_tz_options.keys()), key="sub_tz")
+        _sub_tz_offset = _tz_options[_sub_tz_label]
+
+    _all_comp_digest = sorted(set(
+        c for i in insights for c in i.get("companies_mentioned", [])
+    ))
+    _sub_comp_filter = st.multiselect(
+        "Competitor filter (leave empty for all)",
+        options=_all_comp_digest,
+        key="sub_comp_filter",
+    )
+
+    _sub_col1, _sub_col2 = st.columns(2)
+    with _sub_col1:
+        if st.button("Subscribe", key="subscribe_btn", type="primary"):
+            if _sub_email and "@" in _sub_email:
+                if _sub_email in _sub_emails:
+                    st.warning("This email is already subscribed.")
+                else:
+                    new_sub = {
+                        "email": _sub_email,
+                        "name": _sub_name,
+                        "delivery_hour": _sub_hour,
+                        "tz_offset": _sub_tz_offset,
+                        "competitor_filter": _sub_comp_filter,
+                        "confirmed": True,
+                        "subscribed_at": datetime.now().isoformat(),
+                    }
+                    _subs.append(new_sub)
+                    _save_subscribers(_subs)
+                    _send_confirmation_email(_sub_email, _sub_name)
+                    st.success(f"Subscribed {_sub_email}. Confirmation email sent.")
+            else:
+                st.error("Enter a valid email address.")
+
+    with _sub_col2:
+        if st.button("Unsubscribe", key="unsub_btn"):
+            if _sub_email and _sub_email in _sub_emails:
+                _subs = [s for s in _subs if s["email"] != _sub_email]
+                _save_subscribers(_subs)
+                st.success(f"Unsubscribed {_sub_email}.")
+            elif _sub_email:
+                st.info("Email not found in subscriber list.")
+
+    if _subs:
+        st.caption(f"{len(_subs)} active subscriber(s)")
 
 
 # ---------------------------------------------------------------------------

@@ -7,3 +7,7 @@ anthropic
 apscheduler
 altair
 plotly
+python-docx
+python-pptx
+kaleido
+sendgrid
