@@ -1853,13 +1853,26 @@ try:
 except (ValueError, TypeError):
     freshness = "unknown"
 
-h1, h2, h3, h4 = st.columns([2, 2, 2, 3])
+h1, h2, h3, h4, h5 = st.columns([2, 2, 2, 2, 1])
 h1.metric("Sources", f"{len(approved_sources) + 11}",
           help=f"Active scrapers: {SOURCE_LIST}. Plus {len(approved_sources)} auto-approved community sources.")
 h2.metric("Signals", f"{len(insights):,}",
           help=f"{len(insights):,} quality signals from {len(_raw_insights):,} total scraped (filtered by age, relevance, and dedup).")
 h3.metric("Companies", f"{len(company_meta)}")
 h4.metric("Last Updated", freshness)
+with h5:
+    st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
+    st.markdown(
+        '<a href="https://github.com/grdallas-stack/geo-pulse/actions/workflows/refresh_pipeline.yml" '
+        'target="_blank" style="display:inline-block; background:transparent; color:#0E3B7E; '
+        'border:1px solid #0E3B7E; font-family:DM Mono,monospace; font-size:11px; '
+        'text-transform:uppercase; padding:5px 12px; text-decoration:none; letter-spacing:0.03em; '
+        'white-space:nowrap;" '
+        'onmouseover="this.style.backgroundColor=\'#0E3B7E\';this.style.color=\'#F8F4EB\'" '
+        'onmouseout="this.style.backgroundColor=\'transparent\';this.style.color=\'#0E3B7E\'"'
+        '>&#8635; Refresh</a>',
+        unsafe_allow_html=True,
+    )
 
 _sources_count = len(approved_sources) + 11
 _provenance_ts = last_ts[:16].replace("T", " ") if last_ts else "unknown"
@@ -2409,37 +2422,202 @@ def _build_export_chart_images(all_comps, comp_stats, opp_data):
 # Export UI (above tabs, visible on all tabs)
 # ---------------------------------------------------------------------------
 
-with st.expander("Export"):
-    # Verify dependencies at import time
-    try:
-        from docx import Document as _DocxCheck  # noqa: F811
-    except ImportError as _imp_err:
-        st.error(f"Missing dependency: {_imp_err}. Add python-docx to requirements.txt")
-        st.stop()
+with st.expander("Intelligence Brief"):
+    _rpt_date = datetime.now().strftime("%B %d, %Y")
+    _rpt_week_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
 
+    # --- Pre-compute report data ---
+    _rpt_week_signals = [s for s in insights if s.get("post_date", "") >= _rpt_week_ago]
+    _rpt_source_counts = Counter(s.get("source", "Unknown") for s in _rpt_week_signals)
+    _rpt_top_sources = _rpt_source_counts.most_common(5)
+    _rpt_comp_week = Counter()
+    for _rs in _rpt_week_signals:
+        for _rc in _rs.get("companies_mentioned", []):
+            _rpt_comp_week[_rc] += 1
+    _rpt_top_comps = _rpt_comp_week.most_common(8)
+    _rpt_top_signals = sorted(
+        [s for s in _rpt_week_signals if _relevance_sentence(s)],
+        key=lambda x: _relevance_score(x), reverse=True,
+    )[:5]
+    _rpt_tag_counts = Counter()
+    for _rs in _rpt_week_signals:
+        for _rt in _rs.get("entity_tags", []):
+            _rpt_tag_counts[_rt] += 1
+    _rpt_top_tags = _rpt_tag_counts.most_common(8)
+
+    # --- Section: Title ---
+    st.markdown(
+        f'<div style="border-bottom:2px solid #0E3B7E; padding-bottom:12px; margin-bottom:20px;">'
+        f'<h2 style="font-family:DM Sans,sans-serif; color:#0A0A0A; margin:0;">GEO Pulse Intelligence Brief</h2>'
+        f'<span style="font-family:DM Mono,monospace; font-size:12px; color:#94a3b8;">{_rpt_date}</span>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    # --- Section 1: Market Overview ---
+    _rpt_src_list = ", ".join(f"{s} ({c})" for s, c in _rpt_top_sources) if _rpt_top_sources else "N/A"
+    _rpt_comp_list = ", ".join(f"{c} ({n})" for c, n in _rpt_comp_week.most_common(5)) if _rpt_comp_week else "N/A"
+    st.markdown(
+        f'<div style="margin-bottom:20px;">'
+        f'<h3 style="font-family:DM Sans,sans-serif; color:#0E3B7E; font-size:16px; '
+        f'border-bottom:1px solid #D1CFBA; padding-bottom:6px;">1. Market Overview</h3>'
+        f'<table style="width:100%; font-family:DM Sans,sans-serif; font-size:14px; border-collapse:collapse;">'
+        f'<tr><td style="padding:4px 0; color:#6b7280; width:180px;">Total signals this week</td>'
+        f'<td style="padding:4px 0; font-weight:600;">{len(_rpt_week_signals):,}</td></tr>'
+        f'<tr><td style="padding:4px 0; color:#6b7280;">Total signals all time</td>'
+        f'<td style="padding:4px 0; font-weight:600;">{len(insights):,}</td></tr>'
+        f'<tr><td style="padding:4px 0; color:#6b7280;">Most active sources</td>'
+        f'<td style="padding:4px 0;">{_rpt_src_list}</td></tr>'
+        f'<tr><td style="padding:4px 0; color:#6b7280;">Top companies this week</td>'
+        f'<td style="padding:4px 0;">{_rpt_comp_list}</td></tr>'
+        f'</table></div>',
+        unsafe_allow_html=True,
+    )
+
+    # --- Section 2: Competitor Snapshot ---
+    _rpt_comp_rows = ""
+    for _rc, _rn in _rpt_top_comps:
+        _rcs = _export_all_comp_stats.get(_rc, {})
+        _rcmom = _rcs.get("momentum", "Unknown")
+        _rcpos = _rcs.get("pos_pct", 0)
+        _rpt_comp_rows += (
+            f'<tr><td style="padding:5px 0; font-weight:600;">{_rc}</td>'
+            f'<td style="padding:5px 0; text-align:center;">{_rn}</td>'
+            f'<td style="padding:5px 0; text-align:center;">{_rcmom}</td>'
+            f'<td style="padding:5px 0; text-align:center;">{_rcpos}% positive</td></tr>'
+        )
+    st.markdown(
+        f'<div style="margin-bottom:20px;">'
+        f'<h3 style="font-family:DM Sans,sans-serif; color:#0E3B7E; font-size:16px; '
+        f'border-bottom:1px solid #D1CFBA; padding-bottom:6px;">2. Competitor Snapshot</h3>'
+        f'<table style="width:100%; font-family:DM Sans,sans-serif; font-size:13px; border-collapse:collapse;">'
+        f'<tr style="color:#94a3b8; font-family:DM Mono,monospace; font-size:11px; text-transform:uppercase;">'
+        f'<th style="text-align:left; padding:6px 0; border-bottom:1px solid #D1CFBA;">Company</th>'
+        f'<th style="text-align:center; padding:6px 0; border-bottom:1px solid #D1CFBA;">Signals</th>'
+        f'<th style="text-align:center; padding:6px 0; border-bottom:1px solid #D1CFBA;">Momentum</th>'
+        f'<th style="text-align:center; padding:6px 0; border-bottom:1px solid #D1CFBA;">Sentiment</th></tr>'
+        f'{_rpt_comp_rows}</table></div>',
+        unsafe_allow_html=True,
+    )
+
+    # --- Section 3: Top Signals This Week ---
+    _rpt_sig_html = ""
+    for _rsi, _rs in enumerate(_rpt_top_signals, 1):
+        _rst = (_rs.get("title", "") or _rs.get("text", ""))[:120]
+        _rsu = _rs.get("url", "")
+        _rss = _rs.get("source", "Unknown")
+        _rsd = _rs.get("post_date", "")
+        _rsb = _relevance_sentence(_rs) or ""
+        _rst_link = f'<a href="{_rsu}" target="_blank" style="color:#0A0A0A; text-decoration:none; font-weight:600;">{_rst}</a>' if _rsu else f'<b>{_rst}</b>'
+        _rpt_sig_html += (
+            f'<div style="padding:10px 0; border-bottom:1px solid #E8E4D9;">'
+            f'<div style="display:flex; justify-content:space-between;">'
+            f'<span style="font-family:DM Mono,monospace; font-size:10px; color:#94a3b8; text-transform:uppercase;">{_rss}</span>'
+            f'<span style="font-family:DM Mono,monospace; font-size:10px; color:#94a3b8;">{_rsd}</span></div>'
+            f'<div style="margin-top:4px; font-size:14px;">{_rst_link}</div>'
+            f'<div style="margin-top:2px; font-size:12px; color:#6b7280;">{_rsb}</div>'
+            f'</div>'
+        )
+    st.markdown(
+        f'<div style="margin-bottom:20px;">'
+        f'<h3 style="font-family:DM Sans,sans-serif; color:#0E3B7E; font-size:16px; '
+        f'border-bottom:1px solid #D1CFBA; padding-bottom:6px;">3. Top Signals This Week</h3>'
+        f'{_rpt_sig_html}</div>',
+        unsafe_allow_html=True,
+    )
+
+    # --- Section 4: Trends & Themes ---
+    _rpt_tag_html = ""
+    _tag_labels = {
+        "buyer_voice": "Buyer discussions driving demand signals",
+        "founder_voice": "Founders sharing product and GTM insights",
+        "analyst_voice": "Analyst and media coverage shaping narrative",
+        "feature_request": "Feature gaps surfacing in buyer conversations",
+        "competitive_intel": "Competitive positioning and comparison activity",
+        "complaint": "Pain points and dissatisfaction signals",
+        "praise": "Positive reception and advocacy signals",
+        "funding_news": "Capital activity signaling market confidence",
+        "product_launch": "New products and feature releases entering market",
+    }
+    for _rtt, _rtc in _rpt_top_tags:
+        _rtl = _tag_labels.get(_rtt, _rtt.replace("_", " ").title())
+        _rpt_tag_html += (
+            f'<tr><td style="padding:4px 0;">'
+            f'<span style="display:inline-block; background:#0E3B7E; color:#F8F4EB; '
+            f'font-family:DM Mono,monospace; font-size:10px; padding:2px 8px; '
+            f'text-transform:uppercase; letter-spacing:0.03em;">{_rtt.replace("_"," ")}</span></td>'
+            f'<td style="padding:4px 8px; text-align:center; font-weight:600;">{_rtc}</td>'
+            f'<td style="padding:4px 0; color:#6b7280; font-size:13px;">{_rtl}</td></tr>'
+        )
+    st.markdown(
+        f'<div style="margin-bottom:20px;">'
+        f'<h3 style="font-family:DM Sans,sans-serif; color:#0E3B7E; font-size:16px; '
+        f'border-bottom:1px solid #D1CFBA; padding-bottom:6px;">4. Trends &amp; Themes</h3>'
+        f'<table style="width:100%; font-family:DM Sans,sans-serif; font-size:14px; border-collapse:collapse;">'
+        f'{_rpt_tag_html}</table></div>',
+        unsafe_allow_html=True,
+    )
+
+    # --- Section 5: Recommended Actions ---
+    _rpt_actions = []
+    if _rpt_top_tags and _rpt_top_tags[0][1] >= 3:
+        _top_theme = _rpt_top_tags[0][0].replace("_", " ")
+        _rpt_actions.append(
+            f"Investigate the surge in <b>{_top_theme}</b> signals ({_rpt_top_tags[0][1]} this week). "
+            f"Determine if this represents a positioning opportunity or emerging threat."
+        )
+    if _rpt_top_comps:
+        _top_c = _rpt_top_comps[0][0]
+        _top_cn = _rpt_top_comps[0][1]
+        _rpt_actions.append(
+            f"<b>{_top_c}</b> leads competitor mentions this week ({_top_cn} signals). "
+            f"Review their recent activity for positioning shifts or product launches that warrant a response."
+        )
+    _neg_comps = [c for c, s in _export_all_comp_stats.items()
+                  if s.get("pos_pct", 100) < 40 and s.get("total", 0) >= 3 and _rpt_comp_week.get(c, 0) >= 2]
+    if _neg_comps:
+        _rpt_actions.append(
+            f"Competitors with low positive sentiment ({', '.join(_neg_comps[:3])}) may have exploitable gaps. "
+            f"Cross-reference with buyer complaints to identify differentiation angles."
+        )
+    if len(_rpt_actions) < 3:
+        _rpt_actions.append(
+            "Review the top 5 signals above for messaging or content opportunities. "
+            "Prioritize any that mention ProRata/Gist directly or reference unmet buyer needs."
+        )
+
+    _rpt_action_html = "".join(
+        f'<li style="margin-bottom:8px; font-size:14px; line-height:1.5;">{a}</li>'
+        for a in _rpt_actions[:3]
+    )
+    st.markdown(
+        f'<div style="margin-bottom:20px;">'
+        f'<h3 style="font-family:DM Sans,sans-serif; color:#0E3B7E; font-size:16px; '
+        f'border-bottom:1px solid #D1CFBA; padding-bottom:6px;">5. Recommended Actions</h3>'
+        f'<ol style="font-family:DM Sans,sans-serif; padding-left:20px;">{_rpt_action_html}</ol>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    # --- Download as .docx ---
+    st.markdown("---")
     _date_tag = datetime.now().strftime("%Y-%m-%d")
-    _exp_comps = _all_comp_names_export
-
-    st.markdown("**Research Report (.docx)**")
     try:
         _buf = _export_research_report(
-            insights, company_meta, _export_opp_data, _exp_comps, _export_all_comp_stats
+            insights, company_meta, _export_opp_data,
+            _all_comp_names_export, _export_all_comp_stats
         )
         _doc_bytes = _buf.getvalue()
-        st.caption(f"Export ready: {len(_doc_bytes):,} bytes")
         st.download_button(
-            label="Download Research Report",
+            label="Download Report (.docx)",
             data=_doc_bytes,
-            file_name=f"GEOPulse_ResearchReport_{_date_tag}.docx",
+            file_name=f"GEOPulse_IntelligenceBrief_{_date_tag}.docx",
             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            key="export_dl_rr",
+            key="export_dl_brief",
             type="primary",
         )
     except Exception as _ex:
-        st.error(f"Research Report export failed: {_ex}")
-
-    st.markdown("---")
-    st.caption("Briefing Deck — coming soon")
+        st.error(f"Export failed: {_ex}")
 
 
 # ---------------------------------------------------------------------------
