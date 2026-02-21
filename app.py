@@ -2081,67 +2081,67 @@ else:
         """Set the question to be processed on next rerun."""
         st.session_state["qa_submit"] = question
 
+    _DEFAULT_Q = "Which competitor is gaining the most momentum right now?"
     if "ask_ai_input" not in st.session_state:
-        st.session_state["ask_ai_input"] = ""
-    if "last_selected_prompt" not in st.session_state:
-        st.session_state["last_selected_prompt"] = ""
-    if "auto_submit" not in st.session_state:
-        st.session_state["auto_submit"] = False
+        st.session_state["ask_ai_input"] = _DEFAULT_Q
 
     # --- Input form (Enter key submits via form) ---
     with st.form("qa_form", clear_on_submit=True):
         user_question = st.text_input(
             "Ask a question",
-            value=st.session_state.get("ask_ai_input", ""),
+            value=st.session_state.get("ask_ai_input", _DEFAULT_Q),
             key="ask_ai_text",
-            placeholder="e.g., Which company is gaining momentum right now?",
         )
         submitted = st.form_submit_button("Ask AI", type="primary")
     if submitted and user_question.strip():
         st.session_state["qa_submit"] = user_question.strip()
-        st.session_state["ask_ai_input"] = ""
+        st.session_state["ask_ai_input"] = _DEFAULT_Q
 
-    # --- Example prompt dropdown (replaces old starter buttons) ---
-    _example_prompts = {
-        "": "Try an example prompt...",
-        "What's the most important signal from the last 48 hours?":
-            "Market Overview — Most important signal (48h)",
-        "Which company is gaining the most momentum right now?":
-            "Market Overview — Most momentum right now",
-        "Why is Future gaining momentum?":
-            "Competitor Intel — Why is Future rising?",
-        "What are practitioners saying about Profound vs Semrush?":
-            "Competitor Intel — Profound vs Semrush",
-        "What features are buyers asking for most?":
-            "Buyer Signals — Top feature requests",
-        "What are the biggest gaps in current GEO tools?":
-            "Buyer Signals — Tool gaps",
-        "What should we prioritize building next?":
-            "Strategy — Product priorities",
-        "Where is competitor coverage weakest?":
-            "Strategy — Competitor coverage gaps",
-    }
+    # --- Pill buttons ---
+    _pill_questions = [
+        "What's the biggest trend this week?",
+        "Where is Profound showing up?",
+        "What are buyers complaining about?",
+        "Which source has the most signals?",
+        "What should our team know today?",
+    ]
 
-    _selected_prompt = st.selectbox(
-        "Or try an example prompt",
-        options=list(_example_prompts.keys()),
-        format_func=lambda x: _example_prompts[x],
-        key="prompt_select",
+    st.markdown(
+        '<style>.pill-row .stButton > button { '
+        'background-color: transparent !important; '
+        'color: #0E3B7E !important; '
+        'border: 1px solid #0E3B7E !important; '
+        'font-family: "DM Mono", monospace !important; '
+        'font-size: 11px !important; '
+        'text-transform: uppercase !important; '
+        'padding: 4px 10px !important; '
+        'border-radius: 0px !important; '
+        '} '
+        '.pill-row .stButton > button:hover { '
+        'background-color: #0E3B7E !important; '
+        'color: #F8F4EB !important; '
+        '}</style>',
+        unsafe_allow_html=True,
     )
 
-    if _selected_prompt and _selected_prompt != st.session_state.get("last_selected_prompt"):
-        st.session_state["ask_ai_input"] = _selected_prompt
-        st.session_state["last_selected_prompt"] = _selected_prompt
-        st.session_state["auto_submit"] = True
-        st.rerun()
+    def _pill_click(q):
+        st.session_state["ask_ai_input"] = q
 
-    # Auto-submit if flagged by dropdown selection
-    if st.session_state.get("auto_submit"):
-        st.session_state["auto_submit"] = False
-        _auto_q = st.session_state.get("ask_ai_input", "").strip()
-        if _auto_q:
-            st.session_state["qa_submit"] = _auto_q
-            st.session_state["ask_ai_input"] = ""
+    _pill_container = st.container()
+    with _pill_container:
+        st.markdown('<div class="pill-row">', unsafe_allow_html=True)
+        _pc = st.columns(len(_pill_questions))
+        for _pi, _pq in enumerate(_pill_questions):
+            with _pc[_pi]:
+                st.button(_pq, key=f"pill_{_pi}", on_click=_pill_click, args=(_pq,),
+                          use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # Auto-submit if pill was clicked (ask_ai_input changed from default)
+    if st.session_state.get("ask_ai_input", _DEFAULT_Q) != _DEFAULT_Q and not st.session_state.get("qa_submit"):
+        st.session_state["qa_submit"] = st.session_state["ask_ai_input"]
+        st.session_state["ask_ai_input"] = _DEFAULT_Q
+        st.rerun()
 
     # --- Process pending question ---
     question_to_ask = st.session_state.get("qa_submit", "")
