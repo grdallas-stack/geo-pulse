@@ -29,6 +29,26 @@ st.set_page_config(page_title="GEO Pulse", page_icon="📡", layout="wide")
 st.markdown("""<style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap');
 
+/* Button overrides — must come first */
+.stButton > button[kind="primary"],
+.stButton > button,
+.stFormSubmitButton > button,
+.stFormSubmitButton > button[kind="primary"],
+.stDownloadButton > button {
+  background-color: #0E3B7E !important;
+  color: #F8F4EB !important;
+  font-family: 'DM Sans', sans-serif !important;
+  font-weight: 500;
+  border: none !important;
+  border-radius: 0px !important;
+}
+.stButton > button:hover,
+.stFormSubmitButton > button:hover,
+.stDownloadButton > button:hover {
+  background-color: #FF9D1C !important;
+  color: #0A0A0A !important;
+}
+
 html, body, [class*="css"] {
   font-family: 'DM Sans', sans-serif;
   background-color: #F8F4EB;
@@ -46,21 +66,6 @@ h2, h3 { font-family: 'DM Sans', sans-serif; font-weight: 500; color: #0A0A0A; }
 }
 .stMetric [data-testid="metric-value"] {
   font-family: 'DM Sans', sans-serif; font-weight: 700; color: #0A0A0A;
-}
-
-.stButton > button,
-.stDownloadButton > button {
-  background-color: #0E3B7E !important;
-  color: #F8F4EB !important;
-  font-family: 'DM Sans', sans-serif !important;
-  font-weight: 500;
-  border: none !important;
-  border-radius: 0px !important;
-}
-.stButton > button:hover,
-.stDownloadButton > button:hover {
-  background-color: #FF9D1C !important;
-  color: #0A0A0A !important;
 }
 
 .stTabs [data-baseweb="tab"] {
@@ -96,26 +101,10 @@ code {
   background-color: #0E3B7E; color: #F8F4EB;
   border-radius: 0px; font-family: 'DM Mono', monospace; font-size: 11px;
 }
+
+[data-testid="stSidebar"] { display: none !important; }
+[data-testid="stSidebarCollapsedControl"] { display: none !important; }
 </style>""", unsafe_allow_html=True)
-
-# ---------------------------------------------------------------------------
-# Sidebar branding
-# ---------------------------------------------------------------------------
-
-with st.sidebar:
-    st.markdown(
-        '<div style="padding:16px 0 8px 0;">'
-        '<span style="font-family:DM Sans,sans-serif; '
-        'font-size:20px; font-weight:700; color:#0A0A0A;">'
-        '&#9612; GEO Pulse</span>'
-        '</div>'
-        '<p style="font-family:DM Mono,monospace; '
-        'font-size:11px; color:#D1CFBA; '
-        'letter-spacing:0.05em;">GEO/AEO MARKET INTELLIGENCE'
-        '</p>',
-        unsafe_allow_html=True,
-    )
-    st.markdown("---")
 
 # ---------------------------------------------------------------------------
 # Background scheduler — re-runs pipeline every 6 hours
@@ -1910,11 +1899,11 @@ except (ValueError, TypeError):
     fresh_icon = "⚪"
 
 h1, h2, h3, h4, h5 = st.columns([2, 2, 2, 3, 1])
-h1.metric("Sources Monitored", f"{len(approved_sources) + 11}",
+h1.metric("Sources", f"{len(approved_sources) + 11}",
           help=f"Active scrapers: {SOURCE_LIST}. Plus {len(approved_sources)} auto-approved community sources.")
-h2.metric("Signals Ingested", f"{len(insights):,}",
+h2.metric("Signals", f"{len(insights):,}",
           help=f"{len(insights):,} quality signals from {len(_raw_insights):,} total scraped (filtered by age, relevance, and dedup).")
-h3.metric("Companies Tracked", f"{len(company_meta)}")
+h3.metric("Companies", f"{len(company_meta)}")
 h4.metric(f"{fresh_icon} Last Updated", freshness)
 with h5:
     st.markdown("<div style='height: 24px'></div>", unsafe_allow_html=True)
