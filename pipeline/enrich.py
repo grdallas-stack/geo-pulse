@@ -247,6 +247,37 @@ def _source_quality(source):
 # Main enrichment
 # ---------------------------------------------------------------------------
 
+def _generate_signal_brief(title, text, companies_mentioned, source):
+    """Generate a 1-2 sentence brief explaining why this signal matters for GEO/AEO."""
+    import anthropic
+    try:
+        client = anthropic.Anthropic()
+        snippet = (text or "")[:500]
+        companies_str = ", ".join(companies_mentioned) if companies_mentioned else "none"
+        prompt = f"""You are an analyst covering the GEO/AEO market.
+
+Write 1-2 sentences explaining why the following article matters to someone tracking AI search visibility and brand mentions in LLMs. Be specific — mention actual companies, numbers, or events if present. Do not use filler phrases like "this article discusses" or "watch for positioning shifts."
+
+Title: {title}
+Source: {source}
+Companies mentioned: {companies_str}
+Excerpt: {snippet}
+
+Brief (1-2 sentences, specific, no filler):"""
+
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=120,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        brief = response.content[0].text.strip()
+        # Strip em dashes per style guide
+        brief = brief.replace("\u2014", ", ").replace("\u2013", ", ")
+        return brief
+    except Exception:
+        return ""
+
+
 def enrich_post(post, alias_map, own_brands, context_required_names=None):
     """Enrich a single post with all signals."""
     text = (post.get("text", "") + " " + post.get("title", "")).strip()
@@ -316,6 +347,10 @@ def enrich_post(post, alias_map, own_brands, context_required_names=None):
     source = post.get("source", "")
     quality = _source_quality(source)
 
+    # Generate LLM signal brief
+    title = post.get("title", "")
+    signal_brief = _generate_signal_brief(title, text, sorted(companies_mentioned), source)
+
     return {
         **post,
         "sentiment": sentiment,
@@ -330,6 +365,7 @@ def enrich_post(post, alias_map, own_brands, context_required_names=None):
         "is_feature_request": is_feature_request,
         "is_competitive_intel": is_competitive,
         "source_quality": quality,
+        "signal_brief": signal_brief,
     }
 
 

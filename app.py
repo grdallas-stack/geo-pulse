@@ -2736,7 +2736,7 @@ with tabs[0]:
         _sotw_company = (_sotw_pick.get("companies_mentioned") or [""])[0]
         _sotw_title = (_sotw_pick.get("title") or _sotw_pick.get("text", ""))[:150]
         _sotw_url = _sotw_pick.get("url", "")
-        _sotw_brief = _relevance_sentence(_sotw_pick) or "High-relevance signal for GEO/AEO practitioners."
+        _sotw_brief = (_sotw_pick.get("signal_brief") or "").strip() or "High-relevance signal for GEO/AEO practitioners."
         _sotw_source = _sotw_pick.get("source", "")
         _sotw_date = _sotw_pick.get("post_date", "")
     else:
@@ -2908,7 +2908,7 @@ with tabs[0]:
         filtered = [i for i in filtered if i.get("source", "") == filter_source]
 
     filtered = [i for i in filtered
-                if _is_display_relevant(i) and _relevance_sentence(i)
+                if _is_display_relevant(i) and (i.get("signal_brief") or "").strip()
                 and _relevance_score(i) >= _MIN_RELEVANCE_SCORE]
     filtered.sort(key=lambda x: (x.get("post_date", ""), _relevance_score(x)), reverse=True)
     st.caption(f"Showing {min(25, len(filtered))} of {len(filtered)} GEO-relevant signals from {len(insights):,} total ingested (filtered for relevance)")
@@ -2926,7 +2926,7 @@ with tabs[0]:
         url = insight.get("url", "")
         date = insight.get("post_date", "")
         time_label = _time_ago(date)
-        rel_sentence = _relevance_sentence(insight)
+        rel_sentence = (insight.get("signal_brief") or "").strip()
 
         # Title as HTML anchor or plain text
         if url:
