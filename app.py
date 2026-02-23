@@ -2908,7 +2908,7 @@ with tabs[0]:
         filtered = [i for i in filtered if i.get("source", "") == filter_source]
 
     filtered = [i for i in filtered
-                if _is_display_relevant(i) and (i.get("signal_brief") or "").strip()
+                if _is_display_relevant(i)
                 and _relevance_score(i) >= _MIN_RELEVANCE_SCORE]
     filtered.sort(key=lambda x: (x.get("post_date", ""), _relevance_score(x)), reverse=True)
     st.caption(f"Showing {min(25, len(filtered))} of {len(filtered)} GEO-relevant signals from {len(insights):,} total ingested (filtered for relevance)")
