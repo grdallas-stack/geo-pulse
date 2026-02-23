@@ -1922,17 +1922,9 @@ h3.metric("Companies", f"{len(company_meta)}")
 h4.metric("Last Updated", freshness)
 with h5:
     st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
-    st.markdown(
-        '<a href="https://github.com/grdallas-stack/geo-pulse/actions/workflows/refresh_pipeline.yml" '
-        'target="_blank" style="display:inline-block; background:transparent; color:#0E3B7E; '
-        'border:1px solid #0E3B7E; font-family:DM Mono,monospace; font-size:11px; '
-        'text-transform:uppercase; padding:5px 12px; text-decoration:none; letter-spacing:0.03em; '
-        'white-space:nowrap;" '
-        'onmouseover="this.style.backgroundColor=\'#0E3B7E\';this.style.color=\'#F8F4EB\'" '
-        'onmouseout="this.style.backgroundColor=\'transparent\';this.style.color=\'#0E3B7E\'"'
-        '>&#8635; Refresh</a>',
-        unsafe_allow_html=True,
-    )
+    if st.button("\u21bb Refresh", key="refresh_feed"):
+        st.cache_data.clear()
+        st.rerun()
 
 _sources_count = len(approved_sources) + 11
 _provenance_ts = last_ts[:16].replace("T", " ") if last_ts else "unknown"
@@ -2736,7 +2728,7 @@ with tabs[0]:
         _sotw_company = (_sotw_pick.get("companies_mentioned") or [""])[0]
         _sotw_title = (_sotw_pick.get("title") or _sotw_pick.get("text", ""))[:150]
         _sotw_url = _sotw_pick.get("url", "")
-        _sotw_brief = (_sotw_pick.get("signal_brief") or "").strip() or "High-relevance signal for GEO/AEO practitioners."
+        _sotw_brief = (_sotw_pick.get("signal_brief") or "").strip() or _relevance_sentence(_sotw_pick) or "High-relevance signal for GEO/AEO practitioners."
         _sotw_source = _sotw_pick.get("source", "")
         _sotw_date = _sotw_pick.get("post_date", "")
     else:
@@ -2926,7 +2918,7 @@ with tabs[0]:
         url = insight.get("url", "")
         date = insight.get("post_date", "")
         time_label = _time_ago(date)
-        rel_sentence = (insight.get("signal_brief") or "").strip()
+        rel_sentence = (insight.get("signal_brief") or "").strip() or _relevance_sentence(insight)
 
         # Title as HTML anchor or plain text
         if url:
