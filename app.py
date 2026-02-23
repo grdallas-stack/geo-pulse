@@ -1,4 +1,4 @@
-# app.py — GEO Pulse: Bloomberg terminal for the GEO/AEO category
+# app.py - GEO Pulse: Bloomberg terminal for the GEO/AEO category
 import io
 import json
 import math
@@ -197,9 +197,31 @@ _TITLE_BLOCKLIST = re.compile(
     r"|ask hn:.*hiring"
     r"|hiring thread"
     r"|freelancer.*seeking"
-    r"|monthly.*job",
+    r"|monthly.*job"
+    r"|why is the sky"
+    r"|50 years ago"
+    r"|bill gates.*birthday"
+    r"|what color is"
+    r"|how to lose weight"
+    r"|best recipe for"
+    r"|weather forecast"
+    r"|horoscope"
+    r"|lottery results"
+    r"|sports score"
+    r"|celebrity gossip",
     re.I,
 )
+
+_OFFTOPIC_BLOCKLIST = re.compile(
+    r"cooking|recipe|fitness|workout|horoscope|astrology"
+    r"|weight loss|diet plan|celebrity|gossip|movie review"
+    r"|sports score|game recap|lottery|weather forecast"
+    r"|real estate listing|mortgage rate|car review"
+    r"|travel deal|vacation package|dating advice",
+    re.I,
+)
+
+_MIN_RELEVANCE_SCORE = 1.5
 
 
 def _is_displayable_post(insight):
@@ -280,49 +302,63 @@ def _relevance_score(insight):
 
 
 def _relevance_sentence(insight, for_company=None):
-    """One-sentence explanation of why this post matters.
+    """One-sentence brief explaining WHY this signal matters for GEO/AEO practitioners.
 
     When for_company is set, that company is placed first in rationale text
     so the sentence makes sense on that company's card.
     """
+    # If the article has a summary/lede, prefer that
+    summary = (insight.get("summary") or insight.get("lede") or "").strip()
+    if summary and len(summary) > 20:
+        return summary[:200]
+
     tags = insight.get("entity_tags", [])
     companies = list(insight.get("companies_mentioned", []))
     features = insight.get("features_mentioned", [])
     sentiment = insight.get("sentiment", "neutral")
-    feat_ctx = f" ({', '.join(features[:2])})" if features else ""
+    source = insight.get("source", "")
+    feat_ctx = f" in {', '.join(features[:2])}" if features else ""
 
     # Reorder so for_company appears first
     if for_company and for_company in companies:
         companies = [for_company] + [c for c in companies if c != for_company]
 
+    comp_str = ", ".join(companies[:3]) if companies else ""
+
     if insight.get("is_competitive_intel"):
-        return f"Competitive comparison between {', '.join(companies[:3])}{feat_ctx}."
+        if len(companies) >= 2:
+            return f"Practitioners are comparing {companies[0]} and {', '.join(companies[1:3])}{feat_ctx}, signaling active buyer evaluation in this space."
+        return f"Competitive intelligence signal{feat_ctx} worth tracking for positioning decisions."
     if insight.get("is_feature_request"):
-        voice = "buyer" if insight.get("is_buyer_voice") else "user"
-        return f"Feature request{feat_ctx} from {voice}."
+        voice = "buyers" if insight.get("is_buyer_voice") else "users"
+        if features:
+            return f"Market demand signal: {voice} are asking for {', '.join(features[:2])}, indicating an unmet need in the category."
+        return f"Market demand signal: {voice} are requesting new capabilities, revealing gaps in current tooling."
     if "funding_news" in tags:
-        target = f" for {companies[0]}" if companies else ""
-        return f"Funding or investment signal{target}."
+        target = f"{companies[0]} " if companies else "a GEO/AEO player "
+        return f"Capital is flowing: {target}raised funding, signaling investor confidence in this category."
     if "product_launch" in tags:
-        target = f" from {companies[0]}" if companies else ""
-        return f"Product or feature launch{target}."
+        target = f"{companies[0]} " if companies else "A competitor "
+        return f"{target}launched new capabilities{feat_ctx}. Watch for positioning shifts and buyer reaction."
     if "complaint" in tags and companies:
-        return f"User complaint about {companies[0]}{feat_ctx}. Sentiment: negative."
+        return f"Users are flagging pain points with {companies[0]}{feat_ctx}. Potential differentiation opportunity."
     if "praise" in tags and companies:
-        return f"Positive mention of {companies[0]}{feat_ctx}. Sentiment: positive."
+        return f"{companies[0]} is earning positive sentiment{feat_ctx}. Worth studying what they are doing right."
     if insight.get("is_buyer_voice"):
-        return f"Buyer evaluating tools{feat_ctx}."
+        if companies:
+            return f"Active buyer evaluating {comp_str}{feat_ctx}. Direct demand signal for the category."
+        return f"Buyer actively evaluating GEO/AEO tools{feat_ctx}. Direct demand signal."
     if insight.get("is_founder_voice"):
-        target = f" ({companies[0]})" if companies else ""
-        return f"Founder perspective{target}{feat_ctx}."
+        target = f" at {companies[0]}" if companies else ""
+        return f"Founder perspective{target}{feat_ctx}. Insider signal on product direction."
     if insight.get("is_analyst_voice"):
-        return f"Analyst or research signal{feat_ctx}."
+        return f"Analyst or trade press coverage{feat_ctx}. Shapes buyer perception and category narrative."
     if companies and features:
-        sent = f" Sentiment: {sentiment}." if sentiment != "neutral" else ""
-        return f"Mentions {', '.join(companies[:2])} in context of {', '.join(features[:2])}.{sent}"
+        sent = f" Sentiment trending {sentiment}." if sentiment != "neutral" else ""
+        return f"Market discussion about {', '.join(companies[:2])} in context of {', '.join(features[:2])}.{sent}"
     if companies:
-        sent = f" Sentiment: {sentiment}." if sentiment != "neutral" else ""
-        return f"Mentions {', '.join(companies[:2])}.{sent}"
+        sent = f" Sentiment trending {sentiment}." if sentiment != "neutral" else ""
+        return f"Industry conversation involving {', '.join(companies[:2])} in the GEO/AEO space.{sent}"
     return ""
 
 
@@ -422,7 +458,7 @@ def _share_button(section_id, label="Share", key_suffix="", extra_params=None):
 _METHODOLOGY_NOTE = (
     "Data collected via automated pipeline monitoring 11 public sources. "
     "Signals filtered for GEO/AEO relevance. Sentiment scored by LLM enrichment. "
-    "Competitor coverage based on public mentions only \u2014 absence of data does not "
+    "Competitor coverage based on public mentions only. Absence of data does not "
     "indicate absence of a feature. Signal counts reflect volume of public conversation, "
     "not product capability assessments."
 )
@@ -482,7 +518,7 @@ def _docx_methodology_appendix(doc, total_signals):
         p = doc.add_paragraph(style="List Bullet")
         run_name = p.add_run(f"{name}")
         run_name.bold = True
-        p.add_run(f" \u2014 {desc}")
+        p.add_run(f", {desc}")
 
     doc.add_paragraph("")
     p = doc.add_paragraph()
@@ -1078,7 +1114,7 @@ def _export_briefing_deck(insights, company_meta, opportunity_data, selected_com
             )
         above_str = ", ".join(above_avg[:3]) if above_avg else "none"
         momentum_bullets.append(
-            f"\u2022 Category average is {mean_signals:.0f} signals \u2014 "
+            f"\u2022 Category average is {mean_signals:.0f} signals. "
             f"{above_str} stand{'s' if len(above_avg) == 1 else ''} out above average"
         )
         _pptx_callout_box(slide, momentum_bullets, top_inches=5.3)
@@ -1171,7 +1207,7 @@ def _export_briefing_deck(insights, company_meta, opportunity_data, selected_com
     p0.font.bold = True
     for name, desc in _SOURCE_DESCRIPTIONS:
         p = src_tf.add_paragraph()
-        p.text = f"\u2022 {name} \u2014 {desc}"
+        p.text = f"\u2022 {name}, {desc}"
         p.font.size = PptxPt(11)
         p.font.color.rgb = PptxRGBColor(0x33, 0x33, 0x33)
 
@@ -1612,13 +1648,24 @@ def _send_daily_digests():
 # ---------------------------------------------------------------------------
 
 _GEO_DISPLAY_TERMS = [
-    "geo", "aeo", "generative engine", "answer engine",
+    "geo ", "geo/aeo", " aeo ", "generative engine", "answer engine",
     "ai search", "ai visibility", "ai answer", "ai citation", "ai overview",
     "brand visibility", "share of voice", "share of answer",
     "llm optimization", "llm brand", "llm monitoring",
-    "perplexity", "chatgpt", "searchgpt", "gemini",
-    "seo", "content optimization", "structured data", "schema markup",
-    "zero click", "ai overviews",
+    "ai overviews", "zero click", "zero-click",
+    "content optimization", "structured data", "schema markup",
+    "searchgpt", "search gpt",
+    "chatgpt search", "chatgpt visibility", "chatgpt citation",
+    "gemini search", "gemini visibility",
+    "perplexity search", "perplexity answer", "perplexity citation",
+    "seo tool", "seo platform", "seo measurement",
+    "brand mention", "brand monitoring", "brand measurement",
+    "generative search", "conversational search",
+]
+
+# Weak terms require a company mention to qualify
+_GEO_WEAK_TERMS = [
+    "seo", "chatgpt", "perplexity", "gemini", "ai tool",
 ]
 
 _MAX_AGE_DAYS = 730  # 24 months
@@ -1627,10 +1674,23 @@ _MAX_AGE_DAYS = 730  # 24 months
 def _is_display_relevant(insight):
     """Require GEO context for display. Company mention alone is insufficient."""
     text = (insight.get("text", "") + " " + insight.get("title", "")).lower()
+    title = (insight.get("title") or "").strip()
+
+    # Block clearly off-topic content
+    if _OFFTOPIC_BLOCKLIST.search(text):
+        return False
+    if _TITLE_BLOCKLIST.search(title):
+        return False
+
+    # Require GEO/AEO context keywords
     has_context = any(term in text for term in _GEO_DISPLAY_TERMS)
     if has_context:
         return True
+    # Weak terms only pass with a company mention
     has_companies = bool(insight.get("companies_mentioned"))
+    has_weak = any(term in text for term in _GEO_WEAK_TERMS)
+    if has_companies and has_weak:
+        return True
     source = insight.get("source", "")
     if has_companies and source in ("G2", "Product Hunt"):
         return True
@@ -2506,7 +2566,7 @@ with st.expander("Intelligence Brief"):
         _rst = (_rs.get("title", "") or _rs.get("text", ""))[:120]
         _rsu = _rs.get("url", "")
         _rss = _rs.get("source", "Unknown")
-        _rsd = _rs.get("post_date", "")
+        _rsd = _time_ago(_rs.get("post_date", ""))
         _rsb = _relevance_sentence(_rs) or ""
         _rst_link = f'<a href="{_rsu}" target="_blank" style="color:#0A0A0A; text-decoration:none; font-weight:600;">{_rst}</a>' if _rsu else f'<b>{_rst}</b>'
         _rpt_sig_html += (
@@ -2659,38 +2719,80 @@ with tabs[0]:
     )
 
     # --- Signal of the Week ---
+    # Dynamically pick highest-relevance signal from last 48 hours, fall back to editorial pick
+    _sotw_cutoff = (datetime.now() - timedelta(hours=48)).strftime("%Y-%m-%d")
+    _sotw_candidates = [
+        s for s in insights
+        if s.get("post_date", "") >= _sotw_cutoff
+        and _is_display_relevant(s)
+        and _is_displayable_post(s)
+        and (s.get("companies_mentioned") or s.get("entity_tags") or s.get("is_competitive_intel"))
+        and _relevance_score(s) >= _MIN_RELEVANCE_SCORE * 2
+    ]
+    _sotw_candidates.sort(key=lambda x: _relevance_score(x), reverse=True)
+
+    if _sotw_candidates:
+        _sotw_pick = _sotw_candidates[0]
+        _sotw_company = (_sotw_pick.get("companies_mentioned") or [""])[0]
+        _sotw_title = (_sotw_pick.get("title") or _sotw_pick.get("text", ""))[:150]
+        _sotw_url = _sotw_pick.get("url", "")
+        _sotw_brief = _relevance_sentence(_sotw_pick) or "High-relevance signal for GEO/AEO practitioners."
+        _sotw_source = _sotw_pick.get("source", "")
+        _sotw_date = _sotw_pick.get("post_date", "")
+    else:
+        # Fallback to editorial pick
+        _sotw_company = _SOTW.get("company", "")
+        _sotw_title = _SOTW.get("title", "Signal of the Week")
+        _sotw_url = _SOTW.get("url", "")
+        _sotw_brief = _SOTW.get("brief", "")
+        _sotw_source = _SOTW.get("source", "")
+        _sotw_date = _SOTW.get("date", "")
+
+    # Ensure title is always clickable
+    if _sotw_url:
+        _sotw_title_html = (
+            f'<a href="{_sotw_url}" target="_blank" style="font-size: 1.05rem; '
+            f'font-weight: 600; color: #0A0A0A; text-decoration: none;">{_sotw_title}</a>'
+        )
+    else:
+        _sotw_title_html = f'<span style="font-size: 1.05rem; font-weight: 600; color: #0A0A0A;">{_sotw_title}</span>'
+
+    _sotw_comp_pill = ""
+    if _sotw_company:
+        _sotw_comp_pill = (
+            f'<span style="display:inline-block; background:#0E3B7E; color:#F8F4EB; '
+            f"font-family:'DM Mono',monospace; font-size:11px; padding:2px 8px; "
+            f'text-transform:uppercase; letter-spacing:0.03em;">{_sotw_company.upper()}</span><br>'
+        )
+
+    _sotw_source_line = ""
+    if _sotw_source or _sotw_date:
+        _src_link = f'<a href="{_sotw_url}" target="_blank" style="color: #D1CFBA;">{_sotw_source}</a>' if _sotw_url and _sotw_source else _sotw_source
+        _sotw_source_line = f'<span style="font-size: 0.75rem; color: #D1CFBA;">{_src_link} &middot; {_sotw_date}</span>'
+
     st.markdown(
-        """<div style="border-left: 4px solid #FF9D1C; padding: 16px; """
-        """background: #FFFFFF; border: 1px solid #D1CFBA; margin-bottom: 1rem;">"""
-        """<span style="color: #FF9D1C; font-family: 'DM Mono', monospace; font-size: 0.75rem; font-weight: 600; """
-        """letter-spacing: 0.05em; text-transform: uppercase;">"""
-        """SIGNAL OF THE WEEK</span><br>"""
-        """<span style="display:inline-block; background:#0E3B7E; color:#F8F4EB; """
-        """font-family:'DM Mono',monospace; font-size:11px; padding:2px 8px; """
-        """text-transform:uppercase; letter-spacing:0.03em;">FUTURE</span><br>"""
-        """<a href="https://pressgazette.co.uk/marketing/future-leveragess-high-visibility-on-chatgpt-by-offering-geo-as-a-service/" """
-        """target="_blank" style="font-size: 1.05rem; font-weight: 600; color: #0A0A0A; """
-        """text-decoration: none;">Future PLC launches GEO-as-a-Service division</a>"""
-        """<p style="margin: 0.5rem 0 0.4rem 0; font-size: 0.9rem; color: #0A0A0A;">"""
-        """Future PLC &mdash; publisher of TechRadar and Tom's Guide, the most-cited publisher """
-        """domain on ChatGPT globally &mdash; has launched a commercial GEO optimization division """
-        """selling AI visibility campaigns to brand clients. They delivered a 33% ChatGPT """
-        """visibility uplift for Samsung and hold a direct content deal with OpenAI. This is the """
-        """first major media publisher to productize GEO expertise, signaling the category is """
-        """moving mainstream.</p>"""
-        """<span style="font-size: 0.75rem; color: #D1CFBA;">"""
-        """<a href="https://pressgazette.co.uk/marketing/future-leveragess-high-visibility-on-chatgpt-by-offering-geo-as-a-service/" """
-        """target="_blank" style="color: #D1CFBA;">Press Gazette</a> &middot; 2026-02-20</span>"""
-        """</div>""",
+        f'<div style="border-left: 4px solid #FF9D1C; padding: 16px; '
+        f'background: #FFFFFF; border: 1px solid #D1CFBA; margin-bottom: 1rem;">'
+        f'<span style="color: #FF9D1C; font-family: DM Mono, monospace; font-size: 0.75rem; font-weight: 600; '
+        f'letter-spacing: 0.05em; text-transform: uppercase;">'
+        f'SIGNAL OF THE WEEK</span><br>'
+        f'{_sotw_comp_pill}'
+        f'{_sotw_title_html}'
+        f'<p style="margin: 0.5rem 0 0.4rem 0; font-size: 0.9rem; color: #0A0A0A;">'
+        f'{_sotw_brief}</p>'
+        f'{_sotw_source_line}'
+        f'</div>',
         unsafe_allow_html=True,
     )
+    # Share button inside the card area, styled as ghost pill
     _share_button("signal_of_week", "Share Signal of the Week")
+
     _sotw_insight = {
-        "source": "Press Gazette",
-        "title": "Future PLC launches GEO-as-a-Service division",
-        "url": "https://pressgazette.co.uk/marketing/future-leveragess-high-visibility-on-chatgpt-by-offering-geo-as-a-service/",
-        "post_date": "2026-02-20",
-        "companies_mentioned": ["Future"],
+        "source": _sotw_source,
+        "title": _sotw_title,
+        "url": _sotw_url,
+        "post_date": _sotw_date,
+        "companies_mentioned": [_sotw_company] if _sotw_company else [],
         "entity_tags": ["product_launch"],
         "sentiment": "positive",
     }
@@ -2705,11 +2807,11 @@ with tabs[0]:
         sources_in_data = sorted(set(i.get("source", "") for i in insights))
         filter_source = st.selectbox("Source", ["All"] + sources_in_data, key="feed_source")
 
-    with st.expander("Add a new competitor to monitor"):
+    with st.expander("Add a New Competitor to Monitor"):
         new_comp_name = st.text_input("Company name", key="new_comp_name")
         new_comp_url = st.text_input(
             "Company website URL (optional but recommended)", key="new_comp_url",
-            help="Helps us find the right company — especially for common names.",
+            help="Helps us find the right company, especially for common names.",
         )
         new_comp_aliases = st.text_input("Aliases (comma-separated)", key="new_comp_aliases",
                                          help="e.g. 'acme, acme.ai, acme seo'")
@@ -2805,12 +2907,17 @@ with tabs[0]:
     if filter_source != "All":
         filtered = [i for i in filtered if i.get("source", "") == filter_source]
 
-    filtered = [i for i in filtered if _is_display_relevant(i) and _relevance_sentence(i)]
+    filtered = [i for i in filtered
+                if _is_display_relevant(i) and _relevance_sentence(i)
+                and _relevance_score(i) >= _MIN_RELEVANCE_SCORE]
     filtered.sort(key=lambda x: (x.get("post_date", ""), _relevance_score(x)), reverse=True)
     st.caption(f"Showing {min(25, len(filtered))} of {len(filtered)} GEO-relevant signals from {len(insights):,} total ingested (filtered for relevance)")
 
     new_companies = _get_new_companies(json.dumps(insights))
-    page_size = 25
+    _base_page_size = 25
+    if "feed_page_count" not in st.session_state:
+        st.session_state["feed_page_count"] = 1
+    page_size = _base_page_size * st.session_state["feed_page_count"]
     for idx, insight in enumerate(filtered[:page_size]):
         source = insight.get("source", "")
         source_label = _source_badge(source)
@@ -2830,14 +2937,27 @@ with tabs[0]:
         else:
             title_html = title
 
-        # Competitor pills
+        # Keyword callout pills
+        kw_pills = ""
+        kws = _keywords_for_card(insight)
+        if kws:
+            kw_tags = "".join(
+                f'<span style="display:inline-block; background:transparent; color:#0E3B7E; '
+                f'border:1px solid #0E3B7E; font-family:DM Mono,monospace; font-size:10px; '
+                f'padding:2px 8px; margin-right:4px; margin-top:4px; letter-spacing:0.03em; '
+                f'text-transform:uppercase;">{kw}</span>'
+                for kw in kws[:3]
+            )
+            kw_pills = f'<div style="margin-top:6px;">{kw_tags}</div>'
+
+        # Competitor pills — show ALL competitors mentioned
         comp_pills = ""
         if companies:
             pills = "".join(
                 f'<span style="display:inline-block; background:#0E3B7E; color:#F8F4EB; '
                 f'font-family:DM Mono,monospace; font-size:10px; padding:2px 8px; '
                 f'margin-right:4px; letter-spacing:0.03em;">{c}</span>'
-                for c in companies[:5]
+                for c in companies
             )
             comp_pills = (
                 f'<div style="margin-top:6px;">'
@@ -2860,13 +2980,27 @@ with tabs[0]:
             f'{title_html}</div>'
             f'<div style="margin-top:4px; font-size:13px; color:#6b7280; '
             f'line-height:1.4;">{rel_sentence}</div>'
+            f'{kw_pills}'
             f'{comp_pills}'
             f'</div>',
             unsafe_allow_html=True,
         )
 
     if len(filtered) > page_size:
-        st.caption(f"+ {len(filtered) - page_size} more signals")
+        _remaining = len(filtered) - page_size
+        _next_batch = min(25, _remaining)
+        st.markdown(
+            f'<div style="text-align:center; margin-top:12px;">',
+            unsafe_allow_html=True,
+        )
+        if st.button(
+            f"Load {_next_batch} more signals \u2193",
+            key="load_more_signals",
+        ):
+            st.session_state["feed_page_count"] += 1
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.caption(f"{_remaining} more signals available")
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -2904,13 +3038,22 @@ with tabs[1]:
     sorted_comps = sorted(comp_data_map.items(), key=lambda x: x[1]["total"], reverse=True)
     two_weeks_ago_str = (now - timedelta(days=14)).strftime("%Y-%m-%d")
 
+    # Pre-compute 30-day window for activity checks
+    _30d_ago_comp = (now - timedelta(days=30)).strftime("%Y-%m-%d")
+
+    # Rank and sort: separate high-signal from low-signal competitors
+    _ranked_comps = []
     for comp, cd in sorted_comps:
         total = cd["total"]
-        if total < 2:
+        if total < 1:
             continue
+        _ranked_comps.append((comp, cd))
 
+    for _rank_idx, (comp, cd) in enumerate(_ranked_comps):
+        total = cd["total"]
         pos_pct = round(cd["pos"] * 100 / max(total, 1))
         neg_pct = round(cd["neg"] * 100 / max(total, 1))
+        neu_pct = 100 - pos_pct - neg_pct
 
         # Momentum: compute WoW from actual signal dates
         this_week = cd["this_week"]
@@ -2937,7 +3080,7 @@ with tabs[1]:
         is_own = comp in own_brands
         meta = company_meta.get(comp, {})
         positioning = _company_positioning(meta) if meta else ""
-        own_tag = " ⭐ own brand" if is_own else ""
+        own_tag = " own brand" if is_own else ""
 
         # Find most recent post date for this company
         latest_date = ""
@@ -2946,22 +3089,63 @@ with tabs[1]:
             if d > latest_date:
                 latest_date = d
 
+        # Item 9 & 10: Relative time for last signal
+        _last_signal_label = ""
+        if latest_date:
+            _last_signal_ago = _time_ago(latest_date)
+            if _last_signal_ago:
+                _last_signal_label = f"Last signal: {_last_signal_ago}"
+            else:
+                _last_signal_label = f"Last signal: {latest_date}"
+        # Only show "No recent activity" if zero signals in 30 days
+        _signals_30d = sum(1 for s in cd["signals"] if s.get("post_date", "") >= _30d_ago_comp)
+        if _signals_30d == 0 and total > 0:
+            _last_signal_label = "No recent activity"
+
+        # Item 12: Visual hierarchy - de-emphasize low-signal cards
+        _is_low_signal = total < 3
+        _border_style = "1px solid #E8E4D9" if _is_low_signal else "1px solid #D1CFBA"
+
+        # Item 12: Rank badge for top 3
+        _rank_badge = ""
+        if _rank_idx < 3:
+            _rank_badge = f"#{_rank_idx + 1} "
+
+        # Item 11: Signal counts instead of broken sentiment
+        _all_neutral = (pos_pct == 0 and neg_pct == 0) or neu_pct == 100
+        _signals_this_week = cd["this_week"]
+        _signals_30d_count = _signals_30d
+
         with st.container(border=True):
             # Header row
             hc1, hc2 = st.columns([3, 2])
             with hc1:
                 comp_url = meta.get("url", "") if meta else ""
-                site_link = f" · [Visit site]({comp_url})" if comp_url else ""
-                st.markdown(f"**{comp}**{own_tag}{site_link}")
+                site_link = f" [Visit site]({comp_url})" if comp_url else ""
+                _header_size = "**" if not _is_low_signal else ""
+                st.markdown(f"{_rank_badge}{_header_size}{comp}{_header_size}{own_tag}{site_link}")
                 if positioning:
                     st.caption(positioning)
             with hc2:
-                neu_pct = 100 - pos_pct - neg_pct
-                st.markdown(f"{total} mentions · {momentum}")
-                st.caption(f"{pos_pct}% positive · {neg_pct}% negative · {neu_pct}% neutral")
+                st.markdown(f"{total} mentions, {momentum}")
+                # Item 11: Hide sentiment if all neutral, show signal counts instead
+                if _all_neutral:
+                    st.caption(f"{_signals_this_week} signals this week, {_signals_30d_count} signals last 30 days")
+                else:
+                    st.caption(f"{pos_pct}% positive, {neg_pct}% negative")
+                    st.caption(f"{_signals_this_week} signals this week, {_signals_30d_count} signals last 30 days")
 
-            if total < 5:
-                st.caption("Limited data — results may not be representative.")
+            # Item 12: Replace "Limited data" disclaimer
+            if _is_low_signal:
+                st.markdown(
+                    f'<span style="font-family:DM Mono,monospace; font-size:10px; '
+                    f'color:#94a3b8;">Fewer than 3 signals tracked</span>',
+                    unsafe_allow_html=True,
+                )
+
+            # Item 9 & 10: Show relative time label
+            if _last_signal_label:
+                st.caption(_last_signal_label)
 
             # Top 3 most relevant signals this week
             week_signals = [s for s in cd["signals"] if s.get("post_date", "") >= week_ago_str]
@@ -2979,7 +3163,7 @@ with tabs[1]:
 
                 headline = f"[{sig_title}]({sig_url})" if sig_url else sig_title
                 st.markdown(f"  `{sig_source_label}` {headline}")
-                st.caption(f"  _{sig_reason}_ · {_time_ago(sig.get('post_date', ''))}")
+                st.caption(f"  _{sig_reason}_ , {_time_ago(sig.get('post_date', ''))}")
 
             # Show more expander
             remaining = [s for s in week_signals[3:] if _relevance_sentence(s, for_company=comp)][:12]
@@ -2994,10 +3178,7 @@ with tabs[1]:
 
                         headline = f"[{sig_title}]({sig_url})" if sig_url else sig_title
                         st.markdown(f"`{sig_source_label}` {headline}")
-                        st.caption(f"_{sig_reason}_ · {_time_ago(sig.get('post_date', ''))}")
-
-            if latest_date:
-                st.caption(f"Data as of {latest_date}")
+                        st.caption(f"_{sig_reason}_ , {_time_ago(sig.get('post_date', ''))}")
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -3010,21 +3191,240 @@ with tabs[2]:
         "and competitive coverage."
     )
 
-    # ── INLINE PRD GENERATION ─────────────────────────────────────────────────
-    st.markdown("#### Generate PRD")
-    st.caption("Select a roadmap item to generate a full Product Requirements Document inline.")
+    OPPORTUNITY_THEMES = {
+        "Real-time Tracking": ["real-time", "real time", "live tracking", "live monitoring",
+                               "instant", "continuous", "live data", "monitor"],
+        "Multi-LLM Coverage": ["multiple llm", "all llm", "perplexity and chatgpt", "cross-platform",
+                               "every ai", "all ai", "multi-model", "chatgpt and gemini",
+                               "claude and", "different ai", "llm coverage"],
+        "Actionable Recs": ["actionable", "what to do", "next steps", "recommendations",
+                            "how to improve", "specific advice", "optimization tip",
+                            "action item"],
+        "ROI Measurement": ["roi", "return on investment", "revenue impact", "attribution",
+                            "prove value", "business impact", "conversion", "kpi",
+                            "measure results", "performance metric"],
+        "Historical Trends": ["historical", "trend", "over time", "change over", "compare week",
+                              "month over month", "trajectory", "time series",
+                              "tracking progress", "weekly report"],
+        "Comp. Benchmarking": ["benchmark", "compare to competitor", "competitive",
+                               "industry average", "how do we compare", "vs competitor",
+                               "competitor analysis", "comparison", "ranking"],
+        "Content Guidance": ["what to write", "content recommendations", "topic suggestion",
+                             "content gap", "optimization guide", "content strategy",
+                             "content plan"],
+        "Brand Safety": ["brand safety", "misinformation", "hallucination about",
+                         "wrong information", "incorrect", "ai says wrong",
+                         "inaccurate", "false information", "reputation"],
+        "Integrations": ["integrate", "integration", "connect to", "plugin",
+                         "works with", "api", "google analytics", "hubspot",
+                         "webhook", "zapier", "export data", "third-party"],
+    }
 
-    _prd_opp_names = list(_EXPORT_OPPORTUNITY_THEMES.keys())
-    _prd_selected = st.selectbox(
-        "Select opportunity",
-        options=_prd_opp_names,
-        key="prd_opp_select",
+    # Build opportunity data with per-company tracking and full signal refs
+    opportunity_data = defaultdict(lambda: {
+        "complaints": 0, "requests": 0, "praise": 0,
+        "evidence": 0, "companies_tried": set(),
+        "companies_praised": set(), "companies_complained": set(),
+        "signals": [], "confidence": 0,
+        "company_detail": defaultdict(lambda: {"count": 0, "latest": ""}),
+    })
+
+    for i in insights:
+        text_lower = (i.get("text", "") + " " + i.get("title", "")).lower()
+        tags = i.get("entity_tags", [])
+        sentiment = i.get("sentiment", "")
+        companies_i = i.get("companies_mentioned", [])
+
+        for opp, keywords in OPPORTUNITY_THEMES.items():
+            if any(kw in text_lower for kw in keywords):
+                od = opportunity_data[opp]
+                od["evidence"] += 1
+                if "complaint" in tags:
+                    od["complaints"] += 1
+                    for c in companies_i:
+                        od["companies_complained"].add(c)
+                if i.get("is_feature_request"):
+                    od["requests"] += 1
+                if "praise" in tags and sentiment == "positive":
+                    od["praise"] += 1
+                    for c in companies_i:
+                        od["companies_praised"].add(c)
+                for c in companies_i:
+                    od["companies_tried"].add(c)
+                    detail = od["company_detail"][c]
+                    detail["count"] += 1
+                    post_date = i.get("post_date", "")
+                    if post_date > detail["latest"]:
+                        detail["latest"] = post_date
+                od["signals"].append(i)
+
+    for opp, od in opportunity_data.items():
+        conf = 30
+        sources_seen = set(s.get("source", "") for s in od["signals"] if s.get("source"))
+        conf += len(sources_seen) * 6
+        extra_signals = max(od["evidence"] - 1, 0)
+        conf += min(extra_signals * 5, 15)
+        if any("G2" in s.get("source", "") for s in od["signals"]):
+            conf += 10
+        od["confidence"] = min(conf, 95)
+
+    # --- Shared computation ---
+    comp_mention_counts = Counter()
+    for i in insights:
+        for c in i.get("companies_mentioned", []):
+            comp_mention_counts[c] += 1
+    all_companies_ranked = [c for c, _ in comp_mention_counts.most_common()]
+    top8_default = [c for c, _ in comp_mention_counts.most_common(8)]
+
+    # Date boundaries
+    _now_rm = datetime.now()
+    _30d_ago = (_now_rm - timedelta(days=30)).strftime("%Y-%m-%d")
+    _90d_ago = (_now_rm - timedelta(days=90)).strftime("%Y-%m-%d")
+    _week_ago_rm = (_now_rm - timedelta(days=7)).strftime("%Y-%m-%d")
+    _2week_ago_rm = (_now_rm - timedelta(days=14)).strftime("%Y-%m-%d")
+
+    # ── COMPETITOR SELECTOR (Item 14: styled filter buttons) ──────────────────
+    if "rm_quick" not in st.session_state:
+        st.session_state["rm_quick"] = None
+
+    def _set_quick(mode):
+        st.session_state["rm_quick"] = mode
+        st.session_state.pop("rm_comp_sel", None)
+
+    # Compute rising companies
+    _rising_comps = []
+    for c in all_companies_ranked:
+        tw = sum(1 for s in insights
+                 if c in s.get("companies_mentioned", [])
+                 and s.get("post_date", "") >= _week_ago_rm)
+        pw = sum(1 for s in insights
+                 if c in s.get("companies_mentioned", [])
+                 and _2week_ago_rm <= s.get("post_date", "") < _week_ago_rm)
+        if pw > 0 and tw > pw:
+            _rising_comps.append(c)
+        elif pw == 0 and tw > 0:
+            _rising_comps.append(c)
+
+    qmode = st.session_state.get("rm_quick")
+
+    # Item 14: Filter buttons
+    qc1, qc2, qc3 = st.columns(3)
+    with qc1:
+        st.button("Top 8 by volume", key="qf_top8", on_click=_set_quick, args=("top8",))
+    with qc2:
+        st.button("Rising only", key="qf_rising", on_click=_set_quick, args=("rising",))
+    with qc3:
+        st.button("All", key="qf_all", on_click=_set_quick, args=("all",))
+
+    if qmode == "top8":
+        _sel_default = top8_default
+    elif qmode == "rising":
+        _sel_default = _rising_comps if _rising_comps else top8_default
+    elif qmode == "all":
+        _sel_default = all_companies_ranked
+    else:
+        _sel_default = top8_default
+
+    if qmode:
+        st.session_state["rm_quick"] = None
+
+    selected_comps = st.multiselect(
+        "Select competitors to display",
+        options=all_companies_ranked,
+        default=_sel_default,
+        help="Choose which competitors appear in the tables below",
+        key="rm_comp_sel",
     )
 
-    if st.button("Generate PRD", type="primary", key="gen_prd_btn"):
+    if len(selected_comps) < 2:
+        st.warning("Select at least 2 competitors to compare.")
+        st.stop()
+
+    # ── Pre-compute per-company stats ────────────────────────────────────────
+    _comp_stats = {}
+    for comp in selected_comps:
+        sigs = [s for s in insights if comp in s.get("companies_mentioned", [])]
+        total = len(sigs)
+        pos = sum(1 for s in sigs if s.get("sentiment") == "positive")
+        neg = sum(1 for s in sigs if s.get("sentiment") == "negative")
+        tw = sum(1 for s in sigs if s.get("post_date", "") >= _week_ago_rm)
+        pw = sum(1 for s in sigs
+                 if _2week_ago_rm <= s.get("post_date", "") < _week_ago_rm)
+        latest = max((s.get("post_date", "") for s in sigs), default="")
+
+        if total < 3:
+            momentum = "Insufficient data"
+        elif pw == 0 and tw == 0:
+            momentum = "No recent activity"
+        elif pw == 0:
+            momentum = "Rising"
+        else:
+            wow = round((tw - pw) / pw * 100)
+            if wow >= 20:
+                momentum = "Rising"
+            elif wow <= -20:
+                momentum = "Falling"
+            else:
+                momentum = "Stable"
+
+        _30d_count = sum(1 for s in sigs if s.get("post_date", "") >= _30d_ago)
+
+        _comp_stats[comp] = {
+            "total": total, "pos": pos, "neg": neg,
+            "pos_pct": round(pos * 100 / max(total, 1)),
+            "momentum": momentum, "latest": latest,
+            "this_week": tw, "last_30d": _30d_count,
+        }
+
+    # ────────────────────────────────────────────────────────────────────────
+    # SECTION 1: WHAT THE MARKET WANTS
+    # ────────────────────────────────────────────────────────────────────────
+    st.markdown("#### What the Market Wants")
+    st.caption("Unmet buyer needs ranked by signal volume and source diversity.")
+
+    # Item 15: Minimum 3-signal threshold for main display
+    _strong_opps = {opp: od for opp, od in opportunity_data.items() if od["evidence"] >= 3}
+    _weak_opps = {opp: od for opp, od in opportunity_data.items() if 1 <= od["evidence"] < 3}
+    _sorted_strong = sorted(_strong_opps.items(), key=lambda x: x[1]["evidence"], reverse=True)
+
+    for opp, od in _sorted_strong:
+        _recent_ct = sum(1 for s in od["signals"] if s.get("post_date", "") >= _30d_ago)
+        _top_sigs = sorted(od["signals"], key=lambda x: _relevance_score(x), reverse=True)[:3]
+
+        # Build brief from top signals
+        _buyer_quotes = [s for s in od["signals"] if s.get("is_buyer_voice") or s.get("is_feature_request")]
+        if _buyer_quotes:
+            _brief = _relevance_sentence(_buyer_quotes[0]) or "Buyers are actively seeking this capability."
+        elif _top_sigs:
+            _brief = _relevance_sentence(_top_sigs[0]) or "Market signals indicate demand for this capability."
+        else:
+            _brief = "Signal data supports this as an emerging market need."
+
+        with st.container(border=True):
+            _opp_c1, _opp_c2 = st.columns([4, 1])
+            with _opp_c1:
+                st.markdown(f"**{opp}**")
+                st.caption(f"{od['confidence']}% confidence, {od['evidence']} signals, {_recent_ct} in last 30 days")
+                st.markdown(f'<div style="font-size:13px; color:#6b7280; margin-bottom:8px;">{_brief}</div>', unsafe_allow_html=True)
+
+                # Supporting article links (2-3 max)
+                for _ts in _top_sigs[:3]:
+                    _ts_title = (_ts.get("title") or _ts.get("text", ""))[:100]
+                    _ts_url = _ts.get("url", "")
+                    _ts_src = _source_badge(_ts.get("source", ""))
+                    _ts_link = f"[{_ts_title}]({_ts_url})" if _ts_url else _ts_title
+                    st.markdown(f"  `{_ts_src}` {_ts_link}")
+
+            with _opp_c2:
+                # Generate PRD button inline
+                if st.button("Generate PRD", key=f"prd_{opp}", type="secondary"):
+                    st.session_state["prd_gen_topic"] = opp
+
+    # Handle PRD generation
+    if st.session_state.get("prd_gen_topic"):
+        _prd_topic = st.session_state.pop("prd_gen_topic")
         if _anthropic_key:
-            # Gather relevant signals for this opportunity
-            _prd_keywords = _EXPORT_OPPORTUNITY_THEMES.get(_prd_selected, [])
+            _prd_keywords = OPPORTUNITY_THEMES.get(_prd_topic, [])
             _prd_signals = []
             for _pi in insights:
                 _pt = (_pi.get("text", "") + " " + _pi.get("title", "")).lower()
@@ -3042,7 +3442,7 @@ with tabs[2]:
 
             _prd_prompt = f"""Generate a Product Requirements Document for this GEO/AEO product opportunity based on real market signals.
 
-Opportunity: {_prd_selected}
+Opportunity: {_prd_topic}
 
 Signal data context:
 {_prd_context}
@@ -3092,7 +3492,6 @@ Return ONLY valid Markdown with this exact structure:
 ---
 *Requirements grounded in GEO/AEO market signal data.*
 """
-
             with st.spinner("Generating PRD..."):
                 try:
                     import anthropic as _anth_prd
@@ -3106,7 +3505,7 @@ Return ONLY valid Markdown with this exact structure:
                     )
                     _prd_content = _prd_resp.content[0].text
                     st.session_state["prd_result"] = _prd_content
-                    st.session_state["prd_topic"] = _prd_selected
+                    st.session_state["prd_topic"] = _prd_topic
                 except Exception as _prd_err:
                     st.error(f"PRD generation failed: {_prd_err}")
         else:
@@ -3125,480 +3524,210 @@ Return ONLY valid Markdown with this exact structure:
                 key="prd_dl_md",
             )
 
+    # Item 15: Weak signals collapsed section
+    if _weak_opps:
+        with st.expander("Weak Signals to Watch (fewer than 3 signals)"):
+            for opp, od in sorted(_weak_opps.items(), key=lambda x: x[1]["evidence"], reverse=True):
+                st.markdown(
+                    f'<div style="padding:6px 0; border-bottom:1px solid #E8E4D9;">'
+                    f'<span style="font-weight:500;">{opp}</span> '
+                    f'<span style="font-family:DM Mono,monospace; font-size:11px; color:#94a3b8;">'
+                    f'{od["evidence"]} signal{"s" if od["evidence"] != 1 else ""}, '
+                    f'{od["confidence"]}% confidence</span></div>',
+                    unsafe_allow_html=True,
+                )
+
     st.markdown("---")
 
-    FEATURE_TOOLTIPS = {
-        "Integrations": "Connects to third-party tools like CMS, analytics, and marketing platforms.",
-        "ROI Measurement": "Tracks revenue or traffic impact of GEO optimization efforts.",
-        "Brand Safety": "Monitors for brand misrepresentation in AI-generated answers.",
-        "Real-time Tracking": "Updates AI visibility scores continuously vs. periodic snapshots.",
-        "Historical Trends": "Shows how AI visibility has changed over weeks and months.",
-        "Comp. Benchmarking": "Compares your AI visibility scores against named competitors.",
-        "Actionable Recs": "Provides specific content changes to improve AI citation rates.",
-        "Multi-LLM Coverage": "Tracks visibility across ChatGPT, Gemini, Claude, and Perplexity simultaneously.",
-        "Content Guidance": "Recommends what content to create to improve inclusion in AI answers.",
-    }
+    # ────────────────────────────────────────────────────────────────────────
+    # SECTION 2: COMPETITIVE WHITE SPACE
+    # ────────────────────────────────────────────────────────────────────────
+    st.markdown("#### Competitive White Space")
+    st.caption("Features with buyer demand where no competitor has a clear solution.")
 
-    OPPORTUNITY_THEMES = {
-        "Real-time Tracking": ["real-time", "real time", "live tracking", "live monitoring",
-                               "instant", "continuous", "live data", "monitor"],
-        "Multi-LLM Coverage": ["multiple llm", "all llm", "perplexity and chatgpt", "cross-platform",
-                               "every ai", "all ai", "multi-model", "chatgpt and gemini",
-                               "claude and", "different ai", "llm coverage"],
-        "Actionable Recs": ["actionable", "what to do", "next steps", "recommendations",
-                            "how to improve", "specific advice", "optimization tip",
-                            "action item"],
-        "ROI Measurement": ["roi", "return on investment", "revenue impact", "attribution",
-                            "prove value", "business impact", "conversion", "kpi",
-                            "measure results", "performance metric"],
-        "Historical Trends": ["historical", "trend", "over time", "change over", "compare week",
-                              "month over month", "trajectory", "time series",
-                              "tracking progress", "weekly report"],
-        "Comp. Benchmarking": ["benchmark", "compare to competitor", "competitive",
-                               "industry average", "how do we compare", "vs competitor",
-                               "competitor analysis", "comparison", "ranking"],
-        "Content Guidance": ["what to write", "content recommendations", "topic suggestion",
-                             "content gap", "optimization guide", "content strategy",
-                             "content plan"],
-        "Brand Safety": ["brand safety", "misinformation", "hallucination about",
-                         "wrong information", "incorrect", "ai says wrong",
-                         "inaccurate", "false information", "reputation"],
-        "Integrations": ["integrate", "integration", "connect to", "plugin",
-                         "works with", "api", "google analytics", "hubspot",
-                         "webhook", "zapier", "export data", "third-party"],
-    }
-
-    # Build opportunity data with per-company tracking and full signal refs
-    opportunity_data = defaultdict(lambda: {
-        "complaints": 0, "requests": 0, "praise": 0,
-        "evidence": 0, "companies_tried": set(),
-        "companies_praised": set(), "companies_complained": set(),
-        "signals": [], "confidence": 0,
-        "company_detail": defaultdict(lambda: {"count": 0, "latest": ""}),
-    })
-
-    for i in insights:
-        text_lower = (i.get("text", "") + " " + i.get("title", "")).lower()
-        tags = i.get("entity_tags", [])
-        sentiment = i.get("sentiment", "")
-        companies = i.get("companies_mentioned", [])
-
-        for opp, keywords in OPPORTUNITY_THEMES.items():
-            if any(kw in text_lower for kw in keywords):
-                od = opportunity_data[opp]
-                od["evidence"] += 1
-                if "complaint" in tags:
-                    od["complaints"] += 1
-                    for c in companies:
-                        od["companies_complained"].add(c)
-                if i.get("is_feature_request"):
-                    od["requests"] += 1
-                if "praise" in tags and sentiment == "positive":
-                    od["praise"] += 1
-                    for c in companies:
-                        od["companies_praised"].add(c)
-                for c in companies:
-                    od["companies_tried"].add(c)
-                    detail = od["company_detail"][c]
-                    detail["count"] += 1
-                    post_date = i.get("post_date", "")
-                    if post_date > detail["latest"]:
-                        detail["latest"] = post_date
-                od["signals"].append(i)
-
-    for opp, od in opportunity_data.items():
-        # Confidence: 30% base + source diversity + signal depth + G2 trust bonus
-        conf = 30
-        sources_seen = set(s.get("source", "") for s in od["signals"] if s.get("source"))
-        conf += len(sources_seen) * 6  # +6% per unique source type
-        extra_signals = max(od["evidence"] - 1, 0)
-        conf += min(extra_signals * 5, 15)  # +5% per signal beyond first, cap 15%
-        if any("G2" in s.get("source", "") for s in od["signals"]):
-            conf += 10  # G2 is highest trust source
-        od["confidence"] = min(conf, 95)
-
-    # --- Shared computation for roadmap sections ---
-    comp_mention_counts = Counter()
-    for i in insights:
-        for c in i.get("companies_mentioned", []):
-            comp_mention_counts[c] += 1
-    all_companies_ranked = [c for c, _ in comp_mention_counts.most_common()]
-    top8_default = [c for c, _ in comp_mention_counts.most_common(8)]
-
-    active_opps = {opp: od for opp, od in opportunity_data.items() if od["evidence"] >= 2}
-    sorted_opp_names = sorted(active_opps.keys(),
-                               key=lambda x: active_opps[x]["evidence"], reverse=True)
-
-    # Date boundaries
-    _now_rm = datetime.now()
-    _30d_ago = (_now_rm - timedelta(days=30)).strftime("%Y-%m-%d")
-    _60d_ago = (_now_rm - timedelta(days=60)).strftime("%Y-%m-%d")
-    _90d_ago = (_now_rm - timedelta(days=90)).strftime("%Y-%m-%d")
-    _180d_ago = (_now_rm - timedelta(days=180)).strftime("%Y-%m-%d")
-    _week_ago_rm = (_now_rm - timedelta(days=7)).strftime("%Y-%m-%d")
-    _2week_ago_rm = (_now_rm - timedelta(days=14)).strftime("%Y-%m-%d")
-
-    # ── COMPETITOR SELECTOR ───────────────────────────────────────────────────
-    if "rm_quick" not in st.session_state:
-        st.session_state["rm_quick"] = None
-
-    def _set_quick(mode):
-        st.session_state["rm_quick"] = mode
-        # Force multiselect to re-render with new default
-        st.session_state.pop("rm_comp_sel", None)
-
-    qc1, qc2, qc3 = st.columns(3)
-    with qc1:
-        st.button("Top 8 by volume", key="qf_top8", on_click=_set_quick, args=("top8",))
-    with qc2:
-        st.button("Rising only", key="qf_rising", on_click=_set_quick, args=("rising",))
-    with qc3:
-        st.button("All", key="qf_all", on_click=_set_quick, args=("all",))
-
-    # Compute rising companies for the quick filter
-    _rising_comps = []
-    for c in all_companies_ranked:
-        tw = sum(1 for s in insights
-                 if c in s.get("companies_mentioned", [])
-                 and s.get("post_date", "") >= _week_ago_rm)
-        pw = sum(1 for s in insights
-                 if c in s.get("companies_mentioned", [])
-                 and _2week_ago_rm <= s.get("post_date", "") < _week_ago_rm)
-        if pw > 0 and tw > pw:
-            _rising_comps.append(c)
-        elif pw == 0 and tw > 0:
-            _rising_comps.append(c)
-
-    qmode = st.session_state.get("rm_quick")
-    if qmode == "top8":
-        _sel_default = top8_default
-    elif qmode == "rising":
-        _sel_default = _rising_comps if _rising_comps else top8_default
-    elif qmode == "all":
-        _sel_default = all_companies_ranked
-    else:
-        _sel_default = top8_default
-
-    # Reset quick filter after applying so widget stays in sync
-    if qmode:
-        st.session_state["rm_quick"] = None
-
-    selected_comps = st.multiselect(
-        "Select competitors to display",
-        options=all_companies_ranked,
-        default=_sel_default,
-        help="Choose which competitors appear in the charts below",
-        key="rm_comp_sel",
+    _ws_rows = ""
+    _ws_items = sorted(
+        [(opp, od) for opp, od in opportunity_data.items() if od["evidence"] >= 3],
+        key=lambda x: x[1]["evidence"],
+        reverse=True,
     )
 
-    if len(selected_comps) < 2:
-        st.warning("Select at least 2 competitors to compare.")
-        st.stop()
-
-    # ── Pre-compute per-company stats for charts ──────────────────────────────
-    _comp_stats = {}
-    for comp in selected_comps:
-        sigs = [s for s in insights if comp in s.get("companies_mentioned", [])]
-        total = len(sigs)
-        pos = sum(1 for s in sigs if s.get("sentiment") == "positive")
-        neg = sum(1 for s in sigs if s.get("sentiment") == "negative")
-        tw = sum(1 for s in sigs if s.get("post_date", "") >= _week_ago_rm)
-        pw = sum(1 for s in sigs
-                 if _2week_ago_rm <= s.get("post_date", "") < _week_ago_rm)
-        latest = max((s.get("post_date", "") for s in sigs), default="")
-
-        if total < 3:
-            momentum = "Insufficient data"
-        elif pw == 0 and tw == 0:
-            momentum = "No recent activity"
-        elif pw == 0:
-            momentum = "Rising"
-        else:
-            wow = round((tw - pw) / pw * 100)
-            if wow >= 20:
-                momentum = "Rising"
-            elif wow <= -20:
-                momentum = "Falling"
-            else:
-                momentum = "Stable"
-
-        _comp_stats[comp] = {
-            "total": total, "pos": pos, "neg": neg,
-            "pos_pct": round(pos * 100 / max(total, 1)),
-            "momentum": momentum, "latest": latest,
-        }
-
-    # ── AUTO-CALLOUT: Top Rising Competitor ────────────────────────────────────
-    _rising_selected = [
-        c for c in selected_comps if _comp_stats[c]["momentum"] == "Rising"
-    ]
-    if _rising_selected:
-        _top_rising = max(_rising_selected, key=lambda c: _comp_stats[c]["total"])
-        _tr_total = _comp_stats[_top_rising]["total"]
-        st.markdown(
-            f'<div style="background: #F8F4EB; border-left: 4px solid #FF9D1C; '
-            f'padding: 0.6rem 1rem; margin-bottom: 0.5rem;">'
-            f'<span style="color: #0A0A0A; font-weight: 600;">'
-            f'{_top_rising}</span> is the most active rising competitor '
-            f'with {_tr_total} total signals and growing week-over-week mentions.'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
-
-    # ── CHART 1: COMPETITOR MOMENTUM MAP ──────────────────────────────────────
-    _comps_qs = ",".join(selected_comps) if selected_comps else ""
-    _share_button("momentum_chart", "Share Momentum Chart", extra_params={"comps": _comps_qs})
-    st.markdown("#### Competitor Presence & Momentum")
-    st.caption(
-        "Each dot is a competitor. Further right = more "
-        "market conversations happening about them."
-    )
-    st.caption(
-        "Mint = gaining mentions week over week. "
-        "Gray = flat or declining. Red = falling."
-    )
-
-    MOMENTUM_COLORS = {
-        "Rising": "#BDDEC3",
-        "Falling": "#F44C63",
-        "Stable": "#D1CFBA",
-        "No recent activity": "#D1CFBA",
-        "Insufficient data": "#D1CFBA",
-    }
-
-    # Sort by total signal count descending (top = highest)
-    sorted_for_chart = sorted(selected_comps,
-                               key=lambda c: _comp_stats[c]["total"])
-
-    fig1 = go.Figure()
-
-    for m_label, m_color in MOMENTUM_COLORS.items():
-        comps_in_group = [c for c in sorted_for_chart
-                          if _comp_stats[c]["momentum"] == m_label]
-        if comps_in_group:
-            fig1.add_trace(go.Scatter(
-                x=[_comp_stats[c]["total"] for c in comps_in_group],
-                y=comps_in_group,
-                mode="markers",
-                marker=dict(size=14, color=m_color),
-                name=m_label,
-                hovertemplate=(
-                    "<b>%{y}</b><br>"
-                    "Signals: %{x}<br>"
-                    "Momentum: " + m_label + "<br>"
-                    "Sentiment: %{customdata[0]}% positive<br>"
-                    "Last signal: %{customdata[1]}"
-                    "<extra></extra>"
-                ),
-                customdata=[
-                    [_comp_stats[c]["pos_pct"], _comp_stats[c]["latest"]]
-                    for c in comps_in_group
-                ],
-            ))
-        else:
-            # Empty trace so the legend always shows all 5 states
-            fig1.add_trace(go.Scatter(
-                x=[None], y=[None],
-                mode="markers",
-                marker=dict(size=14, color=m_color),
-                name=m_label,
-                showlegend=True,
-            ))
-
-    # Category average vertical line
-    mean_signals = sum(_comp_stats[c]["total"] for c in selected_comps) / max(len(selected_comps), 1)
-    fig1.add_vline(
-        x=mean_signals, line_dash="dash", line_color="#0A0A0A", line_width=1,
-        annotation_text="Category average",
-        annotation_position="top",
-        annotation_font_size=11,
-        annotation_font_color="#0A0A0A",
-    )
-
-    fig1.update_layout(
-        plot_bgcolor="#F8F4EB",
-        paper_bgcolor="#F8F4EB",
-        font=dict(family="DM Sans, Arial, sans-serif", color="#0A0A0A"),
-        xaxis=dict(title="Total signals", gridcolor="#D1CFBA", zeroline=False),
-        yaxis=dict(title="", gridcolor="#D1CFBA"),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0),
-        margin=dict(l=10, r=20, t=40, b=20),
-        height=max(300, len(selected_comps) * 32 + 80),
-    )
-
-    st.plotly_chart(fig1, use_container_width=True)
-
-    # ── CHART 2: FEATURE HEAT MAP ────────────────────────────────────────────
-    # Feature definitions expander above Chart 2
-    with st.expander("Feature definitions"):
-        for feat, defn in FEATURE_TOOLTIPS.items():
-            st.markdown(f"**{feat}**: {defn}")
-
-    _share_button("heat_map", "Share Heat Map", extra_params={"comps": _comps_qs})
-    st.markdown("#### Feature Heat Map")
-    st.caption(
-        "Each cell = how much recent market conversation exists about a "
-        "competitor in that feature area. Dark blue = active recent signals. "
-        "Light = no data."
-    )
-
-    # Build the heat matrix: rows = features, columns = selected_comps
-    feature_names = list(OPPORTUNITY_THEMES.keys())
-    heat_z = []
-    hover_text = []
-
-    for feat in feature_names:
-        row_z = []
-        row_hover = []
-        od = opportunity_data.get(feat)
-        for comp in selected_comps:
-            if od is None:
-                row_z.append(0)
-                row_hover.append(f"{feat} x {comp}<br>Score: 0/10<br>No signals")
-                continue
-            detail = od["company_detail"].get(comp, {"count": 0, "latest": ""})
-            count = detail["count"]
-            latest = detail["latest"]
-
-            if count == 0:
-                score = 0
-            elif latest and latest >= _30d_ago:
-                score = 7 + min(count - 1, 2)  # 7-9
-            elif latest and latest >= _180d_ago:
-                score = 4 + min(count - 1, 2)  # 4-6
-            else:
-                score = 1 + min(count - 1, 2)  # 1-3
-
-            # Positive sentiment bonus
-            comp_sigs = [s for s in od["signals"]
-                         if comp in s.get("companies_mentioned", [])]
-            has_positive = any(s.get("sentiment") == "positive" for s in comp_sigs)
-            if has_positive and score > 0:
-                score = min(score + 1, 10)
-
-            # Top signal title for hover
-            top_sig_title = ""
-            if comp_sigs:
-                best = sorted(comp_sigs, key=lambda s: s.get("post_date", ""), reverse=True)[0]
-                top_sig_title = (best.get("title", "") or best.get("text", ""))[:60]
-
-            row_z.append(score)
-            hover_line = (
-                f"<b>{feat}</b> x <b>{comp}</b><br>"
-                f"Score: {score}/10<br>"
-                f"Signals: {count}<br>"
-                f"Most recent: {latest or 'n/a'}<br>"
-                f"Top signal: {top_sig_title}"
-            )
-            row_hover.append(hover_line)
-
-        heat_z.append(row_z)
-        hover_text.append(row_hover)
-
-    fig2 = go.Figure(data=go.Heatmap(
-        z=heat_z,
-        x=selected_comps,
-        y=feature_names,
-        hovertext=hover_text,
-        hovertemplate="%{hovertext}<extra></extra>",
-        colorscale=[[0, "#F8F4EB"], [1, "#0E3B7E"]],
-        colorbar=dict(
-            title=dict(text="Cold \u2192 Hot (recent activity)", side="right"),
-            thickness=14,
-        ),
-        xgap=2, ygap=2,
-        zmin=0, zmax=10,
-    ))
-
-    fig2.update_layout(
-        plot_bgcolor="#F8F4EB",
-        paper_bgcolor="#F8F4EB",
-        font=dict(family="DM Sans, Arial, sans-serif", color="#0A0A0A"),
-        xaxis=dict(
-            tickangle=-35,
-            tickfont=dict(size=11),
-            side="bottom",
-        ),
-        yaxis=dict(
-            autorange="reversed",
-            tickfont=dict(size=11),
-        ),
-        margin=dict(l=10, r=20, t=30, b=max(100, max((len(c) for c in selected_comps), default=8) * 6)),
-        height=max(350, len(feature_names) * 38 + 140),
-    )
-
-    st.plotly_chart(fig2, use_container_width=True)
-
-    # ── BUILD NOW ─────────────────────────────────────────────────────────────
-    _share_button("build_now", "Share Build Now", extra_params={"comps": _comps_qs})
-    st.markdown("#### Build Now")
-    st.caption("High buyer demand. No competitor has solved it.")
-
-    build_now_items = []
-    for opp, od in opportunity_data.items():
-        if od["evidence"] < 3:
-            continue
-        if not selected_comps:
-            continue
-        red_count = sum(
+    for opp, od in _ws_items:
+        _has_it = list(od["companies_praised"] | od["companies_tried"])[:5]
+        _gap_count = sum(
             1 for c in selected_comps
             if c not in od["companies_praised"]
             and c not in od["companies_complained"]
             and c not in od["companies_tried"]
         )
-        if red_count > len(selected_comps) / 2:
-            build_now_items.append((opp, od))
+        _opp_score = round(od["evidence"] * (1 + _gap_count / max(len(selected_comps), 1)) * od["confidence"] / 100)
 
-    build_now_items.sort(key=lambda x: x[1]["evidence"], reverse=True)
+        if _has_it:
+            _coverage = ", ".join(_has_it[:3])
+            if len(_has_it) > 3:
+                _coverage += f" +{len(_has_it) - 3} more"
+        else:
+            _coverage = "No competitor has a clear solution"
 
-    if build_now_items:
-        for opp, od in build_now_items:
-            conf = od["confidence"]
-            recent_count = sum(
-                1 for s in od["signals"] if s.get("post_date", "") >= _90d_ago
-            )
-            # Filter evidence to selected competitors only
-            comp_signals = [
-                s for s in od["signals"]
-                if any(c in s.get("companies_mentioned", []) for c in selected_comps)
-            ]
-            with st.container(border=True):
-                st.markdown(f"**{opp}** \u2014 {conf}% confidence")
-                st.markdown(
-                    f"{recent_count} signals mention this gap in the last 90 days. "
-                    "No competitor has a clear solution."
-                )
-                scored_sigs = sorted(
-                    comp_signals, key=lambda x: _relevance_score(x), reverse=True
-                )
-                displayable = [
-                    s for s in scored_sigs
-                    if _is_display_relevant(s) and _relevance_sentence(s)
-                ]
-                for si, sig in enumerate(displayable[:3]):
-                    sig_title = sig.get("title", "")[:100] or sig.get("text", "")[:100]
-                    sig_url = sig.get("url", "")
-                    sig_src = _source_badge(sig.get("source", ""))
-                    sig_why = _relevance_sentence(sig)
-                    hl = f"[{sig_title}]({sig_url})" if sig_url else sig_title
-                    st.markdown(f"  `{sig_src}` {hl}")
-                    st.caption(f"  _{sig_why}_")
-                rest = displayable[3:15]
-                if rest:
-                    with st.expander(f"Show {len(rest)} more evidence"):
-                        for si2, sig in enumerate(rest):
-                            sig_title = sig.get("title", "")[:100] or sig.get("text", "")[:100]
-                            sig_url = sig.get("url", "")
-                            sig_src = _source_badge(sig.get("source", ""))
-                            sig_why = _relevance_sentence(sig)
-                            hl = f"[{sig_title}]({sig_url})" if sig_url else sig_title
-                            st.markdown(f"`{sig_src}` {hl}")
-                            st.caption(f"_{sig_why}_")
-    else:
-        st.caption(
-            "No features currently meet the Build Now criteria "
-            "(3+ signals, majority competitor gap)."
+        _ws_rows += (
+            f'<tr style="border-bottom:1px solid #E8E4D9;">'
+            f'<td style="padding:8px 12px 8px 0; font-weight:500;">{opp}</td>'
+            f'<td style="padding:8px 12px; text-align:center; font-family:DM Mono,monospace; font-size:12px;">{od["evidence"]}</td>'
+            f'<td style="padding:8px 12px; font-size:13px; color:#6b7280;">{_coverage}</td>'
+            f'<td style="padding:8px 0 8px 12px; text-align:center; font-family:DM Mono,monospace; font-size:12px; font-weight:600;">{_opp_score}</td>'
+            f'</tr>'
         )
+
+    if _ws_rows:
+        st.markdown(
+            f'<table style="width:100%; font-family:DM Sans,sans-serif; font-size:14px; border-collapse:collapse;">'
+            f'<tr style="font-family:DM Mono,monospace; font-size:11px; color:#94a3b8; text-transform:uppercase; border-bottom:1px solid #D1CFBA;">'
+            f'<th style="text-align:left; padding:6px 12px 6px 0;">Feature</th>'
+            f'<th style="text-align:center; padding:6px 12px;">Signals</th>'
+            f'<th style="text-align:left; padding:6px 12px;">Competitor Coverage</th>'
+            f'<th style="text-align:center; padding:6px 0 6px 12px;">Opp Score</th>'
+            f'</tr>{_ws_rows}</table>',
+            unsafe_allow_html=True,
+        )
+    else:
+        st.caption("No features currently have enough data to display.")
+
+    st.markdown("---")
+
+    # ────────────────────────────────────────────────────────────────────────
+    # SECTION 3: COMPETITOR MOMENTUM
+    # ────────────────────────────────────────────────────────────────────────
+    st.markdown("#### Competitor Momentum")
+    st.caption("Signal activity ranked by volume. Trend based on week-over-week change.")
+
+    _mom_sorted = sorted(selected_comps, key=lambda c: _comp_stats[c]["total"], reverse=True)
+    _mom_rows = ""
+    for comp in _mom_sorted:
+        cs = _comp_stats[comp]
+        _trend = {"Rising": "\u2191", "Falling": "\u2193", "Stable": "\u2192"}.get(cs["momentum"], "-")
+        _last_sig = _time_ago(cs["latest"]) if cs["latest"] else "N/A"
+        _mom_rows += (
+            f'<tr style="border-bottom:1px solid #E8E4D9;">'
+            f'<td style="padding:8px 12px 8px 0; font-weight:500;">{comp}</td>'
+            f'<td style="padding:8px 12px; text-align:center; font-family:DM Mono,monospace; font-size:12px;">{cs["this_week"]}</td>'
+            f'<td style="padding:8px 12px; text-align:center; font-family:DM Mono,monospace; font-size:12px;">{cs["last_30d"]}</td>'
+            f'<td style="padding:8px 12px; text-align:center; font-size:16px;">{_trend}</td>'
+            f'<td style="padding:8px 0 8px 12px; text-align:right; font-family:DM Mono,monospace; font-size:11px; color:#94a3b8;">{_last_sig}</td>'
+            f'</tr>'
+        )
+
+    st.markdown(
+        f'<table style="width:100%; font-family:DM Sans,sans-serif; font-size:14px; border-collapse:collapse;">'
+        f'<tr style="font-family:DM Mono,monospace; font-size:11px; color:#94a3b8; text-transform:uppercase; border-bottom:1px solid #D1CFBA;">'
+        f'<th style="text-align:left; padding:6px 12px 6px 0;">Competitor</th>'
+        f'<th style="text-align:center; padding:6px 12px;">This Week</th>'
+        f'<th style="text-align:center; padding:6px 12px;">Last 30 Days</th>'
+        f'<th style="text-align:center; padding:6px 12px;">Trend</th>'
+        f'<th style="text-align:right; padding:6px 0 6px 12px;">Last Signal</th>'
+        f'</tr>{_mom_rows}</table>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("---")
+
+    # ────────────────────────────────────────────────────────────────────────
+    # SECTION 4: DOWNLOAD ROADMAP BRIEF
+    # ────────────────────────────────────────────────────────────────────────
+    st.markdown("#### Download Roadmap Brief")
+    st.caption("Export the full roadmap analysis as a formatted .docx.")
+
+    def _export_roadmap_brief():
+        """Generate a Roadmap Brief .docx."""
+        doc = DocxDocument()
+        style = doc.styles["Normal"]
+        style.font.name = "Calibri"
+        style.font.size = Pt(11)
+
+        total_signals = len(insights)
+        date_display = datetime.now().strftime("%B %d, %Y")
+        date_str = datetime.now().strftime("%Y-%m-%d")
+
+        doc.add_heading("GEO Pulse Roadmap Brief", level=0)
+        doc.add_paragraph(f"Generated {date_display}")
+        doc.add_paragraph("")
+
+        # Section 1: What the Market Wants
+        doc.add_heading("What the Market Wants", level=1)
+        for opp, od in _sorted_strong:
+            _rc = sum(1 for s in od["signals"] if s.get("post_date", "") >= _30d_ago)
+            doc.add_heading(opp, level=2)
+            doc.add_paragraph(
+                f"{od['evidence']} signals, {od['confidence']}% confidence, "
+                f"{_rc} in last 30 days."
+            )
+            _top = sorted(od["signals"], key=lambda x: _relevance_score(x), reverse=True)[:3]
+            for _ts in _top:
+                _tst = (_ts.get("title") or _ts.get("text", ""))[:100]
+                _tsu = _ts.get("url", "")
+                p = doc.add_paragraph(style="List Bullet")
+                if _tsu:
+                    _docx_add_hyperlink(p, _tst, _tsu, font_size=11)
+                else:
+                    p.add_run(_tst)
+
+        # Section 2: Competitive White Space
+        doc.add_heading("Competitive White Space", level=1)
+        table = doc.add_table(rows=1, cols=4)
+        table.style = "Table Grid"
+        hdr = table.rows[0].cells
+        for i, h in enumerate(["Feature", "Signals", "Coverage", "Opp Score"]):
+            hdr[i].text = h
+        for opp, od in _ws_items:
+            _has = list(od["companies_praised"] | od["companies_tried"])[:3]
+            _cov = ", ".join(_has) if _has else "No clear solution"
+            _gc = sum(1 for c in selected_comps
+                      if c not in od["companies_praised"]
+                      and c not in od["companies_complained"]
+                      and c not in od["companies_tried"])
+            _sc = round(od["evidence"] * (1 + _gc / max(len(selected_comps), 1)) * od["confidence"] / 100)
+            row = table.add_row().cells
+            row[0].text = opp
+            row[1].text = str(od["evidence"])
+            row[2].text = _cov
+            row[3].text = str(_sc)
+
+        # Section 3: Competitor Momentum
+        doc.add_heading("Competitor Momentum", level=1)
+        table2 = doc.add_table(rows=1, cols=5)
+        table2.style = "Table Grid"
+        hdr2 = table2.rows[0].cells
+        for i, h in enumerate(["Competitor", "This Week", "Last 30 Days", "Trend", "Last Signal"]):
+            hdr2[i].text = h
+        for comp in _mom_sorted:
+            cs = _comp_stats[comp]
+            row = table2.add_row().cells
+            row[0].text = comp
+            row[1].text = str(cs["this_week"])
+            row[2].text = str(cs["last_30d"])
+            row[3].text = cs["momentum"]
+            row[4].text = _time_ago(cs["latest"]) if cs["latest"] else "N/A"
+
+        _docx_source_caption(doc, total_signals, date_str)
+
+        buf = io.BytesIO()
+        doc.save(buf)
+        buf.seek(0)
+        return buf
+
+    try:
+        _rm_buf = _export_roadmap_brief()
+        _rm_bytes = _rm_buf.getvalue()
+        _rm_date = datetime.now().strftime("%Y-%m-%d")
+        st.download_button(
+            label="Download Roadmap Brief (.docx)",
+            data=_rm_bytes,
+            file_name=f"GEOPulse_RoadmapBrief_{_rm_date}.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            key="export_dl_roadmap",
+            type="primary",
+        )
+    except Exception as _rm_ex:
+        st.error(f"Export failed: {_rm_ex}")
 
 
 
