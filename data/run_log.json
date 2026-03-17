@@ -880,5 +880,14 @@
     "new_posts": 2574,
     "since_date": null,
     "error": null
+  },
+  {
+    "run_type": "full",
+    "started_at": "2026-03-17T13:14:58.740734",
+    "completed_at": "2026-03-17T13:19:10.791168",
+    "status": "completed",
+    "new_posts": 2571,
+    "since_date": null,
+    "error": null
   }
 ]
