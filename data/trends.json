@@ -10,13 +10,13 @@
     "2012-W48",
     "2013-W06",
     "2013-W25",
+    "2013-W28",
+    "2013-W30",
     "2013-W42",
     "2013-W44",
     "2013-W46",
     "2013-W47",
     "2013-W50",
-    "2014-W13",
-    "2014-W16",
     "2014-W20",
     "2014-W34",
     "2014-W44",
@@ -30,13 +30,14 @@
     "2015-W24",
     "2015-W29",
     "2015-W31",
+    "2016-W17",
     "2019-W05",
     "2019-W14",
     "2019-W15",
+    "2019-W26",
     "2021-W17",
     "2022-W13",
     "2022-W22",
-    "2022-W36",
     "2022-W48",
     "2022-W49",
     "2022-W50",
@@ -50,9 +51,9 @@
     "2023-W28",
     "2023-W36",
     "2023-W39",
+    "2023-W49",
     "2024-W03",
     "2024-W05",
-    "2024-W12",
     "2024-W13",
     "2024-W19",
     "2024-W20",
@@ -132,6 +133,61 @@
     "2026-W16"
   ],
   "company_trends": {
+    "Conductor": {
+      "history": [
+        {
+          "week": "2026-W05",
+          "count": 1
+        },
+        {
+          "week": "2026-W06",
+          "count": 0
+        },
+        {
+          "week": "2026-W07",
+          "count": 0
+        },
+        {
+          "week": "2026-W08",
+          "count": 0
+        },
+        {
+          "week": "2026-W09",
+          "count": 0
+        },
+        {
+          "week": "2026-W10",
+          "count": 0
+        },
+        {
+          "week": "2026-W11",
+          "count": 0
+        },
+        {
+          "week": "2026-W12",
+          "count": 0
+        },
+        {
+          "week": "2026-W13",
+          "count": 1
+        },
+        {
+          "week": "2026-W14",
+          "count": 0
+        },
+        {
+          "week": "2026-W15",
+          "count": 0
+        },
+        {
+          "week": "2026-W16",
+          "count": 0
+        }
+      ],
+      "latest_count": 0,
+      "delta_pct": 0,
+      "direction": "flat"
+    },
     "Semrush": {
       "history": [
         {
@@ -447,7 +503,7 @@
         },
         {
           "week": "2026-W13",
-          "count": 0
+          "count": 1
         },
         {
           "week": "2026-W14",
@@ -565,16 +621,16 @@
         },
         {
           "week": "2026-W15",
-          "count": 2
+          "count": 1
         },
         {
           "week": "2026-W16",
-          "count": 0
+          "count": 1
         }
       ],
-      "latest_count": 0,
-      "delta_pct": -100.0,
-      "direction": "fading"
+      "latest_count": 1,
+      "delta_pct": 0.0,
+      "direction": "stable"
     },
     "funding_news": {
       "history": [
@@ -624,11 +680,11 @@
         },
         {
           "week": "2026-W16",
-          "count": 1
+          "count": 2
         }
       ],
-      "latest_count": 1,
-      "delta_pct": 1,
+      "latest_count": 2,
+      "delta_pct": 2,
       "direction": "new"
     },
     "praise": {
@@ -722,7 +778,7 @@
         },
         {
           "week": "2026-W13",
-          "count": 1
+          "count": 0
         },
         {
           "week": "2026-W14",
@@ -734,11 +790,11 @@
         },
         {
           "week": "2026-W16",
-          "count": 1
+          "count": 3
         }
       ],
-      "latest_count": 1,
-      "delta_pct": -83.3,
+      "latest_count": 3,
+      "delta_pct": -50.0,
       "direction": "fading"
     },
     "question": {
@@ -785,16 +841,16 @@
         },
         {
           "week": "2026-W15",
-          "count": 2
+          "count": 1
         },
         {
           "week": "2026-W16",
-          "count": 2
+          "count": 3
         }
       ],
-      "latest_count": 2,
-      "delta_pct": 0.0,
-      "direction": "stable"
+      "latest_count": 3,
+      "delta_pct": 200.0,
+      "direction": "rising"
     }
   },
   "volume_trend": [
@@ -859,6 +915,18 @@
       "direction": "stable"
     },
     {
+      "week": "2013-W28",
+      "count": 1,
+      "delta_pct": 0.0,
+      "direction": "stable"
+    },
+    {
+      "week": "2013-W30",
+      "count": 1,
+      "delta_pct": 0.0,
+      "direction": "stable"
+    },
+    {
       "week": "2013-W42",
       "count": 1,
       "delta_pct": 0.0,
@@ -884,18 +952,6 @@
     },
     {
       "week": "2013-W50",
-      "count": 1,
-      "delta_pct": 0.0,
-      "direction": "stable"
-    },
-    {
-      "week": "2014-W13",
-      "count": 1,
-      "delta_pct": 0.0,
-      "direction": "stable"
-    },
-    {
-      "week": "2014-W16",
       "count": 1,
       "delta_pct": 0.0,
       "direction": "stable"
@@ -979,6 +1035,12 @@
       "direction": "fading"
     },
     {
+      "week": "2016-W17",
+      "count": 1,
+      "delta_pct": 0.0,
+      "direction": "stable"
+    },
+    {
       "week": "2019-W05",
       "count": 1,
       "delta_pct": 0.0,
@@ -997,10 +1059,16 @@
       "direction": "stable"
     },
     {
-      "week": "2021-W17",
+      "week": "2019-W26",
       "count": 1,
       "delta_pct": -50.0,
       "direction": "fading"
+    },
+    {
+      "week": "2021-W17",
+      "count": 1,
+      "delta_pct": 0.0,
+      "direction": "stable"
     },
     {
       "week": "2022-W13",
@@ -1015,16 +1083,10 @@
       "direction": "rising"
     },
     {
-      "week": "2022-W36",
+      "week": "2022-W48",
       "count": 1,
       "delta_pct": -85.7,
       "direction": "fading"
-    },
-    {
-      "week": "2022-W48",
-      "count": 1,
-      "delta_pct": 0.0,
-      "direction": "stable"
     },
     {
       "week": "2022-W49",
@@ -1099,19 +1161,19 @@
       "direction": "rising"
     },
     {
-      "week": "2024-W03",
+      "week": "2023-W49",
       "count": 1,
       "delta_pct": -50.0,
       "direction": "fading"
     },
     {
-      "week": "2024-W05",
+      "week": "2024-W03",
       "count": 1,
       "delta_pct": 0.0,
       "direction": "stable"
     },
     {
-      "week": "2024-W12",
+      "week": "2024-W05",
       "count": 1,
       "delta_pct": 0.0,
       "direction": "stable"
@@ -1244,14 +1306,14 @@
     },
     {
       "week": "2025-W13",
-      "count": 5,
-      "delta_pct": 150.0,
+      "count": 3,
+      "delta_pct": 50.0,
       "direction": "rising"
     },
     {
       "week": "2025-W14",
       "count": 1,
-      "delta_pct": -80.0,
+      "delta_pct": -66.7,
       "direction": "fading"
     },
     {
@@ -1364,38 +1426,38 @@
     },
     {
       "week": "2025-W33",
-      "count": 8,
-      "delta_pct": 100.0,
+      "count": 7,
+      "delta_pct": 75.0,
       "direction": "rising"
     },
     {
       "week": "2025-W34",
-      "count": 6,
-      "delta_pct": -25.0,
-      "direction": "fading"
+      "count": 7,
+      "delta_pct": 0.0,
+      "direction": "stable"
     },
     {
       "week": "2025-W35",
       "count": 9,
-      "delta_pct": 50.0,
+      "delta_pct": 28.6,
       "direction": "rising"
     },
     {
       "week": "2025-W36",
-      "count": 7,
-      "delta_pct": -22.2,
+      "count": 5,
+      "delta_pct": -44.4,
       "direction": "fading"
     },
     {
       "week": "2025-W37",
-      "count": 17,
-      "delta_pct": 142.9,
+      "count": 16,
+      "delta_pct": 220.0,
       "direction": "rising"
     },
     {
       "week": "2025-W38",
       "count": 3,
-      "delta_pct": -82.4,
+      "delta_pct": -81.2,
       "direction": "fading"
     },
     {
@@ -1430,26 +1492,26 @@
     },
     {
       "week": "2025-W44",
-      "count": 10,
-      "delta_pct": -9.1,
+      "count": 9,
+      "delta_pct": -18.2,
       "direction": "stable"
     },
     {
       "week": "2025-W45",
       "count": 9,
-      "delta_pct": -10.0,
+      "delta_pct": 0.0,
       "direction": "stable"
     },
     {
       "week": "2025-W46",
-      "count": 3,
-      "delta_pct": -66.7,
+      "count": 4,
+      "delta_pct": -55.6,
       "direction": "fading"
     },
     {
       "week": "2025-W47",
       "count": 8,
-      "delta_pct": 166.7,
+      "delta_pct": 100.0,
       "direction": "rising"
     },
     {
@@ -1460,14 +1522,14 @@
     },
     {
       "week": "2025-W49",
-      "count": 4,
-      "delta_pct": -42.9,
+      "count": 5,
+      "delta_pct": -28.6,
       "direction": "fading"
     },
     {
       "week": "2025-W50",
       "count": 8,
-      "delta_pct": 100.0,
+      "delta_pct": 60.0,
       "direction": "rising"
     },
     {
@@ -1490,20 +1552,20 @@
     },
     {
       "week": "2026-W02",
-      "count": 14,
-      "delta_pct": 366.7,
+      "count": 13,
+      "delta_pct": 333.3,
       "direction": "rising"
     },
     {
       "week": "2026-W03",
-      "count": 8,
-      "delta_pct": -42.9,
+      "count": 7,
+      "delta_pct": -46.2,
       "direction": "fading"
     },
     {
       "week": "2026-W04",
       "count": 11,
-      "delta_pct": 37.5,
+      "delta_pct": 57.1,
       "direction": "rising"
     },
     {
@@ -1538,48 +1600,54 @@
     },
     {
       "week": "2026-W10",
-      "count": 9,
-      "delta_pct": -35.7,
-      "direction": "fading"
+      "count": 13,
+      "delta_pct": -7.1,
+      "direction": "stable"
     },
     {
       "week": "2026-W11",
       "count": 16,
-      "delta_pct": 77.8,
+      "delta_pct": 23.1,
       "direction": "rising"
     },
     {
       "week": "2026-W12",
-      "count": 19,
-      "delta_pct": 18.8,
-      "direction": "stable"
+      "count": 20,
+      "delta_pct": 25.0,
+      "direction": "rising"
     },
     {
       "week": "2026-W13",
-      "count": 17,
-      "delta_pct": -10.5,
+      "count": 16,
+      "delta_pct": -20.0,
       "direction": "stable"
     },
     {
       "week": "2026-W14",
       "count": 19,
-      "delta_pct": 11.8,
+      "delta_pct": 18.8,
       "direction": "stable"
     },
     {
       "week": "2026-W15",
-      "count": 41,
-      "delta_pct": 115.8,
+      "count": 34,
+      "delta_pct": 78.9,
       "direction": "rising"
     },
     {
       "week": "2026-W16",
-      "count": 28,
-      "delta_pct": -31.7,
-      "direction": "fading"
+      "count": 40,
+      "delta_pct": 17.6,
+      "direction": "stable"
     }
   ],
-  "rising": [],
+  "rising": [
+    {
+      "name": "question",
+      "type": "tag",
+      "delta": 200.0
+    }
+  ],
   "fading": [
     {
       "name": "Semrush",
@@ -1597,11 +1665,6 @@
       "delta": -100.0
     },
     {
-      "name": "complaint",
-      "type": "tag",
-      "delta": -100.0
-    },
-    {
       "name": "praise",
       "type": "tag",
       "delta": -100.0
@@ -1609,8 +1672,8 @@
     {
       "name": "product_launch",
       "type": "tag",
-      "delta": -83.3
+      "delta": -50.0
     }
   ],
-  "generated_at": "2026-04-14T13:33:23.277354"
+  "generated_at": "2026-04-14T19:22:19.179366"
 }
