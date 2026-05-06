@@ -31,7 +31,6 @@
     "2015-W24",
     "2015-W29",
     "2015-W31",
-    "2016-W17",
     "2019-W05",
     "2019-W14",
     "2019-W26",
@@ -342,7 +341,7 @@
         },
         {
           "week": "2026-W17",
-          "count": 2
+          "count": 1
         },
         {
           "week": "2026-W18",
@@ -350,12 +349,12 @@
         },
         {
           "week": "2026-W19",
-          "count": 0
+          "count": 1
         }
       ],
-      "latest_count": 0,
-      "delta_pct": -100.0,
-      "direction": "fading"
+      "latest_count": 1,
+      "delta_pct": 0.0,
+      "direction": "stable"
     },
     "The Prompting Company": {
       "history": [
@@ -509,7 +508,7 @@
         },
         {
           "week": "2026-W17",
-          "count": 2
+          "count": 1
         },
         {
           "week": "2026-W18",
@@ -731,7 +730,7 @@
         },
         {
           "week": "2026-W17",
-          "count": 7
+          "count": 6
         },
         {
           "week": "2026-W18",
@@ -739,11 +738,11 @@
         },
         {
           "week": "2026-W19",
-          "count": 0
+          "count": 1
         }
       ],
-      "latest_count": 0,
-      "delta_pct": -100.0,
+      "latest_count": 1,
+      "delta_pct": -50.0,
       "direction": "fading"
     },
     "comparison": {
@@ -845,16 +844,16 @@
         },
         {
           "week": "2026-W18",
-          "count": 2
+          "count": 1
         },
         {
           "week": "2026-W19",
-          "count": 2
+          "count": 4
         }
       ],
-      "latest_count": 2,
-      "delta_pct": 0.0,
-      "direction": "stable"
+      "latest_count": 4,
+      "delta_pct": 300.0,
+      "direction": "rising"
     },
     "funding_news": {
       "history": [
@@ -935,7 +934,7 @@
         },
         {
           "week": "2026-W13",
-          "count": 0
+          "count": 1
         },
         {
           "week": "2026-W14",
@@ -959,18 +958,18 @@
         },
         {
           "week": "2026-W19",
-          "count": 1
+          "count": 3
         }
       ],
-      "latest_count": 1,
-      "delta_pct": 1,
+      "latest_count": 3,
+      "delta_pct": 3,
       "direction": "new"
     },
     "product_launch": {
       "history": [
         {
           "week": "2026-W08",
-          "count": 3
+          "count": 4
         },
         {
           "week": "2026-W09",
@@ -990,7 +989,7 @@
         },
         {
           "week": "2026-W13",
-          "count": 0
+          "count": 1
         },
         {
           "week": "2026-W14",
@@ -998,7 +997,7 @@
         },
         {
           "week": "2026-W15",
-          "count": 1
+          "count": 0
         },
         {
           "week": "2026-W16",
@@ -1010,7 +1009,7 @@
         },
         {
           "week": "2026-W18",
-          "count": 2
+          "count": 1
         },
         {
           "week": "2026-W19",
@@ -1018,8 +1017,8 @@
         }
       ],
       "latest_count": 1,
-      "delta_pct": -50.0,
-      "direction": "fading"
+      "delta_pct": 0.0,
+      "direction": "stable"
     },
     "question": {
       "history": [
@@ -1265,12 +1264,6 @@
       "direction": "fading"
     },
     {
-      "week": "2016-W17",
-      "count": 1,
-      "delta_pct": 0.0,
-      "direction": "stable"
-    },
-    {
       "week": "2019-W05",
       "count": 1,
       "delta_pct": 0.0,
@@ -1434,15 +1427,15 @@
     },
     {
       "week": "2024-W29",
-      "count": 2,
-      "delta_pct": 100.0,
-      "direction": "rising"
+      "count": 1,
+      "delta_pct": 0.0,
+      "direction": "stable"
     },
     {
       "week": "2024-W31",
       "count": 1,
-      "delta_pct": -50.0,
-      "direction": "fading"
+      "delta_pct": 0.0,
+      "direction": "stable"
     },
     {
       "week": "2024-W34",
@@ -1578,26 +1571,26 @@
     },
     {
       "week": "2025-W20",
-      "count": 4,
-      "delta_pct": 100.0,
+      "count": 5,
+      "delta_pct": 150.0,
       "direction": "rising"
     },
     {
       "week": "2025-W21",
       "count": 4,
-      "delta_pct": 0.0,
+      "delta_pct": -20.0,
       "direction": "stable"
     },
     {
       "week": "2025-W22",
-      "count": 6,
-      "delta_pct": 50.0,
+      "count": 7,
+      "delta_pct": 75.0,
       "direction": "rising"
     },
     {
       "week": "2025-W23",
       "count": 4,
-      "delta_pct": -33.3,
+      "delta_pct": -42.9,
       "direction": "fading"
     },
     {
@@ -1650,20 +1643,20 @@
     },
     {
       "week": "2025-W32",
-      "count": 3,
-      "delta_pct": -25.0,
+      "count": 2,
+      "delta_pct": -50.0,
       "direction": "fading"
     },
     {
       "week": "2025-W33",
-      "count": 8,
-      "delta_pct": 166.7,
+      "count": 7,
+      "delta_pct": 250.0,
       "direction": "rising"
     },
     {
       "week": "2025-W34",
       "count": 5,
-      "delta_pct": -37.5,
+      "delta_pct": -28.6,
       "direction": "fading"
     },
     {
@@ -1710,14 +1703,14 @@
     },
     {
       "week": "2025-W42",
-      "count": 7,
-      "delta_pct": 16.7,
+      "count": 6,
+      "delta_pct": 0.0,
       "direction": "stable"
     },
     {
       "week": "2025-W43",
       "count": 11,
-      "delta_pct": 57.1,
+      "delta_pct": 83.3,
       "direction": "rising"
     },
     {
@@ -1734,14 +1727,14 @@
     },
     {
       "week": "2025-W46",
-      "count": 5,
-      "delta_pct": -50.0,
+      "count": 6,
+      "delta_pct": -40.0,
       "direction": "fading"
     },
     {
       "week": "2025-W47",
       "count": 8,
-      "delta_pct": 60.0,
+      "delta_pct": 33.3,
       "direction": "rising"
     },
     {
@@ -1794,14 +1787,14 @@
     },
     {
       "week": "2026-W04",
-      "count": 12,
-      "delta_pct": 140.0,
+      "count": 11,
+      "delta_pct": 120.0,
       "direction": "rising"
     },
     {
       "week": "2026-W05",
       "count": 8,
-      "delta_pct": -33.3,
+      "delta_pct": -27.3,
       "direction": "fading"
     },
     {
@@ -1818,14 +1811,14 @@
     },
     {
       "week": "2026-W08",
-      "count": 9,
-      "delta_pct": -47.1,
+      "count": 10,
+      "delta_pct": -41.2,
       "direction": "fading"
     },
     {
       "week": "2026-W09",
       "count": 13,
-      "delta_pct": 44.4,
+      "delta_pct": 30.0,
       "direction": "rising"
     },
     {
@@ -1836,74 +1829,70 @@
     },
     {
       "week": "2026-W11",
-      "count": 12,
-      "delta_pct": 71.4,
+      "count": 13,
+      "delta_pct": 85.7,
       "direction": "rising"
     },
     {
       "week": "2026-W12",
-      "count": 10,
-      "delta_pct": -16.7,
+      "count": 13,
+      "delta_pct": 0.0,
       "direction": "stable"
     },
     {
       "week": "2026-W13",
-      "count": 9,
-      "delta_pct": -10.0,
+      "count": 11,
+      "delta_pct": -15.4,
       "direction": "stable"
     },
     {
       "week": "2026-W14",
       "count": 11,
-      "delta_pct": 22.2,
-      "direction": "rising"
+      "delta_pct": 0.0,
+      "direction": "stable"
     },
     {
       "week": "2026-W15",
-      "count": 16,
-      "delta_pct": 45.5,
+      "count": 15,
+      "delta_pct": 36.4,
       "direction": "rising"
     },
     {
       "week": "2026-W16",
-      "count": 25,
-      "delta_pct": 56.2,
+      "count": 22,
+      "delta_pct": 46.7,
       "direction": "rising"
     },
     {
       "week": "2026-W17",
-      "count": 36,
-      "delta_pct": 44.0,
+      "count": 34,
+      "delta_pct": 54.5,
       "direction": "rising"
     },
     {
       "week": "2026-W18",
-      "count": 37,
-      "delta_pct": 2.8,
+      "count": 35,
+      "delta_pct": 2.9,
       "direction": "stable"
     },
     {
       "week": "2026-W19",
-      "count": 24,
-      "delta_pct": -35.1,
-      "direction": "fading"
+      "count": 31,
+      "delta_pct": -11.4,
+      "direction": "stable"
     }
   ],
-  "rising": [],
+  "rising": [
+    {
+      "name": "complaint",
+      "type": "tag",
+      "delta": 300.0
+    }
+  ],
   "fading": [
     {
       "name": "Conductor",
       "type": "company",
-      "delta": -100.0
-    },
-    {
-      "name": "Semrush",
-      "type": "company",
-      "delta": -100.0
-    },
-    {
-      "name": "company_mention",
-      "type": "tag",
       "delta": -100.0
     },
     {
@@ -1912,7 +1901,7 @@
       "delta": -100.0
     },
     {
-      "name": "product_launch",
+      "name": "company_mention",
       "type": "tag",
       "delta": -50.0
     },
@@ -1922,5 +1911,5 @@
       "delta": -33.3
     }
   ],
-  "generated_at": "2026-05-06T02:59:34.978199"
+  "generated_at": "2026-05-06T14:18:44.489693"
 }
