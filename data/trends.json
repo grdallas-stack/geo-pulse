@@ -15,15 +15,12 @@
     "2019-W05",
     "2019-W14",
     "2019-W15",
-    "2019-W26",
     "2021-W23",
     "2021-W34",
     "2022-W13",
     "2022-W22",
     "2022-W49",
     "2022-W52",
-    "2023-W02",
-    "2023-W03",
     "2023-W06",
     "2023-W14",
     "2023-W16",
@@ -331,7 +328,7 @@
         },
         {
           "week": "2026-W25",
-          "count": 2
+          "count": 1
         },
         {
           "week": "2026-W26",
@@ -396,11 +393,11 @@
         },
         {
           "week": "2026-W27",
-          "count": 3
+          "count": 2
         }
       ],
-      "latest_count": 3,
-      "delta_pct": 200.0,
+      "latest_count": 2,
+      "delta_pct": 100.0,
       "direction": "rising"
     },
     "founder_voice": {
@@ -610,7 +607,7 @@
         },
         {
           "week": "2026-W25",
-          "count": 2
+          "count": 1
         },
         {
           "week": "2026-W26",
@@ -834,7 +831,7 @@
         },
         {
           "week": "2026-W26",
-          "count": 6
+          "count": 5
         },
         {
           "week": "2026-W27",
@@ -842,7 +839,7 @@
         }
       ],
       "latest_count": 6,
-      "delta_pct": 0.0,
+      "delta_pct": 20.0,
       "direction": "stable"
     },
     "product_launch": {
@@ -853,7 +850,7 @@
         },
         {
           "week": "2026-W17",
-          "count": 1
+          "count": 0
         },
         {
           "week": "2026-W18",
@@ -893,11 +890,11 @@
         },
         {
           "week": "2026-W27",
-          "count": 1
+          "count": 2
         }
       ],
-      "latest_count": 1,
-      "delta_pct": -66.7,
+      "latest_count": 2,
+      "delta_pct": -33.3,
       "direction": "fading"
     },
     "question": {
@@ -944,7 +941,7 @@
         },
         {
           "week": "2026-W26",
-          "count": 1
+          "count": 0
         },
         {
           "week": "2026-W27",
@@ -952,8 +949,8 @@
         }
       ],
       "latest_count": 2,
-      "delta_pct": 100.0,
-      "direction": "rising"
+      "delta_pct": 2,
+      "direction": "new"
     }
   },
   "volume_trend": [
@@ -1048,12 +1045,6 @@
       "direction": "fading"
     },
     {
-      "week": "2019-W26",
-      "count": 1,
-      "delta_pct": 0.0,
-      "direction": "stable"
-    },
-    {
       "week": "2021-W23",
       "count": 1,
       "delta_pct": 0.0,
@@ -1085,18 +1076,6 @@
     },
     {
       "week": "2022-W52",
-      "count": 1,
-      "delta_pct": 0.0,
-      "direction": "stable"
-    },
-    {
-      "week": "2023-W02",
-      "count": 1,
-      "delta_pct": 0.0,
-      "direction": "stable"
-    },
-    {
-      "week": "2023-W03",
       "count": 1,
       "delta_pct": 0.0,
       "direction": "stable"
@@ -1199,14 +1178,14 @@
     },
     {
       "week": "2024-W32",
-      "count": 2,
-      "delta_pct": -33.3,
-      "direction": "fading"
+      "count": 3,
+      "delta_pct": 0.0,
+      "direction": "stable"
     },
     {
       "week": "2024-W34",
       "count": 1,
-      "delta_pct": -50.0,
+      "delta_pct": -66.7,
       "direction": "fading"
     },
     {
@@ -1529,26 +1508,26 @@
     },
     {
       "week": "2025-W51",
-      "count": 6,
-      "delta_pct": -14.3,
+      "count": 7,
+      "delta_pct": 0.0,
       "direction": "stable"
     },
     {
       "week": "2025-W52",
       "count": 3,
-      "delta_pct": -50.0,
+      "delta_pct": -57.1,
       "direction": "fading"
     },
     {
       "week": "2026-W01",
-      "count": 5,
-      "delta_pct": 66.7,
+      "count": 4,
+      "delta_pct": 33.3,
       "direction": "rising"
     },
     {
       "week": "2026-W02",
       "count": 9,
-      "delta_pct": 80.0,
+      "delta_pct": 125.0,
       "direction": "rising"
     },
     {
@@ -1571,15 +1550,15 @@
     },
     {
       "week": "2026-W06",
-      "count": 5,
-      "delta_pct": -28.6,
-      "direction": "fading"
+      "count": 8,
+      "delta_pct": 14.3,
+      "direction": "stable"
     },
     {
       "week": "2026-W07",
       "count": 8,
-      "delta_pct": 60.0,
-      "direction": "rising"
+      "delta_pct": 0.0,
+      "direction": "stable"
     },
     {
       "week": "2026-W08",
@@ -1607,14 +1586,14 @@
     },
     {
       "week": "2026-W12",
-      "count": 7,
-      "delta_pct": 16.7,
+      "count": 6,
+      "delta_pct": 0.0,
       "direction": "stable"
     },
     {
       "week": "2026-W13",
       "count": 12,
-      "delta_pct": 71.4,
+      "delta_pct": 100.0,
       "direction": "rising"
     },
     {
@@ -1637,14 +1616,14 @@
     },
     {
       "week": "2026-W17",
-      "count": 9,
-      "delta_pct": -30.8,
+      "count": 8,
+      "delta_pct": -38.5,
       "direction": "fading"
     },
     {
       "week": "2026-W18",
       "count": 9,
-      "delta_pct": 0.0,
+      "delta_pct": 12.5,
       "direction": "stable"
     },
     {
@@ -1691,23 +1670,18 @@
     },
     {
       "week": "2026-W26",
-      "count": 37,
-      "delta_pct": 42.3,
+      "count": 33,
+      "delta_pct": 26.9,
       "direction": "rising"
     },
     {
       "week": "2026-W27",
-      "count": 63,
-      "delta_pct": 70.3,
+      "count": 65,
+      "delta_pct": 97.0,
       "direction": "rising"
     }
   ],
   "rising": [
-    {
-      "name": "question",
-      "type": "tag",
-      "delta": 100.0
-    },
     {
       "name": "company_mention",
       "type": "tag",
@@ -1723,8 +1697,8 @@
     {
       "name": "product_launch",
       "type": "tag",
-      "delta": -66.7
+      "delta": -33.3
     }
   ],
-  "generated_at": "2026-07-01T14:42:24.605277"
+  "generated_at": "2026-07-01T20:02:19.715886"
 }
