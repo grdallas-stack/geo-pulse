@@ -1,15 +1,6 @@
 [
   {
     "run_type": "full",
-    "started_at": "2026-07-04T08:37:31.622283",
-    "completed_at": "2026-07-04T08:41:56.118447",
-    "status": "completed",
-    "new_posts": 2502,
-    "since_date": null,
-    "error": null
-  },
-  {
-    "run_type": "full",
     "started_at": "2026-07-04T13:27:14.372021",
     "completed_at": "2026-07-04T13:31:49.852251",
     "status": "completed",
@@ -896,6 +887,15 @@
     "completed_at": "2026-07-29T02:44:21.087465",
     "status": "completed",
     "new_posts": 2567,
+    "since_date": null,
+    "error": null
+  },
+  {
+    "run_type": "full",
+    "started_at": "2026-07-29T08:41:00.432858",
+    "completed_at": "2026-07-29T08:47:16.809680",
+    "status": "completed",
+    "new_posts": 2494,
     "since_date": null,
     "error": null
   }
