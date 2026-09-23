@@ -18,7 +18,7 @@
       "Testing suggests Google's AI Overviews tell millions lies per hour"
     ],
     "status": "approved",
-    "discovered_at": "2026-09-22T21:02:29.370712"
+    "discovered_at": "2026-09-23T03:44:10.306596"
   },
   {
     "domain": "theguardian.com",
@@ -39,7 +39,7 @@
       "Google AI Overviews cite YouTube more than any medical site for health queries"
     ],
     "status": "approved",
-    "discovered_at": "2026-09-22T21:02:29.370730"
+    "discovered_at": "2026-09-23T03:44:10.306607"
   },
   {
     "domain": "aivojournal.org",
@@ -59,7 +59,27 @@
       "New benchmark shows ChatGPT and Gemini favor challengers over legacy brands"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370764"
+    "discovered_at": "2026-09-23T03:44:10.306633"
+  },
+  {
+    "domain": "arxiv.org",
+    "mention_count": 9,
+    "first_seen": "2025-03-19",
+    "last_seen": "2025-09-14",
+    "source_types": [
+      "unknown"
+    ],
+    "geo_relevant": true,
+    "sample_urls": [
+      "https://arxiv.org/abs/2509.08919",
+      "https://arxiv.org/abs/2502.00415"
+    ],
+    "contexts": [
+      "Generative Engine Optimization: How to Dominate AI Search",
+      "MarketSenseAI 2.0: Enhancing Stock Analysis Through LLM Agents"
+    ],
+    "status": "approved",
+    "discovered_at": "2026-09-23T03:44:10.306636"
   },
   {
     "domain": "seroundtable.com",
@@ -79,7 +99,7 @@
       "Many Searchers Want to Turn Off Google AI Overviews"
     ],
     "status": "approved",
-    "discovered_at": "2026-09-22T21:02:29.370784"
+    "discovered_at": "2026-09-23T03:44:10.306648"
   },
   {
     "domain": "propensia.ai",
@@ -99,7 +119,7 @@
       "Generative Engine Optimization (SEO for LLMs)"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370787"
+    "discovered_at": "2026-09-23T03:44:10.306650"
   },
   {
     "domain": "blog.google",
@@ -119,7 +139,7 @@
       "AI Overviews: About last week"
     ],
     "status": "approved",
-    "discovered_at": "2026-09-22T21:02:29.370808"
+    "discovered_at": "2026-09-23T03:44:10.306665"
   },
   {
     "domain": "ebsite-auditor.io",
@@ -137,7 +157,7 @@
       "Show HN: Website Auditor –> Test your brand's AI visibility, get growth plan"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370694"
+    "discovered_at": "2026-09-23T03:44:10.306582"
   },
   {
     "domain": "app.geosurge.ai",
@@ -155,7 +175,7 @@
       "Show HN: AI Brand Visibility for Free Forever"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370706"
+    "discovered_at": "2026-09-23T03:44:10.306591"
   },
   {
     "domain": "tributly.io",
@@ -173,7 +193,7 @@
       "SEO/GEO for a new product in 2026"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370709"
+    "discovered_at": "2026-09-23T03:44:10.306593"
   },
   {
     "domain": "aivisibility.pro",
@@ -191,7 +211,7 @@
       "Show HN: AI Visibility: Check whether ChatGPT/Claude/Gemini recommend your brand"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370710"
+    "discovered_at": "2026-09-23T03:44:10.306594"
   },
   {
     "domain": "ai-visibility.pro",
@@ -209,7 +229,7 @@
       "Show HN: Free AI Visibility Audit Tool& Agent"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370715"
+    "discovered_at": "2026-09-23T03:44:10.306597"
   },
   {
     "domain": "pastebin.com",
@@ -227,7 +247,7 @@
       "System prompt to defend against \"Project 545\" Generative Engine Optimization"
     ],
     "status": "approved",
-    "discovered_at": "2026-09-22T21:02:29.370716"
+    "discovered_at": "2026-09-23T03:44:10.306598"
   },
   {
     "domain": "rankpad.app",
@@ -245,7 +265,7 @@
       "Rankpad – AI Visibility Tracking for Brands"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370718"
+    "discovered_at": "2026-09-23T03:44:10.306599"
   },
   {
     "domain": "hedge-ops.com",
@@ -263,7 +283,7 @@
       "AEO: Getting Started"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370720"
+    "discovered_at": "2026-09-23T03:44:10.306601"
   },
   {
     "domain": "the-decoder.com",
@@ -281,7 +301,7 @@
       "German ruling declares Google liable for false answers in AI Overviews"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370722"
+    "discovered_at": "2026-09-23T03:44:10.306602"
   },
   {
     "domain": "agentpatterns.ai",
@@ -299,7 +319,7 @@
       "Generative Engine Optimization"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370723"
+    "discovered_at": "2026-09-23T03:44:10.306603"
   },
   {
     "domain": "localpicks.ai",
@@ -317,7 +337,7 @@
       "Local USA Small Business AEO / Geo / SEO"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370725"
+    "discovered_at": "2026-09-23T03:44:10.306604"
   },
   {
     "domain": "developers.google.com",
@@ -335,7 +355,7 @@
       "Google says generative AI visibility is still SEO"
     ],
     "status": "approved",
-    "discovered_at": "2026-09-22T21:02:29.370726"
+    "discovered_at": "2026-09-23T03:44:10.306605"
   },
   {
     "domain": "chatbenchmark.com",
@@ -353,7 +373,7 @@
       "AI Search Visibility: The Practical Guide to Generative Engine Optimization"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370728"
+    "discovered_at": "2026-09-23T03:44:10.306606"
   },
   {
     "domain": "nypost.com",
@@ -371,7 +391,7 @@
       "Google's AI Overviews spew false answers per hour, bombshell study reveals"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370731"
+    "discovered_at": "2026-09-23T03:44:10.306608"
   },
   {
     "domain": "virtualuncle.com",
@@ -389,7 +409,7 @@
       "Reddit is the #1 most cited source across every major AI search platform"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370732"
+    "discovered_at": "2026-09-23T03:44:10.306609"
   },
   {
     "domain": "mapledeploy.ca",
@@ -407,7 +427,7 @@
       "An experimental guide to Answer Engine Optimization"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370734"
+    "discovered_at": "2026-09-23T03:44:10.306611"
   },
   {
     "domain": "juliasolorzano.com",
@@ -425,7 +445,7 @@
       "Answer Engine Optimization"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370736"
+    "discovered_at": "2026-09-23T03:44:10.306612"
   },
   {
     "domain": "xeolint.com",
@@ -443,7 +463,7 @@
       "CLI linter for GEO and SEO discoverability"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370737"
+    "discovered_at": "2026-09-23T03:44:10.306613"
   },
   {
     "domain": "argeo.ai",
@@ -461,7 +481,7 @@
       "Show HN: Argeo – AI Visibility and Generative Engine Optimization (Geo) Advisory"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370738"
+    "discovered_at": "2026-09-23T03:44:10.306614"
   },
   {
     "domain": "potatometer.com",
@@ -479,7 +499,7 @@
       "Show HN: Potatometer – Check how visible your website is to AI search (GEO)"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370740"
+    "discovered_at": "2026-09-23T03:44:10.306615"
   },
   {
     "domain": "superamped.com",
@@ -497,7 +517,7 @@
       "The founder's guide to AI search engine optimization"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370742"
+    "discovered_at": "2026-09-23T03:44:10.306616"
   },
   {
     "domain": "tryhikoo.com",
@@ -515,7 +535,7 @@
       "Show HN: Hikoo – Track and optimize how AI search engines talk about your brand"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370743"
+    "discovered_at": "2026-09-23T03:44:10.306617"
   },
   {
     "domain": "dashboard.georankers.co",
@@ -533,7 +553,7 @@
       "Show HN: GeoRankers – See how AI models like ChatGPT describe your SaaS"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370744"
+    "discovered_at": "2026-09-23T03:44:10.306618"
   },
   {
     "domain": "valarmorghulis.io",
@@ -551,7 +571,7 @@
       "Geo Is Not the Next Generation of SEO"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370746"
+    "discovered_at": "2026-09-23T03:44:10.306619"
   },
   {
     "domain": "opc.dev",
@@ -569,7 +589,7 @@
       "Show HN: OPC Skills – 9 AI agent skills for solopreneurs (Claude Code, Cursor)"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370748"
+    "discovered_at": "2026-09-23T03:44:10.306620"
   },
   {
     "domain": "blog.vect.pro",
@@ -587,7 +607,7 @@
       "Generative Engine Optimization (Geo): A Blueprint for Ranking in AI Search"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370749"
+    "discovered_at": "2026-09-23T03:44:10.306621"
   },
   {
     "domain": "geonimo.com",
@@ -605,7 +625,7 @@
       "Geonimo – AI Geo/SEO Agent"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370751"
+    "discovered_at": "2026-09-23T03:44:10.306623"
   },
   {
     "domain": "amplift.ai",
@@ -623,7 +643,7 @@
       "Show HN: Amplift – AI agent for influencer marketing, GEO, and social listening"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370752"
+    "discovered_at": "2026-09-23T03:44:10.306624"
   },
   {
     "domain": "trakkr.ai",
@@ -641,7 +661,7 @@
       "Show HN: Searchable AI visibility index (15k+ brands, 500 industries)"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370754"
+    "discovered_at": "2026-09-23T03:44:10.306625"
   },
   {
     "domain": "ai-robots-txt.franzai.com",
@@ -659,7 +679,7 @@
       "Show HN: Geo / AI SEO Robots.txt Audit Tool"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370755"
+    "discovered_at": "2026-09-23T03:44:10.306626"
   },
   {
     "domain": "tryrankly.com",
@@ -677,7 +697,7 @@
       "Show HN: Rankly – The only AEO platform to track AI visibility and conversions"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370757"
+    "discovered_at": "2026-09-23T03:44:10.306627"
   },
   {
     "domain": "amplitude.com",
@@ -695,7 +715,7 @@
       "Show HN: Free Geo (SEO for LLM)"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370758"
+    "discovered_at": "2026-09-23T03:44:10.306628"
   },
   {
     "domain": "flufffilter.com",
@@ -713,7 +733,7 @@
       "Show HN: Content quality analysis that finds what SEO tools miss"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370759"
+    "discovered_at": "2026-09-23T03:44:10.306630"
   },
   {
     "domain": "amazon.com",
@@ -731,7 +751,7 @@
       "Show HN: Free Today) eBook: AI Search Engine Optimization Guide"
     ],
     "status": "approved",
-    "discovered_at": "2026-09-22T21:02:29.370761"
+    "discovered_at": "2026-09-23T03:44:10.306631"
   },
   {
     "domain": "ired.com",
@@ -749,7 +769,7 @@
       "Forget SEO. Welcome to the World of Generative Engine Optimization"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370762"
+    "discovered_at": "2026-09-23T03:44:10.306632"
   },
   {
     "domain": "geofast.me",
@@ -767,7 +787,7 @@
       "Show HN: We Built a Tool for Geo (Generative Engine Optimization)"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370765"
+    "discovered_at": "2026-09-23T03:44:10.306634"
   },
   {
     "domain": "juicylinks.ai",
@@ -785,25 +805,7 @@
       "Geo – Generative Engine Optimization for LLM Discovery (Juicylinks.ai)"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370767"
-  },
-  {
-    "domain": "arxiv.org",
-    "mention_count": 9,
-    "first_seen": "2025-09-14",
-    "last_seen": "2025-09-14",
-    "source_types": [
-      "unknown"
-    ],
-    "geo_relevant": true,
-    "sample_urls": [
-      "https://arxiv.org/abs/2509.08919"
-    ],
-    "contexts": [
-      "Generative Engine Optimization: How to Dominate AI Search"
-    ],
-    "status": "approved",
-    "discovered_at": "2026-09-22T21:02:29.370768"
+    "discovered_at": "2026-09-23T03:44:10.306635"
   },
   {
     "domain": "bsky.app",
@@ -821,7 +823,7 @@
       "Google AI Overview made up an elaborate story about me"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370770"
+    "discovered_at": "2026-09-23T03:44:10.306637"
   },
   {
     "domain": "reachllm.com",
@@ -839,7 +841,7 @@
       "Show HN: ReachLLM to track, analyze and improve AI Search visibility"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370771"
+    "discovered_at": "2026-09-23T03:44:10.306638"
   },
   {
     "domain": "betteraeo.com",
@@ -857,7 +859,7 @@
       "Show HN: BetterAEO – Measure AI search readiness and get AI recommendations"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370773"
+    "discovered_at": "2026-09-23T03:44:10.306639"
   },
   {
     "domain": "geostandard.org",
@@ -875,7 +877,7 @@
       "We archived the GEO Standard – AIVO now defines AI search optimization"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370774"
+    "discovered_at": "2026-09-23T03:44:10.306640"
   },
   {
     "domain": "acrobat.adobe.com",
@@ -893,7 +895,7 @@
       "Show HN: AIVO Standard v2.2, a framework for multimodal AI visibility"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370776"
+    "discovered_at": "2026-09-23T03:44:10.306641"
   },
   {
     "domain": "lauradecastro.substack.com",
@@ -911,7 +913,7 @@
       "AI Visibility 101: How Brands Can Build AI Trust"
     ],
     "status": "approved",
-    "discovered_at": "2026-09-22T21:02:29.370777"
+    "discovered_at": "2026-09-23T03:44:10.306642"
   },
   {
     "domain": "drive.google.com",
@@ -929,7 +931,7 @@
       "Show HN: Beginner's Guide to Answer Engine Optimization – The Future of Search?"
     ],
     "status": "approved",
-    "discovered_at": "2026-09-22T21:02:29.370779"
+    "discovered_at": "2026-09-23T03:44:10.306643"
   },
   {
     "domain": "conductor.build",
@@ -947,7 +949,7 @@
       "Show HN: Conductor, a Mac app that lets you run a bunch of Claude Codes at once"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370780"
+    "discovered_at": "2026-09-23T03:44:10.306644"
   },
   {
     "domain": "mentiondesk.com",
@@ -965,7 +967,7 @@
       "Show HN: I built an Answer Engine Optimization tool to boost brand AI visibility"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370781"
+    "discovered_at": "2026-09-23T03:44:10.306646"
   },
   {
     "domain": "geogen.io",
@@ -983,7 +985,7 @@
       "Generative Engine Optimization Platform Launch"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370783"
+    "discovered_at": "2026-09-23T03:44:10.306647"
   },
   {
     "domain": "seoreviewtools.com",
@@ -1001,7 +1003,7 @@
       "Create: AI Brand Visibility Report [Free Tool]"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370786"
+    "discovered_at": "2026-09-23T03:44:10.306649"
   },
   {
     "domain": "geneo.app",
@@ -1019,7 +1021,7 @@
       "Show HN: Geneo – Track your brand visibility across AI search"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370789"
+    "discovered_at": "2026-09-23T03:44:10.306651"
   },
   {
     "domain": "guptadeepak.com",
@@ -1037,7 +1039,7 @@
       "From Traditional SEO to AI-Driven Answer Engine Optimization in B2B SaaS"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370790"
+    "discovered_at": "2026-09-23T03:44:10.306653"
   },
   {
     "domain": "linrush.com",
@@ -1055,7 +1057,7 @@
       "Show HN: I'm Building Ahrefs for AI Search Results"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370792"
+    "discovered_at": "2026-09-23T03:44:10.306654"
   },
   {
     "domain": "apimagic.ai",
@@ -1073,7 +1075,7 @@
       "How does GEO (SEO for AI) work?"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370794"
+    "discovered_at": "2026-09-23T03:44:10.306655"
   },
   {
     "domain": "a16z.com",
@@ -1091,7 +1093,7 @@
       "How Generative Engine Optimization (GEO) rewrites the rules of search"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370795"
+    "discovered_at": "2026-09-23T03:44:10.306656"
   },
   {
     "domain": "ignorance.ai",
@@ -1109,7 +1111,7 @@
       "SEO for AI: A Look at Generative Engine Optimization"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370797"
+    "discovered_at": "2026-09-23T03:44:10.306657"
   },
   {
     "domain": "ordsandmoneyinmachines.substack.com",
@@ -1127,7 +1129,7 @@
       "LLMs as Answer Engines and SEO: There's Only So Many 'Right' Answers"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370799"
+    "discovered_at": "2026-09-23T03:44:10.306658"
   },
   {
     "domain": "transfon.com",
@@ -1145,7 +1147,7 @@
       "Geo vs. SEO: New Traffic Source"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370800"
+    "discovered_at": "2026-09-23T03:44:10.306659"
   },
   {
     "domain": "ahrefs.com",
@@ -1163,7 +1165,7 @@
       "AI Overviews Reduce Clicks by 34.5%"
     ],
     "status": "approved",
-    "discovered_at": "2026-09-22T21:02:29.370802"
+    "discovered_at": "2026-09-23T03:44:10.306660"
   },
   {
     "domain": "bloomberg.com",
@@ -1181,7 +1183,7 @@
       "Publishers say traffic to their sites has plummeted due to Google AI Overviews"
     ],
     "status": "approved",
-    "discovered_at": "2026-09-22T21:02:29.370803"
+    "discovered_at": "2026-09-23T03:44:10.306661"
   },
   {
     "domain": "sheep.horse",
@@ -1199,7 +1201,7 @@
       "Yo Google, Thanks for the AI Overview but Your Search Sucks Now"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370805"
+    "discovered_at": "2026-09-23T03:44:10.306662"
   },
   {
     "domain": "mbcrosier.com",
@@ -1217,7 +1219,7 @@
       "AI Search Optimization"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370807"
+    "discovered_at": "2026-09-23T03:44:10.306664"
   },
   {
     "domain": "quickchat.ai",
@@ -1235,7 +1237,7 @@
       "Generative Search Optimization: How to Rank Higher in ChatGPT?"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370809"
+    "discovered_at": "2026-09-23T03:44:10.306666"
   },
   {
     "domain": "fuckingsearch.com",
@@ -1253,7 +1255,7 @@
       "Show HN: Fuckingsearch.com, search Google without AI Overviews"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370811"
+    "discovered_at": "2026-09-23T03:44:10.306667"
   },
   {
     "domain": "answerengineoptimization.com",
@@ -1271,7 +1273,7 @@
       "Answer Engine Optimization (AEO) – The Next Evolution of SEO?"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370812"
+    "discovered_at": "2026-09-23T03:44:10.306668"
   },
   {
     "domain": "gamegame.ai",
@@ -1289,7 +1291,7 @@
       "Show HN: GameGame – an LLM to resolve conflicts in board games"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370814"
+    "discovered_at": "2026-09-23T03:44:10.306669"
   },
   {
     "domain": "tenbluelinks.org",
@@ -1307,7 +1309,7 @@
       "How to Turn Off AI Overview in Google and Set \"Web\" as Default"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370815"
+    "discovered_at": "2026-09-23T03:44:10.306670"
   },
   {
     "domain": "support.google.com",
@@ -1325,7 +1327,7 @@
       "How to Turn Off AI Overviews When Searching"
     ],
     "status": "approved",
-    "discovered_at": "2026-09-22T21:02:29.370816"
+    "discovered_at": "2026-09-23T03:44:10.306671"
   },
   {
     "domain": "tomshardware.com",
@@ -1343,7 +1345,7 @@
       "Bye Bye, AI: How to block Google's AI overviews and just get search results"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370818"
+    "discovered_at": "2026-09-23T03:44:10.306672"
   },
   {
     "domain": "theverge.com",
@@ -1361,7 +1363,7 @@
       "Google is overhauling search results with AI overviews and Gemini organization"
     ],
     "status": "approved",
-    "discovered_at": "2026-09-22T21:02:29.370893"
+    "discovered_at": "2026-09-23T03:44:10.306673"
   },
   {
     "domain": "techcrunch.com",
@@ -1379,7 +1381,7 @@
       "SEO tool Ahrefs invests $60M in building creator-friendly search engine, ‘Yep’"
     ],
     "status": "approved",
-    "discovered_at": "2026-09-22T21:02:29.370896"
+    "discovered_at": "2026-09-23T03:44:10.306674"
   },
   {
     "domain": "heartbeat.fritz.ai",
@@ -1397,7 +1399,7 @@
       "Tech blogging best practices: SEO and sharing"
     ],
     "status": "suggested",
-    "discovered_at": "2026-09-22T21:02:29.370897"
+    "discovered_at": "2026-09-23T03:44:10.306675"
   },
   {
     "domain": "domaingang.com",
